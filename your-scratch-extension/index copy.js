@@ -67,7 +67,7 @@ class MqttConnection {
         this._running = false;
 
         if (this._isMqttConnected) {
-            console.log('[mlforkids] mqtt unsubscribing');
+            console.log('[sidekick] mqtt unsubscribing');
             this._mqttClient.unsubscribe(Object.keys(this._subscriptions));
             this._subscriptions = {};
         }
@@ -84,7 +84,7 @@ class MqttConnection {
     }
 
     connect(id) {
-        console.log('[mlforkids] mqtt connect', id);
+        console.log('[sidekick] mqtt connect', id);
 
         this._mqttClient = mqtt.connect(MQTT_BROKERS[id].brokerAddress);
         this._mqttClient.on('connect', () => {
@@ -93,14 +93,14 @@ class MqttConnection {
         });
         this._mqttClient.on('error', (err) => {
             this._isMqttConnected = false;
-            console.log('[mlforkids] mqtt error', err);
+            console.log('[sidekick] mqtt error', err);
             this._runtime.emit(this._runtime.constructor.PERIPHERAL_REQUEST_ERROR, {
                 message: `Connection error`,
                 extensionId: this._extensionId
             });
         });
         this._mqttClient.on('message', (topic, message) => {
-            console.log('[mlforkids] message', topic);
+            console.log('[sidekick] message', topic);
             if (this._running && topic in this._subscriptions) {
                 this._subscriptions[topic].push(message.toString());
             }
@@ -108,7 +108,7 @@ class MqttConnection {
     }
 
     disconnect() {
-        console.log('[mlforkids] mqtt disconnect', id);
+        console.log('[sidekick] mqtt disconnect', id);
 
         var force = true;
         this._mqttClient.end(force);
@@ -135,11 +135,11 @@ class MqttConnection {
             return false;
         }
         if (!(topic in this._subscriptions)) {
-            console.log('[mlforkids] mqtt subscribing to', topic);
+            console.log('[sidekick] mqtt subscribing to', topic);
             this._subscriptions[topic] = [];
             this._mqttClient.subscribe(topic, (err) => {
                 if (err) {
-                    console.log('[mlforkids] mqtt subscription error', err);
+                    console.log('[sidekick] mqtt subscription error', err);
                     delete this._subscriptions[topic];
                 }
             });
@@ -177,7 +177,7 @@ class Scratch3ML4KMqtt {
     getInfo() {
         return {
             // unique ID for your extension
-            id: 'mlforkidsMQTT',
+            id: 'sidekickMQTT',
 
             // name that will be displayed in the Scratch UI
             name: 'MQTT',
@@ -324,17 +324,17 @@ class Scratch3ML4KMqtt {
     }
 
     _loadMQTT() {
-        var id = 'mlforkids-script-mqtt';
+        var id = 'sidekick-script-mqtt';
         if (document.getElementById(id)) {
-            console.log('[mlforkids] MQTT library already loaded');
+            console.log('[sidekick] MQTT library already loaded');
         }
         else {
-            console.log('[mlforkids] loading MQTT library');
+            console.log('[sidekick] loading MQTT library');
 
             var scriptObj = document.createElement('script');
             scriptObj.id = id;
             scriptObj.type = 'text/javascript';
-            scriptObj.src = './mlforkids-thirdparty-libs/mqtt/mqtt.min.js';
+            scriptObj.src = './sidekick-thirdparty-libs/mqtt/mqtt.min.js';
 
             scriptObj.onreadystatechange = this._mqttLibraryLoaded.bind(this);
             scriptObj.onload = this._mqttLibraryLoaded.bind(this);
@@ -345,7 +345,7 @@ class Scratch3ML4KMqtt {
 
     _mqttLibraryLoaded() {
         this._libraryReady = true;
-        this._mqttConnection = new MqttConnection(this._runtime, 'mlforkidsMQTT');
+        this._mqttConnection = new MqttConnection(this._runtime, 'sidekickMQTT');
     }
 }
 

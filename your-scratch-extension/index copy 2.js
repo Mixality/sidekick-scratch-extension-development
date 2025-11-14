@@ -67,7 +67,7 @@ class MqttConnection {
         this._running = false;
 
         if (this._isMqttConnected) {
-            console.log('[mlforkids] mqtt unsubscribing');
+            console.log('[sidekick] mqtt unsubscribing');
             this._mqttClient.unsubscribe(Object.keys(this._subscriptions));
             this._subscriptions = {};
         }
@@ -84,10 +84,10 @@ class MqttConnection {
     }
 
     connect(id) {
-        console.log('[mlforkids] mqtt connect', id);
+        console.log('[sidekick] mqtt connect', id);
 
         if (typeof window.mqtt === 'undefined' || typeof window.mqtt.connect !== 'function') {
-            console.error('[mlforkids] MQTT library not loaded yet');
+            console.error('[sidekick] MQTT library not loaded yet');
             return;
         }
 
@@ -98,14 +98,14 @@ class MqttConnection {
         });
         this._mqttClient.on('error', (err) => {
             this._isMqttConnected = false;
-            console.log('[mlforkids] mqtt error', err);
+            console.log('[sidekick] mqtt error', err);
             this._runtime.emit(this._runtime.constructor.PERIPHERAL_REQUEST_ERROR, {
                 message: `Connection error`,
                 extensionId: this._extensionId
             });
         });
         this._mqttClient.on('message', (topic, message) => {
-            console.log('[mlforkids] message', topic);
+            console.log('[sidekick] message', topic);
             if (this._running && topic in this._subscriptions) {
                 this._subscriptions[topic].push(message.toString());
             }
@@ -113,7 +113,7 @@ class MqttConnection {
     }
 
     disconnect() {
-        console.log('[mlforkids] mqtt disconnect', id);
+        console.log('[sidekick] mqtt disconnect', id);
 
         var force = true;
         this._mqttClient.end(force);
@@ -140,11 +140,11 @@ class MqttConnection {
             return false;
         }
         if (!(topic in this._subscriptions)) {
-            console.log('[mlforkids] mqtt subscribing to', topic);
+            console.log('[sidekick] mqtt subscribing to', topic);
             this._subscriptions[topic] = [];
             this._mqttClient.subscribe(topic, (err) => {
                 if (err) {
-                    console.log('[mlforkids] mqtt subscription error', err);
+                    console.log('[sidekick] mqtt subscription error', err);
                     delete this._subscriptions[topic];
                 }
             });
@@ -182,7 +182,7 @@ class Scratch3ML4KMqtt {
     getInfo() {
         return {
             // unique ID for your extension
-            id: 'mlforkidsMQTT',
+            id: 'sidekickMQTT',
 
             // name that will be displayed in the Scratch UI
             name: 'MQTT',
@@ -331,12 +331,12 @@ class Scratch3ML4KMqtt {
  _loadMQTT() {
         var id = 'mqtt-library-script';
         if (document.getElementById(id) || typeof window.mqtt !== 'undefined') {
-            console.log('[mlforkids] MQTT library already loaded');
+            console.log('[sidekick] MQTT library already loaded');
             this._mqttLibraryLoaded();
             return;
         }
         
-        console.log('[mlforkids] loading MQTT library from CDN');
+        console.log('[sidekick] loading MQTT library from CDN');
 
         var scriptObj = document.createElement('script');
         scriptObj.id = id;
@@ -347,7 +347,7 @@ class Scratch3ML4KMqtt {
         scriptObj.onreadystatechange = this._mqttLibraryLoaded.bind(this);
         scriptObj.onload = this._mqttLibraryLoaded.bind(this);
         scriptObj.onerror = (err) => {
-            console.error('[mlforkids] Failed to load MQTT library from CDN', err);
+            console.error('[sidekick] Failed to load MQTT library from CDN', err);
         };
 
         document.head.appendChild(scriptObj);
@@ -357,8 +357,8 @@ class Scratch3ML4KMqtt {
         if (this._libraryReady) return;
         
         this._libraryReady = true;
-        console.log('[mlforkids] MQTT library loaded, creating connection');
-        this._mqttConnection = new MqttConnection(this._runtime, 'mlforkidsMQTT');
+        console.log('[sidekick] MQTT library loaded, creating connection');
+        this._mqttConnection = new MqttConnection(this._runtime, 'sidekickMQTT');
     }
 }
 
