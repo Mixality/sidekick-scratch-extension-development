@@ -342,9 +342,7 @@ class Scratch3ML4KMqtt {
         scriptObj.id = id;
         scriptObj.type = 'text/javascript';
         // Using a CDN version that's built for browsers
-        // scriptObj.src = 'https://unpkg.com/mqtt@5.14.1/dist/mqtt.min.js';
-        scriptObj.src = './sidekick-thirdparty-libraries/mqtt/mqtt.min.js';
-
+        scriptObj.src = 'https://unpkg.com/mqtt@5.14.1/dist/mqtt.min.js';
 
         scriptObj.onreadystatechange = this._mqttLibraryLoaded.bind(this);
         scriptObj.onload = this._mqttLibraryLoaded.bind(this);

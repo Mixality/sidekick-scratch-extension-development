@@ -86,12 +86,7 @@ class MqttConnection {
     connect(id) {
         console.log('[mlforkids] mqtt connect', id);
 
-        if (typeof window.mqtt === 'undefined' || typeof window.mqtt.connect !== 'function') {
-            console.error('[mlforkids] MQTT library not loaded yet');
-            return;
-        }
-
-        this._mqttClient = window.mqtt.connect(MQTT_BROKERS[id].brokerAddress);
+        this._mqttClient = mqtt.connect(MQTT_BROKERS[id].brokerAddress);
         this._mqttClient.on('connect', () => {
             this._isMqttConnected = true;
             this._runtime.emit(this._runtime.constructor.PERIPHERAL_CONNECTED);
@@ -328,38 +323,28 @@ class Scratch3ML4KMqtt {
         }
     }
 
- _loadMQTT() {
-        var id = 'mqtt-library-script';
-        if (document.getElementById(id) || typeof window.mqtt !== 'undefined') {
+    _loadMQTT() {
+        var id = 'mlforkids-script-mqtt';
+        if (document.getElementById(id)) {
             console.log('[mlforkids] MQTT library already loaded');
-            this._mqttLibraryLoaded();
-            return;
         }
-        
-        console.log('[mlforkids] loading MQTT library from CDN');
+        else {
+            console.log('[mlforkids] loading MQTT library');
 
-        var scriptObj = document.createElement('script');
-        scriptObj.id = id;
-        scriptObj.type = 'text/javascript';
-        // Using a CDN version that's built for browsers
-        // scriptObj.src = 'https://unpkg.com/mqtt@5.14.1/dist/mqtt.min.js';
-        scriptObj.src = './sidekick-thirdparty-libraries/mqtt/mqtt.min.js';
+            var scriptObj = document.createElement('script');
+            scriptObj.id = id;
+            scriptObj.type = 'text/javascript';
+            scriptObj.src = './mlforkids-thirdparty-libs/mqtt/mqtt.min.js';
 
+            scriptObj.onreadystatechange = this._mqttLibraryLoaded.bind(this);
+            scriptObj.onload = this._mqttLibraryLoaded.bind(this);
 
-        scriptObj.onreadystatechange = this._mqttLibraryLoaded.bind(this);
-        scriptObj.onload = this._mqttLibraryLoaded.bind(this);
-        scriptObj.onerror = (err) => {
-            console.error('[mlforkids] Failed to load MQTT library from CDN', err);
-        };
-
-        document.head.appendChild(scriptObj);
+            document.head.appendChild(scriptObj);
+        }
     }
 
     _mqttLibraryLoaded() {
-        if (this._libraryReady) return;
-        
         this._libraryReady = true;
-        console.log('[mlforkids] MQTT library loaded, creating connection');
         this._mqttConnection = new MqttConnection(this._runtime, 'mlforkidsMQTT');
     }
 }
