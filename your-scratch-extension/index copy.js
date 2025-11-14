@@ -12,15 +12,6 @@ const MQTT_BROKERS = {
 
         brokerAddress: 'wss://test.mosquitto.org:8081'
     },
-    mosquitto: {
-        id: 'mosquitto',
-        peripheralId: 'mosquitto',
-        key: 'mosquitto',
-        name: 'Mosquitto',
-        rssi: 1,
-
-        brokerAddress: 'wss://test.mosquitto.org:8081'
-    },
     eclipse: {
         id: 'eclipse',
         peripheralId: 'eclipse',
