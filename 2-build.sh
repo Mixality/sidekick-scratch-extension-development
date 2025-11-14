@@ -14,3 +14,12 @@ NODE_OPTIONS='--openssl-legacy-provider' ./node_modules/.bin/webpack --bail
 echo "BUILDING SCRATCH GUI ..."
 cd $SCRATCH_SRC_HOME/scratch-gui
 NODE_OPTIONS='--openssl-legacy-provider' ./node_modules/.bin/webpack --bail
+
+echo "Copying third-party libraries to build directory..."
+if [ -d "/workspaces/sidekick-scratch-extension-development/sidekick-thirdparty-libraries" ]; then
+    mkdir -p $SCRATCH_SRC_HOME/scratch-gui/build/sidekick-thirdparty-libraries
+    cp -r /workspaces/sidekick-scratch-extension-development/sidekick-thirdparty-libraries/* $SCRATCH_SRC_HOME/scratch-gui/build/sidekick-thirdparty-libraries/
+    echo "✓ Third-party libraries copied successfully!"
+else
+    echo "No third-party libraries found to copy."
+fi
