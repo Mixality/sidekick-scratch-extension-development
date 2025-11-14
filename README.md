@@ -16,3 +16,4 @@ I've wrapped all the complicated bits in scripts that set everything up, and pre
 
 If you make something with this, please [let me know](https://github.com/dalelane/scratch-extension-development/issues) - I'd love to hear about it.
 
+https://Mixality.github.io/sidekick-scratch-extension-development/scratch

@@ -22,8 +22,14 @@ fi
 echo "Commit any changes"
 git add your-scratch-extension
 git add dependencies
-git commit -m "Update"
-git push origin master
+# Den Branch-Namen hier im Skript auf develop ändern (um immer auf develop zu arbeiten)
+# git commit -m "Update"
+# git push origin master
+# Oder: Den Branch-Namen, wie folgt, dynamisch ermitteln (um flexibel zu bleiben)
+git diff --cached --quiet || git commit -m "Update"
+CURRENTBRANCH=$(git rev-parse --abbrev-ref HEAD)
+git push origin $CURRENTBRANCH
+
 
 echo "Building the Scratch fork"
 ./2-build.sh
