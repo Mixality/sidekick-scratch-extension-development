@@ -20,7 +20,7 @@ if [[ $BASH_SOURCE = */* ]]; then
 fi
 
 echo "Commit any changes"
-git add your-scratch-extension
+git add sidekick-scratch-extension
 git add dependencies
 # Den Branch-Namen hier im Skript auf develop ändern (um immer auf develop zu arbeiten)
 # git commit -m "Update"

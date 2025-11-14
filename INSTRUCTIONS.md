@@ -1,1 +1,1 @@
-<!-- # Develop your own Scratch extension -->
+<!-- # Develop a Scratch extension -->
