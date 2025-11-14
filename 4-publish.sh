@@ -28,6 +28,20 @@ git add dependencies
 # Oder: Den Branch-Namen, wie folgt, dynamisch ermitteln (um flexibel zu bleiben)
 git diff --cached --quiet || git commit -m "Update"
 CURRENTBRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Check if current branch exists on remote and pull if needed
+if git ls-remote --heads origin $CURRENTBRANCH | grep -q $CURRENTBRANCH; then
+    echo "Pulling latest changes from origin/$CURRENTBRANCH"
+    git pull origin $CURRENTBRANCH || {
+        echo "Pull failed, trying to reset to remote state"
+        git fetch origin $CURRENTBRANCH
+        git reset --hard origin/$CURRENTBRANCH
+        # Re-add and commit our changes
+        git add sidekick-scratch-extension dependencies
+        git diff --cached --quiet || git commit -m "Update"
+    }
+fi
+
 git push origin $CURRENTBRANCH
 
 
@@ -39,6 +53,15 @@ DEVBRANCH=$(git rev-parse --abbrev-ref HEAD)
 if git rev-parse --verify gh-pages >/dev/null 2>&1
 then
   git checkout gh-pages
+  # Pull latest changes from remote gh-pages if it exists
+  if git ls-remote --heads origin gh-pages | grep -q gh-pages; then
+    echo "Pulling latest changes from remote gh-pages"
+    git pull origin gh-pages || {
+      echo "Pull failed, trying to reset to remote state"
+      git fetch origin gh-pages
+      git reset --hard origin/gh-pages
+    }
+  fi
 else
   git checkout -b gh-pages
 fi
