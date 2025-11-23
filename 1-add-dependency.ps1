@@ -42,8 +42,8 @@ if (-not (Test-Path "$SCRIPT_DIR\patched")) {
 Write-Host "Adding new dependency: $MODULE" -ForegroundColor Cyan
 Write-Host ""
 
-$scratchVmPath = Join-Path $SCRIPT_DIR "scratch-vm"
-Set-Location $scratchVmPath
+$dependenciesPath = Join-Path $SCRIPT_DIR "dependencies"
+Set-Location $dependenciesPath
 
 # Try to install as npm dependency
 Write-Host "Attempting to install via npm..." -ForegroundColor Yellow
@@ -61,12 +61,6 @@ if ($npmSuccess) {
     # Check if the module has Node.js-specific dependencies
     Write-Host "Checking if $MODULE has Node.js-specific dependencies..." -ForegroundColor Yellow
     
-    # Get the package's dependencies
-    $packageInfoJson = npm view $MODULE dependencies --json 2>$null
-    if (-not $packageInfoJson) {
-        $packageInfoJson = "{}"
-    }
-    
     # List of Node.js core modules that indicate it's Node-only
     $nodejsCoreModules = @(
         "fs", "net", "tls", "http", "https", "dgram", "child_process", "cluster", 
@@ -76,15 +70,38 @@ if ($npmSuccess) {
         "timers", "tty", "http2"
     )
     
-    # Check if package depends on Node.js core modules
+    # Check the installed package and its dependencies recursively
     $hasNodeDependency = $false
     $foundModules = @()
     
-    foreach ($coreModule in $nodejsCoreModules) {
-        if ($packageInfoJson -match "`"$coreModule`"") {
-            $hasNodeDependency = $true
-            $foundModules += $coreModule
+    # Use npm list to get all dependencies (including transitive)
+    $npmListOutput = npm list --all --json 2>$null | ConvertFrom-Json
+    
+    # Function to recursively check dependencies
+    function Check-Dependencies {
+        param($deps)
+        if (-not $deps) { return }
+        
+        foreach ($key in $deps.PSObject.Properties.Name) {
+            # Check if the dependency name matches a Node.js core module
+            foreach ($coreModule in $nodejsCoreModules) {
+                if ($key -match "^$coreModule$" -or $key -match "^node-$coreModule" -or $key -match "^$coreModule-") {
+                    $script:hasNodeDependency = $true
+                    if ($script:foundModules -notcontains $coreModule) {
+                        $script:foundModules += $coreModule
+                    }
+                }
+            }
+            
+            # Recursively check sub-dependencies
+            if ($deps.$key.dependencies) {
+                Check-Dependencies $deps.$key.dependencies
+            }
         }
+    }
+    
+    if ($npmListOutput.dependencies) {
+        Check-Dependencies $npmListOutput.dependencies
     }
     
     if ($hasNodeDependency) {
@@ -117,3 +134,8 @@ if ($npmSuccess) {
     Set-Location $SCRIPT_DIR
     & "$SCRIPT_DIR\1-2-add-thirdparty-library.ps1" $MODULE
 }
+
+# Return to original directory
+Set-Location $SCRIPT_DIR
+Write-Host ""
+Write-Host "Done!" -ForegroundColor Green

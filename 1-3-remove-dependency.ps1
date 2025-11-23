@@ -23,7 +23,7 @@ Write-Host ""
 
 # Check if it's an npm dependency
 $NPM_INSTALLED = $false
-$packageJsonPath = Join-Path $SCRIPT_DIR "scratch-vm\package.json"
+$packageJsonPath = Join-Path $SCRIPT_DIR "dependencies\package.json"
 if (Test-Path $packageJsonPath) {
     $packageContent = Get-Content $packageJsonPath -Raw
     if ($packageContent -match "`"$MODULE`"") {
@@ -41,9 +41,10 @@ if (Test-Path $thirdPartyPath) {
 # Remove npm dependency if it exists
 if ($NPM_INSTALLED) {
     Write-Host "Removing $MODULE from npm dependencies..." -ForegroundColor Yellow
-    Set-Location (Join-Path $SCRIPT_DIR "scratch-vm")
+    Set-Location (Join-Path $SCRIPT_DIR "dependencies")
     npm uninstall $MODULE | Out-Null
     Write-Host "✓ Removed $MODULE from npm dependencies" -ForegroundColor Green
+    Set-Location $SCRIPT_DIR
 }
 
 # Remove third-party library if it exists
