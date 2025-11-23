@@ -116,6 +116,14 @@ try {
 
 Set-Location $SCRIPT_DIR
 
+# Link scratch-vm to scratch-gui (CRITICAL!)
+Write-Host ""
+Write-Host "Linking scratch-vm to scratch-gui..." -ForegroundColor Cyan
+Set-Location "scratch-gui"
+npm link ../scratch-vm
+Write-Host "  ✓ scratch-gui now uses local scratch-vm" -ForegroundColor Green
+Set-Location $SCRIPT_DIR
+
 # Mark as patched
 New-Item -ItemType File -Path "patched" -Force | Out-Null
 
