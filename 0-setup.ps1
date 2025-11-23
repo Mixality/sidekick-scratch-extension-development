@@ -67,7 +67,19 @@ if (Test-Path $targetPath) {
 # Apply scratch-vm patch
 Write-Host "  - Patching scratch-vm..."
 Set-Location "scratch-vm"
-git apply "$SCRIPT_DIR\patches\scratch-vm.patch"
+
+$extensionManagerFile = "src\extension-support\extension-manager.js"
+$content = Get-Content $extensionManagerFile -Raw
+
+# Check if already patched
+if ($content -notmatch "sidekickScratchExtension") {
+    # Add extension to builtinExtensions
+    $content = $content -replace "(gdxfor: \(\) => require\('\.\./extensions/scratch3_gdx_for'\))", "`$1,`n    sidekickScratchExtension: () => require('../extensions/sidekick-scratch-extension')"
+    Set-Content $extensionManagerFile $content -NoNewline
+    Write-Host "    ✓ Extension registered in extension-manager.js" -ForegroundColor Green
+} else {
+    Write-Host "    ✓ Already patched" -ForegroundColor Green
+}
 
 # Move and link package.json files (or copy if symlink fails)
 if (-not (Test-Path "$SCRIPT_DIR\dependencies\package.json.backup")) {
@@ -89,7 +101,51 @@ Set-Location ..
 # Apply scratch-gui patch
 Write-Host "  - Patching scratch-gui..."
 Set-Location "scratch-gui"
-git apply "$SCRIPT_DIR\patches\scratch-gui.patch"
+
+$indexFile = "src\lib\libraries\extensions\index.jsx"
+$content = Get-Content $indexFile -Raw
+
+# Check if already patched
+if ($content -notmatch "sidekickExtension") {
+    # Add imports at the top (after React import)
+    $imports = @"
+import sidekickExtensionInsetIconURL from './sidekickextension/sidekick-extension-icon.png';
+import sidekickExtensionIconURL from './sidekickextension/sidekick-extension-background.png';
+
+"@
+    $content = $content -replace "(import \{FormattedMessage\} from 'react-intl';)", "`$1`n`n$imports"
+    
+    # Add extension to the export array (after "export default [")
+    $extensionEntry = @"
+{
+        name: (
+            <FormattedMessage
+                defaultMessage="SIDEKICK Extension"
+                description="Name for the 'SIDEKICK Extension' extension"
+                id="gui.extension.sidekick.name"
+            />
+        ),
+        extensionId: 'sidekickScratchExtension',
+        iconURL: sidekickExtensionIconURL,
+        insetIconURL: sidekickExtensionInsetIconURL,
+        description: (
+            <FormattedMessage
+                defaultMessage="Custom Scratch extension."
+                description="Description for the 'SIDEKICK Extension' extension"
+                id="gui.extension.sidekick.description"
+            />
+        ),
+        featured: true,
+        disabled: false
+    },
+"@
+    $content = $content -replace "(export default \[)", "`$1`n    $extensionEntry"
+    
+    Set-Content $indexFile $content -NoNewline
+    Write-Host "    ✓ Extension added to GUI library" -ForegroundColor Green
+} else {
+    Write-Host "    ✓ Already patched" -ForegroundColor Green
+}
 
 # Create and link extension assets (or copy if symlink fails)
 $assetsPath = "src\lib\libraries\extensions\sidekickextension"
