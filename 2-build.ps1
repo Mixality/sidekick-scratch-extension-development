@@ -12,6 +12,15 @@ if (-not (Test-Path "scratch-vm")) {
     exit 1
 }
 
+# Sync extension files first
+Write-Host "Synchronizing extension files..." -ForegroundColor Yellow
+$sourceExt = Join-Path $SCRIPT_DIR "sidekick-scratch-extension"
+$targetExt = Join-Path $SCRIPT_DIR "scratch-vm\src\extensions\sidekick-scratch-extension"
+if (Test-Path $targetExt) {
+    Copy-Item "$sourceExt\*" -Destination $targetExt -Recurse -Force
+    Write-Host "✓ Extension files synchronized!" -ForegroundColor Green
+}
+
 Write-Host "Building Scratch VM..." -ForegroundColor Yellow
 Set-Location "scratch-vm"
 $env:NODE_OPTIONS = "--openssl-legacy-provider"
