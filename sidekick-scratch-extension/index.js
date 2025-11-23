@@ -112,8 +112,37 @@ class MqttConnection {
         });
     }
 
+    connectToBroker(brokerAddress) {
+        console.log('[sidekick] mqtt connect', brokerAddress);
+
+        if (typeof window.mqtt === 'undefined' || typeof window.mqtt.connect !== 'function') {
+            console.error('[sidekick] MQTT library not loaded yet');
+            return;
+        }
+
+        this._mqttClient = window.mqtt.connect(brokerAddress);
+        this._mqttClient.on('connect', () => {
+            this._isMqttConnected = true;
+            this._runtime.emit(this._runtime.constructor.PERIPHERAL_CONNECTED);
+        });
+        this._mqttClient.on('error', (err) => {
+            this._isMqttConnected = false;
+            console.log('[sidekick] mqtt error', err);
+            this._runtime.emit(this._runtime.constructor.PERIPHERAL_REQUEST_ERROR, {
+                message: `Connection error`,
+                extensionId: this._extensionId
+            });
+        });
+        this._mqttClient.on('message', (topic, message) => {
+            console.log('[sidekick] message', topic);
+            if (this._running && topic in this._subscriptions) {
+                this._subscriptions[topic].push(message.toString());
+            }
+        });
+    }
+
     disconnect() {
-        console.log('[sidekick] mqtt disconnect', id);
+        // console.log('[sidekick] mqtt disconnect', id);
 
         var force = true;
         this._mqttClient.end(force);
@@ -163,7 +192,7 @@ class MqttConnection {
     }
 }
 
-class Scratch3ML4KMqtt {
+class Scratch3SidekickMqtt {
 
     // constructor(runtime) {
     //     // put any setup for the extension here
@@ -205,6 +234,17 @@ class Scratch3ML4KMqtt {
 
             // Scratch blocks
             blocks: [
+                {
+                    opcode: 'connection',
+                    text: 'connect to [BROKER]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        BROKER: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'wss://test.mosquitto.org:8081'
+                        }
+                    }
+                },
                 {
                     opcode: 'publish',
                     text: 'publish [MESSAGE] to [TOPIC]',
@@ -311,7 +351,20 @@ class Scratch3ML4KMqtt {
     //     // example implementation to return a string
     //     return MY_STRING + ' : doubled would be ' + (MY_NUMBER * 2);
     // }
-
+    connection({ BROKER }) {
+        // if (!this._mqttConnection) {
+        //     this._mqttConnection.connectToBroker(BROKER);
+        // } else if (this._mqttConnection) {
+        //     this._mqttConnection.disconnect();
+        // }
+        if (this._mqttConnection) {
+            if (!this._mqttConnection.isConnected()) {
+                this._mqttConnection.connectToBroker(BROKER);
+            } else if (this._mqttConnection.isConnected()) {
+                this._mqttConnection.disconnect();
+            }
+        }
+    }
     publish({ TOPIC, MESSAGE }) {
         if (this._mqttConnection) {
             this._mqttConnection.mqttPublish(TOPIC, MESSAGE);
@@ -328,14 +381,14 @@ class Scratch3ML4KMqtt {
         }
     }
 
- _loadMQTT() {
+    _loadMQTT() {
         var id = 'mqtt-library-script';
         if (document.getElementById(id) || typeof window.mqtt !== 'undefined') {
             console.log('[sidekick] MQTT library already loaded');
             this._mqttLibraryLoaded();
             return;
         }
-        
+
         console.log('[sidekick] loading MQTT library from CDN');
 
         var scriptObj = document.createElement('script');
@@ -357,11 +410,11 @@ class Scratch3ML4KMqtt {
 
     _mqttLibraryLoaded() {
         if (this._libraryReady) return;
-        
+
         this._libraryReady = true;
         console.log('[sidekick] MQTT library loaded, creating connection');
         this._mqttConnection = new MqttConnection(this._runtime, 'sidekickMQTT');
     }
 }
 
-module.exports = Scratch3ML4KMqtt;
+module.exports = Scratch3SidekickMqtt;

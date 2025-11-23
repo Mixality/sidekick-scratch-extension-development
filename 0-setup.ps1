@@ -125,7 +125,7 @@ import sidekickExtensionIconURL from './sidekickextension/sidekick-extension-bac
                 id="gui.extension.sidekick.name"
             />
         ),
-        extensionId: 'sidekickScratchExtension',
+        extensionId: 'sidekickMQTT',
         iconURL: sidekickExtensionIconURL,
         insetIconURL: sidekickExtensionInsetIconURL,
         description: (
