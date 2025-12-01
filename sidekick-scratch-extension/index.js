@@ -11,7 +11,8 @@ const MQTT_BROKERS = {
         rssi: 1,
 
         brokerAddress: 'wss://test.mosquitto.org:8081'
-    },
+    }
+    ,
     eclipse: {
         id: 'eclipse',
         peripheralId: 'eclipse',
@@ -20,25 +21,26 @@ const MQTT_BROKERS = {
         rssi: 2,
 
         brokerAddress: 'wss://mqtt.eclipseprojects.io:443/mqtt'
-    },
-    hivemq: {
-        id: 'hivemq',
-        peripheralId: 'hivemq',
-        key: 'hivemq',
-        name: 'HiveMQ',
-        rssi: 3,
-
-        brokerAddress: 'wss://broker.hivemq.com:8884/mqtt'
-    },
-    emqx: {
-        id: 'emqx',
-        peripheralId: 'emqx',
-        key: 'emqx',
-        name: 'EMQX',
-        rssi: 4,
-
-        brokerAddress: 'wss://broker.emqx.io:8084/mqtt'
     }
+    // ,
+    // hivemq: {
+    //     id: 'hivemq',
+    //     peripheralId: 'hivemq',
+    //     key: 'hivemq',
+    //     name: 'HiveMQ',
+    //     rssi: 3,
+
+    //     brokerAddress: 'wss://broker.hivemq.com:8884/mqtt'
+    // },
+    // emqx: {
+    //     id: 'emqx',
+    //     peripheralId: 'emqx',
+    //     key: 'emqx',
+    //     name: 'EMQX',
+    //     rssi: 4,
+
+    //     brokerAddress: 'wss://broker.emqx.io:8084/mqtt'
+    // }
 };
 
 class MqttConnection {
@@ -192,7 +194,7 @@ class MqttConnection {
     }
 }
 
-class Scratch3SidekickMqtt {
+class Scratch3SidekickBlocks {
 
     // constructor(runtime) {
     //     // put any setup for the extension here
@@ -211,10 +213,10 @@ class Scratch3SidekickMqtt {
     getInfo() {
         return {
             // unique ID for the extension
-            id: 'sidekickMQTT',
+            id: 'sidekick',
 
             // name that will be displayed in the Scratch UI
-            name: 'MQTT',
+            name: 'SIDEKICK Extension',
 
             // colours to use for the extension blocks
             // colour for the blocks
@@ -241,7 +243,8 @@ class Scratch3SidekickMqtt {
                     arguments: {
                         BROKER: {
                             type: ArgumentType.STRING,
-                            defaultValue: 'wss://test.mosquitto.org:8081'
+                            // defaultValue: 'wss://test.mosquitto.org:8081'
+                            defaultValue: 'ws://192.168.178.116:9001'
                         }
                     }
                 },
@@ -413,8 +416,8 @@ class Scratch3SidekickMqtt {
 
         this._libraryReady = true;
         console.log('[sidekick] MQTT library loaded, creating connection');
-        this._mqttConnection = new MqttConnection(this._runtime, 'sidekickMQTT');
+        this._mqttConnection = new MqttConnection(this._runtime, 'sidekick');
     }
 }
 
-module.exports = Scratch3SidekickMqtt;
+module.exports = Scratch3SidekickBlocks;

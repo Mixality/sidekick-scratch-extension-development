@@ -45,13 +45,13 @@ if (Test-Path "patched") {
 Write-Host "Applying patches..." -ForegroundColor Yellow
 
 # Add extension symlink to scratch-vm (or copy if symlink fails)
-$extensionPath = Join-Path $SCRIPT_DIR "sidekick-scratch-extension"
-$targetPath = Join-Path $SCRIPT_DIR "scratch-vm\src\extensions\sidekick-scratch-extension"
+$extensionPath = Join-Path $SCRIPT_DIR "sidekick-scratch-mqtt-extension"
+$targetPath = Join-Path $SCRIPT_DIR "scratch-vm\src\extensions\scratch3_sidekickmqtt"
 
 if (Test-Path $targetPath) {
-    Write-Host "  - Extension already exists" -ForegroundColor Yellow
+    Write-Host "  - SIDEKICK MQTT extension already exists" -ForegroundColor Yellow
 } else {
-    Write-Host "  - Linking/copying extension..."
+    Write-Host "  - Linking/copying SIDEKICK MQTT extension..."
     try {
         # Try to create symlink (requires admin or developer mode)
         New-Item -ItemType SymbolicLink -Path $targetPath -Target $extensionPath -Force -ErrorAction Stop | Out-Null
@@ -64,6 +64,26 @@ if (Test-Path $targetPath) {
     }
 }
 
+# Add extension symlink to scratch-vm (or copy if symlink fails)
+$extensionPath2 = Join-Path $SCRIPT_DIR "sidekick-scratch-extension"
+$targetPath2 = Join-Path $SCRIPT_DIR "scratch-vm\src\extensions\scratch3_sidekick"
+
+if (Test-Path $targetPath2) {
+    Write-Host "  - SIDEKICK extension already exists" -ForegroundColor Yellow
+} else {
+    Write-Host "  - Linking/copying SIDEKICK extension..."
+    try {
+        # Try to create symlink (requires admin or developer mode)
+        New-Item -ItemType SymbolicLink -Path $targetPath2 -Target $extensionPath2 -Force -ErrorAction Stop | Out-Null
+        Write-Host "    ✓ Symbolic link created" -ForegroundColor Green
+    } catch {
+        # Fallback: copy files instead
+        Write-Host "    (Symlink failed, copying files instead)" -ForegroundColor Yellow
+        Copy-Item $extensionPath2 $targetPath2 -Recurse -Force
+        Write-Host "    ✓ Files copied" -ForegroundColor Green
+    }
+}
+
 # Apply scratch-vm patch
 Write-Host "  - Patching scratch-vm..."
 Set-Location "scratch-vm"
@@ -72,9 +92,9 @@ $extensionManagerFile = "src\extension-support\extension-manager.js"
 $content = Get-Content $extensionManagerFile -Raw
 
 # Check if already patched
-if ($content -notmatch "sidekickScratchExtension") {
+if ($content -notmatch "sidekickMQTT" || $content -notmatch "sidekick") {
     # Add extension to builtinExtensions
-    $content = $content -replace "(gdxfor: \(\) => require\('\.\./extensions/scratch3_gdx_for'\))", "`$1,`n    sidekickScratchExtension: () => require('../extensions/sidekick-scratch-extension')"
+    $content = $content -replace "(gdxfor: \(\) => require\('\.\./extensions/scratch3_gdx_for'\))", "`$1,`n    sidekickMQTT: () => require('../extensions/scratch3_sidekickmqtt'),`n    sidekick: () => require('../extensions/scratch3_sidekick')"
     Set-Content $extensionManagerFile $content -NoNewline
     Write-Host "    ✓ Extension registered in extension-manager.js" -ForegroundColor Green
 } else {
@@ -106,11 +126,14 @@ $indexFile = "src\lib\libraries\extensions\index.jsx"
 $content = Get-Content $indexFile -Raw
 
 # Check if already patched
-if ($content -notmatch "sidekickExtension") {
+if ($content -notmatch "sidekick") {
     # Add imports at the top (after React import)
     $imports = @"
-import sidekickExtensionInsetIconURL from './sidekickextension/sidekick-extension-icon.png';
-import sidekickExtensionIconURL from './sidekickextension/sidekick-extension-background.png';
+import sidekickMQTTIconURL from './sidekickmqtt/sidekick-mqtt.png';
+import sidekickMQTTInsetIconURL from './sidekickmqtt/sidekick-mqtt-small.png';
+
+import sidekickIconURL from './sidekick/sidekick.svg';
+import sidekickInsetIconURL from './sidekick/sidekick-small.svg';
 
 "@
     $content = $content -replace "(import \{FormattedMessage\} from 'react-intl';)", "`$1`n`n$imports"
@@ -120,18 +143,39 @@ import sidekickExtensionIconURL from './sidekickextension/sidekick-extension-bac
 {
         name: (
             <FormattedMessage
-                defaultMessage="SIDEKICK Extension"
-                description="Name for the 'SIDEKICK Extension' extension"
-                id="gui.extension.sidekick.name"
+                defaultMessage="SIDEKICK MQTT Extension"
+                description="Name for the 'SIDEKICK MQTT' extension"
+                id="gui.extension.sidekickmqtt.name"
             />
         ),
         extensionId: 'sidekickMQTT',
-        iconURL: sidekickExtensionIconURL,
-        insetIconURL: sidekickExtensionInsetIconURL,
+        iconURL: sidekickMQTTIconURL,
+        insetIconURL: sidekickMQTTInsetIconURL,
         description: (
             <FormattedMessage
-                defaultMessage="Custom Scratch extension."
-                description="Description for the 'SIDEKICK Extension' extension"
+                defaultMessage="Custom Scratch MQTT extension."
+                description="Description for the 'SIDEKICK MQTT' extension"
+                id="gui.extension.sidekickmqtt.description"
+            />
+        ),
+        featured: true,
+        disabled: false
+    },
+    {
+        name: (
+            <FormattedMessage
+                defaultMessage="SIDEKICK Extension"
+                description="Name for the 'SIDEKICK' extension"
+                id="gui.extension.sidekick.name"
+            />
+        ),
+        extensionId: 'sidekick',
+        iconURL: sidekickIconURL,
+        insetIconURL: sidekickInsetIconURL,
+        description: (
+            <FormattedMessage
+                defaultMessage="SIDEKICK Scratch extension."
+                description="Description for the 'SIDEKICK' extension"
                 id="gui.extension.sidekick.description"
             />
         ),
@@ -147,27 +191,54 @@ import sidekickExtensionIconURL from './sidekickextension/sidekick-extension-bac
     Write-Host "    ✓ Already patched" -ForegroundColor Green
 }
 
-# Create and link extension assets (or copy if symlink fails)
-$assetsPath = "src\lib\libraries\extensions\sidekickextension"
+Write-Host "Create and link SIDEKICK MQTT extension assets (or copy if symlink fails)..."
+# Create and link SIDEKICK MQTT extension assets (or copy if symlink fails)
+$assetsPath = "src\lib\libraries\extensions\sidekickmqtt"
 if (-not (Test-Path $assetsPath)) {
     New-Item -ItemType Directory -Path $assetsPath -Force | Out-Null
 }
 
 Set-Location $assetsPath
-$bgImage = Join-Path $SCRIPT_DIR "sidekick-extension-background.png"
-$iconImage = Join-Path $SCRIPT_DIR "sidekick-extension-icon.png"
+$bgImage = Join-Path $SCRIPT_DIR "sidekick-mqtt.png"
+$iconImage = Join-Path $SCRIPT_DIR "sidekick-mqtt-small.png"
 
 try {
-    if (-not (Test-Path "sidekick-extension-background.png")) {
-        New-Item -ItemType SymbolicLink -Path "sidekick-extension-background.png" -Target $bgImage -Force -ErrorAction Stop | Out-Null
+    if (-not (Test-Path "sidekick-mqtt.png")) {
+        New-Item -ItemType SymbolicLink -Path "sidekick-mqtt.png" -Target $bgImage -Force -ErrorAction Stop | Out-Null
     }
-    if (-not (Test-Path "sidekick-extension-icon.png")) {
-        New-Item -ItemType SymbolicLink -Path "sidekick-extension-icon.png" -Target $iconImage -Force -ErrorAction Stop | Out-Null
+    if (-not (Test-Path "sidekick-mqtt-small.png")) {
+        New-Item -ItemType SymbolicLink -Path "sidekick-mqtt-small.png" -Target $iconImage -Force -ErrorAction Stop | Out-Null
     }
 } catch {
     # Fallback: copy files
-    Copy-Item $bgImage "sidekick-extension-background.png" -Force
-    Copy-Item $iconImage "sidekick-extension-icon.png" -Force
+    Copy-Item $bgImage "sidekick-mqtt.png" -Force
+    Copy-Item $iconImage "sidekick-mqtt-small.png" -Force
+}
+
+Set-Location $SCRIPT_DIR
+
+Write-Host "Create and link SIDEKICK extension assets (or copy if symlink fails)..."
+# Create and link SIDEKICK extension assets (or copy if symlink fails)
+$assetsPath2 = "src\lib\libraries\extensions\sidekick"
+if (-not (Test-Path $assetsPath2)) {
+    New-Item -ItemType Directory -Path $assetsPath2 -Force | Out-Null
+}
+
+Set-Location $assetsPath2
+$bgImage2 = Join-Path $SCRIPT_DIR "sidekick.svg"
+$iconImage2 = Join-Path $SCRIPT_DIR "sidekick-small.svg"
+
+try {
+    if (-not (Test-Path "sidekick.svg")) {
+        New-Item -ItemType SymbolicLink -Path "sidekick.svg" -Target $bgImage2 -Force -ErrorAction Stop | Out-Null
+    }
+    if (-not (Test-Path "sidekick-small.svg")) {
+        New-Item -ItemType SymbolicLink -Path "sidekick-small.svg" -Target $iconImage2 -Force -ErrorAction Stop | Out-Null
+    }
+} catch {
+    # Fallback: copy files
+    Copy-Item $bgImage2 "sidekick.svg" -Force
+    Copy-Item $iconImage2 "sidekick-small.svg" -Force
 }
 
 Set-Location $SCRIPT_DIR

@@ -214,7 +214,7 @@ class Scratch3SidekickMqtt {
             id: 'sidekickMQTT',
 
             // name that will be displayed in the Scratch UI
-            name: 'MQTT',
+            name: 'SIDEKICK MQTT Extension',
 
             // colours to use for the extension blocks
             // colour for the blocks

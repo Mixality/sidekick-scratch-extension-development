@@ -13,12 +13,20 @@ if (-not (Test-Path "scratch-vm")) {
 }
 
 # Sync extension files first
-Write-Host "Synchronizing extension files..." -ForegroundColor Yellow
-$sourceExt = Join-Path $SCRIPT_DIR "sidekick-scratch-extension"
-$targetExt = Join-Path $SCRIPT_DIR "scratch-vm\src\extensions\sidekick-scratch-extension"
+Write-Host "Synchronizing MQTT extension files..." -ForegroundColor Yellow
+$sourceExt = Join-Path $SCRIPT_DIR "sidekick-scratch-mqtt-extension"
+$targetExt = Join-Path $SCRIPT_DIR "scratch-vm\src\extensions\scratch3_sidekickmqtt"
 if (Test-Path $targetExt) {
     Copy-Item "$sourceExt\*" -Destination $targetExt -Recurse -Force
-    Write-Host "✓ Extension files synchronized!" -ForegroundColor Green
+    Write-Host "✓ MQTT extension files synchronized!" -ForegroundColor Green
+}
+
+Write-Host "Synchronizing SIDEKICK extension files..." -ForegroundColor Yellow
+$sourceExt2 = Join-Path $SCRIPT_DIR "sidekick-scratch-extension"
+$targetExt2 = Join-Path $SCRIPT_DIR "scratch-vm\src\extensions\scratch3_sidekick"
+if (Test-Path $targetExt2) {
+    Copy-Item "$sourceExt2\*" -Destination $targetExt2 -Recurse -Force
+    Write-Host "✓ SIDEKICK extension files synchronized!" -ForegroundColor Green
 }
 
 Write-Host "Building Scratch VM..." -ForegroundColor Yellow
