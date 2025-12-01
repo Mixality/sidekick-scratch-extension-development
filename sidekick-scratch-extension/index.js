@@ -11,26 +11,27 @@ const MQTT_BROKERS = {
         rssi: 1,
 
         brokerAddress: 'ws://10.42.0.1:9001'
-    },
-    mosquitto: {
-        id: 'mosquitto',
-        peripheralId: 'mosquitto',
-        key: 'mosquitto',
-        name: 'Mosquitto',
-        rssi: 2,
-
-        brokerAddress: 'wss://test.mosquitto.org:8081'
     }
-    ,
-    eclipse: {
-        id: 'eclipse',
-        peripheralId: 'eclipse',
-        key: 'eclipse',
-        name: 'Eclipse Projects',
-        rssi: 3,
+    // ,
+    // mosquitto: {
+    //     id: 'mosquitto',
+    //     peripheralId: 'mosquitto',
+    //     key: 'mosquitto',
+    //     name: 'Mosquitto',
+    //     rssi: 2,
 
-        brokerAddress: 'wss://mqtt.eclipseprojects.io:443/mqtt'
-    }
+    //     brokerAddress: 'wss://test.mosquitto.org:8081'
+    // }
+    // ,
+    // eclipse: {
+    //     id: 'eclipse',
+    //     peripheralId: 'eclipse',
+    //     key: 'eclipse',
+    //     name: 'Eclipse Projects',
+    //     rssi: 3,
+
+    //     brokerAddress: 'wss://mqtt.eclipseprojects.io:443/mqtt'
+    // }
     // ,
     // hivemq: {
     //     id: 'hivemq',
@@ -253,7 +254,8 @@ class Scratch3SidekickBlocks {
                         BROKER: {
                             type: ArgumentType.STRING,
                             // defaultValue: 'wss://test.mosquitto.org:8081'
-                            defaultValue: 'ws://192.168.178.116:9001'
+                            // defaultValue: 'ws://192.168.178.116:9001'
+                            defaultValue: 'ws://10.42.0.1:9001'
                         }
                     }
                 },
@@ -284,6 +286,18 @@ class Scratch3SidekickBlocks {
                     }
                 },
                 {
+                    opcode: 'getUltrasonic',
+                    text: 'Ist Ultraschallsensor [ULTRASONIC] ausgelöst?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        ULTRASONIC: {
+                            type: ArgumentType.STRING,
+                            menu: 'ultrasonicNumber',
+                            defaultValue: '1'
+                        }
+                    }
+                },
+                {
                     opcode: 'message',
                     text: 'message from [TOPIC]',
                     blockType: BlockType.REPORTER,
@@ -294,7 +308,7 @@ class Scratch3SidekickBlocks {
                         }
                     }
                 }
-            ]
+            ],
 
             // [
             //     {
@@ -351,6 +365,23 @@ class Scratch3SidekickBlocks {
             //         }
             //     }
             // ]
+
+            menus: {
+                ultrasonicNumber: {
+                    // eslint-disable-next-line max-len
+                    items: [
+                        { text: '1', value: '1' },
+                        { text: '2', value: '2' },
+                        { text: '3', value: '3' },
+                        { text: '4', value: '4' },
+                        { text: '5', value: '5' },
+                        { text: '6', value: '6' },
+                        { text: '7', value: '7' },
+                        { text: '8', value: '8' },
+                        { text: '9', value: '9' }
+                    ]
+                },
+            }
         };
     }
 
@@ -390,6 +421,13 @@ class Scratch3SidekickBlocks {
     message({ TOPIC }) {
         if (this._mqttConnection) {
             return this._mqttConnection.mqttMessage(TOPIC);
+        }
+    }
+    getUltrasonic({ ULTRASONIC }) {
+        if (this._mqttConnection) {
+            // sidekick/box/{box_nr}/hand_detected
+            var ultrasonicTopic = 'sidekick/box/' + ULTRASONIC + "/hand_detected";
+            return this._mqttConnection.mqttMessage(ultrasonicTopic) === '1';
         }
     }
 
