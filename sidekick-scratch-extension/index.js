@@ -3,12 +3,21 @@ const ArgumentType = require('../../extension-support/argument-type');
 // const TargetType = require('../../extension-support/target-type');
 
 const MQTT_BROKERS = {
+    hotspot: {
+        id: 'hotspot',
+        peripheralId: 'hotspot',
+        key: 'hotspot',
+        name: 'SIDEKICK RPi Hotspot',
+        rssi: 1,
+
+        brokerAddress: 'ws://10.42.0.1:9001'
+    },
     mosquitto: {
         id: 'mosquitto',
         peripheralId: 'mosquitto',
         key: 'mosquitto',
         name: 'Mosquitto',
-        rssi: 1,
+        rssi: 2,
 
         brokerAddress: 'wss://test.mosquitto.org:8081'
     }
@@ -18,7 +27,7 @@ const MQTT_BROKERS = {
         peripheralId: 'eclipse',
         key: 'eclipse',
         name: 'Eclipse Projects',
-        rssi: 2,
+        rssi: 3,
 
         brokerAddress: 'wss://mqtt.eclipseprojects.io:443/mqtt'
     }
@@ -28,7 +37,7 @@ const MQTT_BROKERS = {
     //     peripheralId: 'hivemq',
     //     key: 'hivemq',
     //     name: 'HiveMQ',
-    //     rssi: 3,
+    //     rssi: 4,
 
     //     brokerAddress: 'wss://broker.hivemq.com:8884/mqtt'
     // },
@@ -37,7 +46,7 @@ const MQTT_BROKERS = {
     //     peripheralId: 'emqx',
     //     key: 'emqx',
     //     name: 'EMQX',
-    //     rssi: 4,
+    //     rssi: 5,
 
     //     brokerAddress: 'wss://broker.emqx.io:8084/mqtt'
     // }

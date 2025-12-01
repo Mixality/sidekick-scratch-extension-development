@@ -18,7 +18,8 @@ echo $DIR
 
 echo "Adding extension to Scratch source"
 cd $SCRATCH_SRC_HOME/scratch-vm/src/extensions
-ln -s $DIR/sidekick-scratch-extension sidekick-scratch-extension
+ln -s $DIR/sidekick-scratch-mqtt-extension scratch3_sidekickmqtt
+ln -s $DIR/sidekick-scratch-extension scratch3_sidekick
 
 echo "Patching Scratch source to enable extension"
 cd $SCRATCH_SRC_HOME/scratch-vm
@@ -30,11 +31,19 @@ ln -s $DIR/dependencies/package-lock.json .
 cd $SCRATCH_SRC_HOME/scratch-gui
 git apply $DIR/patches/scratch-gui.patch
 
-echo "Copying in the Scratch extension files"
-mkdir -p src/lib/libraries/extensions/sidekickextension
-cd src/lib/libraries/extensions/sidekickextension
-ln -s $DIR/sidekick-extension-background.png sidekick-extension-background.png
-ln -s $DIR/sidekick-extension-icon.png sidekick-extension-icon.png
+echo "Copying in the SIDEKICK MQTT Scratch extension files"
+mkdir -p src/lib/libraries/extensions/sidekickmqtt
+cd src/lib/libraries/extensions/sidekickmqtt
+ln -s $DIR/sidekick-mqtt.png sidekick-mqtt.png
+ln -s $DIR/sidekick-mqtt-small.png sidekick-mqtt-small.png
+
+cd $SCRATCH_SRC_HOME/scratch-gui
+
+echo "Copying in the SIDEKICK Scratch extension files"
+mkdir -p src/lib/libraries/extensions/sidekick
+cd src/lib/libraries/extensions/sidekick
+ln -s $DIR/sidekick.svg sidekick.svg
+ln -s $DIR/sidekick-small.svg sidekick-small.svg
 
 echo "Marking the Scratch source as customized"
 touch $SCRATCH_SRC_HOME/patched
