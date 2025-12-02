@@ -197,14 +197,26 @@ nmcli connection modify Hotspot connection.autoconnect-priority 100
     - Password: **sidekick**
   - Open webapp:
     - Via: http://10.42.0.1:8000
+  - Set broker of / via `connect to [BROKER]` block:
+    - ws://10.42.0.1:9001
 
+### Development
 
+#### Home LAN Development Connection:
 
-
-ws://10.42.0.1:9001
-
-
-
+1. Setup: Get everything from the RPi
+   
+   - Browser: http://192.168.178.117:8000/
+     - `connect to [BROKER]` block: ws://192.168.178.117:9001
+  
+2. Setup: Run webapp on PC, Broker on RPi
+   
+   - Prerequisite: Build and run webapp on the PC:
+     1. Run: `./2-build.ps1`
+     2. Run: `./3-run-private.ps1`
+   
+   - Browser: http://localhost:8000/
+     - `connect to [BROKER]` block: ws://192.168.178.117:9001
 
 ## IP Address Setup
 
