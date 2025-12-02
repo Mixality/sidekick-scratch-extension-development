@@ -228,6 +228,32 @@ class MqttConnection {
         }
         return '';
     }
+
+    // Für HAT-Blöcke die auf bestimmte Werte reagieren sollen:
+    // Gibt true zurück wenn neue Nachricht da ist UND der Inhalt matched.
+    // Konsumiert die Nachricht NUR wenn der Wert passt!
+    mqttSubscribeForValue(topic, expectedValue) {
+        if (!this._isMqttConnected || !this._running) {
+            return false;
+        }
+        if (!(topic in this._subscriptions)) {
+            console.log('[sidekick] mqtt subscribing to', topic);
+            this._subscriptions[topic] = { lastMessage: '', hasNewMessage: false };
+            this._mqttClient.subscribe(topic, (err) => {
+                if (err) {
+                    console.log('[sidekick] mqtt subscription error', err);
+                    delete this._subscriptions[topic];
+                }
+            });
+        }
+        // Nur wenn neue Nachricht UND der Wert passt, konsumieren wir die Flag
+        if (this._subscriptions[topic].hasNewMessage && 
+            this._subscriptions[topic].lastMessage === expectedValue) {
+            this._subscriptions[topic].hasNewMessage = false;
+            return true;
+        }
+        return false;
+    }
 }
 
 class Scratch3SidekickBlocks {
@@ -285,6 +311,117 @@ class Scratch3SidekickBlocks {
                         }
                     }
                 },
+                '---',
+                // ========== Hand-Erkennung (SmartBox) ==========
+                {
+                    opcode: 'whenHandDetected',
+                    text: 'Wenn Hand erkannt an Box [BOX]',
+                    blockType: BlockType.HAT,
+                    arguments: {
+                        BOX: {
+                            type: ArgumentType.STRING,
+                            menu: 'boxNumber',
+                            defaultValue: '1'
+                        }
+                    }
+                },
+                {
+                    opcode: 'isHandDetected',
+                    text: 'Hand erkannt an Box [BOX]?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        BOX: {
+                            type: ArgumentType.STRING,
+                            menu: 'boxNumber',
+                            defaultValue: '1'
+                        }
+                    }
+                },
+                '---',
+                // ========== LED Steuerung ==========
+                {
+                    opcode: 'setLedColor',
+                    text: 'Setze LED von Box [BOX] auf Farbe [COLOR]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        BOX: {
+                            type: ArgumentType.STRING,
+                            menu: 'boxNumberWithAll',
+                            defaultValue: '1'
+                        },
+                        COLOR: {
+                            type: ArgumentType.COLOR,
+                            defaultValue: '#00ff00'
+                        }
+                    }
+                },
+                {
+                    opcode: 'setLedColorPreset',
+                    text: 'Setze LED von Box [BOX] auf [COLOR]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        BOX: {
+                            type: ArgumentType.STRING,
+                            menu: 'boxNumberWithAll',
+                            defaultValue: '1'
+                        },
+                        COLOR: {
+                            type: ArgumentType.STRING,
+                            menu: 'colorMenu',
+                            defaultValue: 'green'
+                        }
+                    }
+                },
+                {
+                    opcode: 'setLedOff',
+                    text: 'Schalte LED von Box [BOX] aus',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        BOX: {
+                            type: ArgumentType.STRING,
+                            menu: 'boxNumberWithAll',
+                            defaultValue: '1'
+                        }
+                    }
+                },
+                '---',
+                // ========== Button Blöcke ==========
+                {
+                    opcode: 'whenButtonAction',
+                    text: 'Wenn Button [BUTTON] [ACTION] wird',
+                    blockType: BlockType.HAT,
+                    arguments: {
+                        BUTTON: {
+                            type: ArgumentType.STRING,
+                            menu: 'buttonNumber',
+                            defaultValue: '1'
+                        },
+                        ACTION: {
+                            type: ArgumentType.STRING,
+                            menu: 'buttonAction',
+                            defaultValue: 'pressed'
+                        }
+                    }
+                },
+                {
+                    opcode: 'isButtonState',
+                    text: 'Button [BUTTON] [ACTION]?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        BUTTON: {
+                            type: ArgumentType.STRING,
+                            menu: 'buttonNumber',
+                            defaultValue: '1'
+                        },
+                        ACTION: {
+                            type: ArgumentType.STRING,
+                            menu: 'buttonAction',
+                            defaultValue: 'pressed'
+                        }
+                    }
+                },
+                '---',
+                // ========== Allgemeine MQTT Blöcke ==========
                 {
                     opcode: 'publish',
                     text: 'publish [MESSAGE] to [TOPIC]',
@@ -308,18 +445,6 @@ class Scratch3SidekickBlocks {
                         TOPIC: {
                             type: ArgumentType.STRING,
                             defaultValue: 'scratch/mqtt'
-                        }
-                    }
-                },
-                {
-                    opcode: 'getUltrasonic',
-                    text: 'Ist Ultraschallsensor [ULTRASONIC] ausgelöst?',
-                    blockType: BlockType.BOOLEAN,
-                    arguments: {
-                        ULTRASONIC: {
-                            type: ArgumentType.STRING,
-                            menu: 'ultrasonicNumber',
-                            defaultValue: '1'
                         }
                     }
                 },
@@ -393,8 +518,12 @@ class Scratch3SidekickBlocks {
             // ]
 
             menus: {
-                ultrasonicNumber: {
-                    // eslint-disable-next-line max-len
+                boxNumber: {
+                    acceptReporters: false,
+                    items: ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+                },
+                boxNumberWithAll: {
+                    acceptReporters: false,
                     items: [
                         { text: '1', value: '1' },
                         { text: '2', value: '2' },
@@ -404,9 +533,35 @@ class Scratch3SidekickBlocks {
                         { text: '6', value: '6' },
                         { text: '7', value: '7' },
                         { text: '8', value: '8' },
-                        { text: '9', value: '9' }
+                        { text: '9', value: '9' },
+                        { text: 'alle', value: 'all' }
                     ]
                 },
+                buttonNumber: {
+                    acceptReporters: false,
+                    items: ['1', '2', '3', '4']
+                },
+                buttonAction: {
+                    acceptReporters: false,
+                    items: [
+                        { text: 'gedrückt', value: 'pressed' },
+                        { text: 'losgelassen', value: 'released' }
+                    ]
+                },
+                colorMenu: {
+                    acceptReporters: false,
+                    items: [
+                        { text: 'Rot', value: 'red' },
+                        { text: 'Grün', value: 'green' },
+                        { text: 'Blau', value: 'blue' },
+                        { text: 'Gelb', value: 'yellow' },
+                        { text: 'Weiß', value: 'white' },
+                        { text: 'Orange', value: 'orange' },
+                        { text: 'Lila', value: 'purple' },
+                        { text: 'Cyan', value: 'cyan' },
+                        { text: 'Pink', value: 'pink' }
+                    ]
+                }
             }
         };
     }
@@ -434,6 +589,80 @@ class Scratch3SidekickBlocks {
             }
         }
     }
+
+    // ========== Hand-Erkennung (SmartBox) ==========
+    
+    whenHandDetected({ BOX }) {
+        if (this._mqttConnection) {
+            const topic = `sidekick/box/${BOX}/hand`;
+            // mqttSubscribe gibt true zurück wenn neue Nachricht da ist (edge-triggered)
+            // Das reicht für den HAT-Block, da Python nur "detected" sendet
+            return this._mqttConnection.mqttSubscribe(topic);
+        }
+        return false;
+    }
+
+    isHandDetected({ BOX }) {
+        if (this._mqttConnection) {
+            const topic = `sidekick/box/${BOX}/hand`;
+            // Für den BOOLEAN-Block: Auto-subscribe und prüfen ob letzte Nachricht "detected" war
+            const lastMessage = this._mqttConnection.mqttGetLastMessage(topic);
+            return lastMessage === 'detected';
+        }
+        return false;
+    }
+
+    // ========== LED Steuerung ==========
+
+    setLedColor({ BOX, COLOR }) {
+        if (this._mqttConnection) {
+            // COLOR kommt als Dezimalzahl vom Color-Picker (z.B. 16711680 für rot)
+            // Konvertieren zu Hex-String #RRGGBB
+            const hexColor = '#' + ('000000' + COLOR.toString(16)).slice(-6);
+            const ledTopic = `sidekick/box/${BOX}/led`;
+            this._mqttConnection.mqttPublish(ledTopic, hexColor);
+            console.log('[sidekick] LED setzen:', ledTopic, hexColor);
+        }
+    }
+
+    setLedColorPreset({ BOX, COLOR }) {
+        if (this._mqttConnection) {
+            const ledTopic = `sidekick/box/${BOX}/led`;
+            this._mqttConnection.mqttPublish(ledTopic, COLOR);
+            console.log('[sidekick] LED setzen (preset):', ledTopic, COLOR);
+        }
+    }
+
+    setLedOff({ BOX }) {
+        if (this._mqttConnection) {
+            const ledTopic = `sidekick/box/${BOX}/led`;
+            this._mqttConnection.mqttPublish(ledTopic, 'off');
+            console.log('[sidekick] LED aus:', ledTopic);
+        }
+    }
+
+    // ========== Button Steuerung ==========
+
+    whenButtonAction({ BUTTON, ACTION }) {
+        if (this._mqttConnection) {
+            const topic = `sidekick/button/${BUTTON}/state`;
+            // Prüfe ob neue Nachricht UND ob der Inhalt zur gewählten Aktion passt
+            return this._mqttConnection.mqttSubscribeForValue(topic, ACTION);
+        }
+        return false;
+    }
+
+    isButtonState({ BUTTON, ACTION }) {
+        if (this._mqttConnection) {
+            const topic = `sidekick/button/${BUTTON}/state`;
+            // Prüfe ob der aktuelle Zustand zur gewählten Aktion passt
+            return this._mqttConnection.mqttGetLastMessage(topic) === ACTION;
+        }
+        return false;
+    }
+
+    // ========== Allgemeine MQTT Methoden ==========
+
     publish({ TOPIC, MESSAGE }) {
         if (this._mqttConnection) {
             this._mqttConnection.mqttPublish(TOPIC, MESSAGE);
@@ -448,15 +677,6 @@ class Scratch3SidekickBlocks {
         if (this._mqttConnection) {
             return this._mqttConnection.mqttMessage(TOPIC);
         }
-    }
-    getUltrasonic({ ULTRASONIC }) {
-        if (this._mqttConnection) {
-            // sidekick/box/{box_nr}/hand_detected
-            var ultrasonicTopic = 'sidekick/box/' + ULTRASONIC + '/hand_detected';
-            // Auto-subscribe und letzte Nachricht holen (ohne zu konsumieren)
-            return this._mqttConnection.mqttGetLastMessage(ultrasonicTopic) === '1';
-        }
-        return false;
     }
 
     _loadMQTT() {

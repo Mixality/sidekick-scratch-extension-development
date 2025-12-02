@@ -17,11 +17,26 @@ console_timer = 0
 # MQTT Konfiguration
 MQTT_BROKER = "localhost"  # Ändere dies zur IP/Hostname deines MQTT-Brokers
 MQTT_PORT = 1883
-MQTT_TOPIC_BASE = "sidekick/box"  # Topic-Format: sidekick/box/{box_nr}/hand_detected
+MQTT_TOPIC_BOX = "sidekick/box"      # Topic-Format: sidekick/box/{box_nr}/hand und sidekick/box/{box_nr}/led
+MQTT_TOPIC_BUTTON = "sidekick/button"  # Topic-Format: sidekick/button/{button_nr}/state
 MQTT_ENABLED = True  # Setze auf False, um MQTT zu deaktivieren
 
-# Globaler MQTT-Client
+# Button GPIO-Pin Zuordnung (aus SIDEKICK-extension.js)
+# Button 1 = GPIO 4, Button 2 = GPIO 17, Button 3 = GPIO 27, Button 4 = GPIO 22
+BUTTON_PINS = {
+    1: 4,
+    2: 17,
+    3: 27,
+    4: 22
+}
+
+# Globaler MQTT-Client und LED-Strip (für MQTT-Callbacks)
 mqtt_client = None
+led_strip = None
+smartboxes_global = None
+
+# Button-Zustände (für Erkennung von Zustandsänderungen)
+button_states = {1: False, 2: False, 3: False, 4: False}
 
 
 def init_mqtt():
@@ -35,6 +50,7 @@ def init_mqtt():
         mqtt_client = mqtt.Client()
         mqtt_client.on_connect = on_mqtt_connect
         mqtt_client.on_disconnect = on_mqtt_disconnect
+        mqtt_client.on_message = on_mqtt_message  # Callback für eingehende Nachrichten
         mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
         mqtt_client.loop_start()  # Startet Background-Thread für MQTT
         print(f"MQTT-Verbindung zu {MQTT_BROKER}:{MQTT_PORT} wird hergestellt...")
@@ -49,6 +65,14 @@ def on_mqtt_connect(client, userdata, flags, rc):
     """Callback bei erfolgreicher MQTT-Verbindung."""
     if rc == 0:
         print("MQTT-Verbindung erfolgreich hergestellt!")
+        # Subscribe zu LED-Steuerungs-Topics für alle Boxen (1-9)
+        for box_nr in range(1, 10):
+            topic = f"{MQTT_TOPIC_BOX}/{box_nr}/led"
+            client.subscribe(topic)
+            print(f"MQTT: Subscribed to {topic}")
+        # Subscribe auch zu "all" für alle LEDs gleichzeitig
+        client.subscribe(f"{MQTT_TOPIC_BOX}/all/led")
+        print(f"MQTT: Subscribed to {MQTT_TOPIC_BOX}/all/led")
     else:
         print(f"MQTT-Verbindung fehlgeschlagen mit Code: {rc}")
 
@@ -58,16 +82,135 @@ def on_mqtt_disconnect(client, userdata, rc):
     print("MQTT-Verbindung getrennt.")
 
 
+def on_mqtt_message(client, userdata, msg):
+    """Callback für eingehende MQTT-Nachrichten (LED-Steuerung)."""
+    global led_strip
+    
+    try:
+        topic = msg.topic
+        payload = msg.payload.decode('utf-8')
+        print(f"MQTT empfangen: {topic} -> {payload}")
+        
+        # Topic-Format: sidekick/box/{box_nr}/led oder sidekick/box/all/led
+        parts = topic.split('/')
+        if len(parts) >= 4 and parts[3] == 'led':
+            box_id = parts[2]  # box_nr oder "all"
+            
+            # Payload kann sein: "off", "red", "green", "blue", "yellow", oder "#RRGGBB"
+            r, g, b = parse_color(payload)
+            
+            if led_strip is not None:
+                if box_id == 'all':
+                    # Alle Boxen setzen
+                    for box_nr in range(1, 10):
+                        set_led_color(led_strip, box_nr, r, g, b)
+                else:
+                    box_nr = int(box_id)
+                    set_led_color(led_strip, box_nr, r, g, b)
+                    
+    except Exception as e:
+        print(f"Fehler beim Verarbeiten der MQTT-Nachricht: {e}")
+
+
+def parse_color(color_str):
+    """Parst einen Farb-String und gibt (R, G, B) zurück."""
+    color_str = color_str.lower().strip()
+    
+    # Vordefinierte Farben
+    colors = {
+        'off': (0, 0, 0),
+        'black': (0, 0, 0),
+        'red': (255, 0, 0),
+        'green': (0, 255, 0),
+        'blue': (0, 0, 255),
+        'yellow': (255, 255, 0),
+        'white': (255, 255, 255),
+        'orange': (255, 165, 0),
+        'purple': (128, 0, 128),
+        'cyan': (0, 255, 255),
+        'pink': (255, 192, 203),
+    }
+    
+    if color_str in colors:
+        return colors[color_str]
+    
+    # Hex-Format: #RRGGBB oder RRGGBB
+    if color_str.startswith('#'):
+        color_str = color_str[1:]
+    
+    if len(color_str) == 6:
+        try:
+            r = int(color_str[0:2], 16)
+            g = int(color_str[2:4], 16)
+            b = int(color_str[4:6], 16)
+            return (r, g, b)
+        except ValueError:
+            pass
+    
+    # Fallback: aus
+    print(f"Unbekannte Farbe: {color_str}, verwende 'off'")
+    return (0, 0, 0)
+
+
+def set_led_color(strip, box_nr, r, g, b):
+    """Setzt die LED-Farbe für eine bestimmte Box."""
+    LED_COUNT = 7  # LEDs pro Box (aus SimpleLED.py)
+    LED_COUNT_START = LED_COUNT * (box_nr - 1)
+    LED_COUNT_END = LED_COUNT_START + LED_COUNT
+    
+    print(f"LED Box {box_nr}: RGB({r}, {g}, {b})")
+    
+    for i in range(LED_COUNT_START, LED_COUNT_END):
+        # strip.setPixelColor(i, neopixel.Color(r, g, b))
+        # Die aktuell eingesetzte LED-Streifen-Variante dieser WS2812B-LED hat eine andere Farbreihenfolge (GRB statt RGB):
+        strip.setPixelColor(i, neopixel.Color(g, r, b))
+    strip.show()
+
+
 def publish_hand_detected(box_nr):
     """Sendet eine MQTT-Nachricht, wenn eine Hand erkannt wurde."""
     global mqtt_client
     if mqtt_client is not None and MQTT_ENABLED:
-        topic = f"{MQTT_TOPIC_BASE}/{box_nr}/hand_detected"
+        topic = f"{MQTT_TOPIC_BOX}/{box_nr}/hand"
         try:
-            mqtt_client.publish(topic, "1")
+            mqtt_client.publish(topic, "detected")
             print(f"MQTT: Hand erkannt an Box {box_nr} -> Topic: {topic}")
         except Exception as e:
             print(f"MQTT-Publish fehlgeschlagen: {e}")
+
+
+def publish_button_state(button_nr, state):
+    """Sendet eine MQTT-Nachricht bei Button-Zustandsänderung."""
+    global mqtt_client
+    if mqtt_client is not None and MQTT_ENABLED:
+        topic = f"{MQTT_TOPIC_BUTTON}/{button_nr}/state"
+        payload = "pressed" if state else "released"
+        try:
+            mqtt_client.publish(topic, payload)
+            print(f"MQTT: Button {button_nr} {payload} -> Topic: {topic}")
+        except Exception as e:
+            print(f"MQTT-Publish fehlgeschlagen: {e}")
+
+
+def init_buttons():
+    """Initialisiert die GPIO-Pins für die Buttons."""
+    for button_nr, gpio_pin in BUTTON_PINS.items():
+        GPIO.setup(gpio_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        print(f"Button {button_nr} initialisiert auf GPIO {gpio_pin}")
+
+
+def check_buttons():
+    """Überprüft alle Buttons und sendet MQTT bei Zustandsänderung."""
+    global button_states
+    
+    for button_nr, gpio_pin in BUTTON_PINS.items():
+        # Button ist gedrückt wenn GPIO LOW ist (Pull-Up Konfiguration)
+        current_state = GPIO.input(gpio_pin) == GPIO.LOW
+        
+        # Nur bei Zustandsänderung MQTT senden
+        if current_state != button_states[button_nr]:
+            button_states[button_nr] = current_state
+            publish_button_state(button_nr, current_state)
 
 class SmartBox:
 
@@ -274,6 +417,8 @@ def checkSmartBoxes(smartboxes):
 
 
 def runBoxes():
+    global led_strip  # Wichtig! Damit der MQTT-Callback auf den Strip zugreifen kann
+    
     GPIO.cleanup()
     
     # MQTT initialisieren
@@ -281,9 +426,17 @@ def runBoxes():
     
     # Echo, BoxNr, LED_Message
     smartboxes = initSmartBoxes()
+    
+    # Buttons initialisieren
+    init_buttons()
+    
     strip = neopixel.Adafruit_NeoPixel(70, 12, SimpleLED.LED_FREQ_HZ, SimpleLED.LED_DMA, SimpleLED.LED_INVERT,
                               SimpleLED.LED_BRIGHTNESS, SimpleLED.LED_CHANNEL)
     strip.begin()
+    
+    # Globale Variable setzen für MQTT-Callback
+    led_strip = strip
+    
     endtime = time.time() + 1
 
     while 1:
@@ -304,6 +457,8 @@ def runBoxes():
                 smartbox.LED_control(strip)
                 statusString += "SmartBox " + str(smartbox.box_nr) + " Messwert: " + str(round(smartbox.distance,2)) + "\n"
             
+            # Buttons überprüfen
+            check_buttons()
             
             if start >= endtime:
                 os.system("clear")
