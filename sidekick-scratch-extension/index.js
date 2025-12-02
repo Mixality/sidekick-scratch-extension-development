@@ -11,6 +11,15 @@ const MQTT_BROKERS = {
         rssi: 1,
 
         brokerAddress: 'ws://10.42.0.1:9001'
+    },
+    devHome: {
+        id: 'devHome',
+        peripheralId: 'devHome',
+        key: 'devHome',
+        name: 'Home Network (Development)',
+        rssi: 2,
+
+        brokerAddress: 'ws://192.168.178.117:9001'
     }
     // ,
     // mosquitto: {
@@ -68,6 +77,7 @@ class MqttConnection {
 
         this._scan();
 
+        // Speichert für jedes Topic: { lastMessage: string, hasNewMessage: boolean }
         this._subscriptions = {};
     }
 
@@ -117,9 +127,10 @@ class MqttConnection {
             });
         });
         this._mqttClient.on('message', (topic, message) => {
-            console.log('[sidekick] message', topic);
+            console.log('[sidekick] message', topic, message.toString());
             if (this._running && topic in this._subscriptions) {
-                this._subscriptions[topic].push(message.toString());
+                this._subscriptions[topic].lastMessage = message.toString();
+                this._subscriptions[topic].hasNewMessage = true;
             }
         });
     }
@@ -146,9 +157,10 @@ class MqttConnection {
             });
         });
         this._mqttClient.on('message', (topic, message) => {
-            console.log('[sidekick] message', topic);
+            console.log('[sidekick] message', topic, message.toString());
             if (this._running && topic in this._subscriptions) {
-                this._subscriptions[topic].push(message.toString());
+                this._subscriptions[topic].lastMessage = message.toString();
+                this._subscriptions[topic].hasNewMessage = true;
             }
         });
     }
@@ -182,7 +194,7 @@ class MqttConnection {
         }
         if (!(topic in this._subscriptions)) {
             console.log('[sidekick] mqtt subscribing to', topic);
-            this._subscriptions[topic] = [];
+            this._subscriptions[topic] = { lastMessage: '', hasNewMessage: false };
             this._mqttClient.subscribe(topic, (err) => {
                 if (err) {
                     console.log('[sidekick] mqtt subscription error', err);
@@ -190,15 +202,29 @@ class MqttConnection {
                 }
             });
         }
-        return this._subscriptions[topic].length > 0;
+        // Für HAT-Blocks: true wenn neue Nachricht, dann Flag zurücksetzen (edge-triggered)
+        if (this._subscriptions[topic].hasNewMessage) {
+            this._subscriptions[topic].hasNewMessage = false;
+            return true;
+        }
+        return false;
     }
 
     mqttMessage(topic) {
         if (this._isMqttConnected &&
             this._running &&
-            this._subscriptions[topic] &&
-            this._subscriptions[topic].length > 0) {
-            return this._subscriptions[topic].shift();
+            this._subscriptions[topic]) {
+            // Gibt die letzte Nachricht zurück OHNE sie zu löschen
+            return this._subscriptions[topic].lastMessage;
+        }
+        return '';
+    }
+
+    // Auto-subscribe zu einem Topic und gibt die letzte Nachricht zurück
+    mqttGetLastMessage(topic) {
+        this.mqttSubscribe(topic);  // Stellt sicher dass wir subscribed sind
+        if (this._subscriptions[topic]) {
+            return this._subscriptions[topic].lastMessage;
         }
         return '';
     }
@@ -426,9 +452,11 @@ class Scratch3SidekickBlocks {
     getUltrasonic({ ULTRASONIC }) {
         if (this._mqttConnection) {
             // sidekick/box/{box_nr}/hand_detected
-            var ultrasonicTopic = 'sidekick/box/' + ULTRASONIC + "/hand_detected";
-            return this._mqttConnection.mqttMessage(ultrasonicTopic) === '1';
+            var ultrasonicTopic = 'sidekick/box/' + ULTRASONIC + '/hand_detected';
+            // Auto-subscribe und letzte Nachricht holen (ohne zu konsumieren)
+            return this._mqttConnection.mqttGetLastMessage(ultrasonicTopic) === '1';
         }
+        return false;
     }
 
     _loadMQTT() {

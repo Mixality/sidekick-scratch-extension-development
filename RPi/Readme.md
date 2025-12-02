@@ -168,6 +168,18 @@ nmcli connection modify Hotspot connection.autoconnect-priority 100
 
 ### PI:
 
+- Set up MQTT connection.
+
+- Set up sensor (messages):
+  - Start the Python script on the RPi:
+    ```sh
+    sudo python3 ~/Sidekick/python/ScratchConnect.py
+    ```
+    - Python script origin / source: https://github.com/Mixality/Sidekick/tree/main/python
+
+- In Scratch: Create a Hat block listening on the topic (example here: Box 1, ultrasonic hand detection):
+  - `sidekick/box/1/hand_detected`
+
 - Download published Scratch webapp (on GitHub Pages, modified version with SIDEKICK extentions):
   - https://github.com/Mixality/sidekick-scratch-extension-development/tree/gh-pages
 
@@ -190,3 +202,27 @@ nmcli connection modify Hotspot connection.autoconnect-priority 100
 
 
 ws://10.42.0.1:9001
+
+
+
+
+## IP Address Setup
+
+### During Development:
+
+- Development setup, via LAN, with 192.168.178.x
+  - Problem: Dynamic DHCP IP assignment
+  - Possible solution: Static IP configuration  on the RPi:
+
+  ```shell
+  sudo nmcli connection modify "Wired connection 1" ipv4.addresses 192.168.178.117/24
+  sudo nmcli connection modify "Wired connection 1" ipv4.gateway 192.168.178.1
+  sudo nmcli connection modify "Wired connection 1" ipv4.dns "192.168.178.1"
+  sudo nmcli connection modify "Wired connection 1" ipv4.method manual
+  sudo nmcli connection up "Wired connection 1"
+  ```
+
+### For Release Version / End User:
+
+- The RPi is router, in hotspot mode
+  - Thus, its gateway IP (ws://10.42.0.1:9001) always stays the same
