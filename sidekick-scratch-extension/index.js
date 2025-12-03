@@ -1,6 +1,7 @@
 const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
 // const TargetType = require('../../extension-support/target-type');
+const Cast = require('../../util/cast');
 
 const MQTT_BROKERS = {
     hotspot: {
@@ -256,17 +257,225 @@ class MqttConnection {
     }
 }
 
-class Scratch3SidekickBlocks {
+/**
+ * VideoSkin - Eine echte Skin-Klasse die von BitmapSkin erbt.
+ * Wird dynamisch erstellt wenn der Renderer verfügbar ist.
+ */
+let VideoSkinClass = null;
+let _frameCounter = 0;
 
-    // constructor(runtime) {
-    //     // put any setup for the extension here
-    // }
+function getOrCreateVideoSkinClass(renderer) {
+    if (VideoSkinClass) return VideoSkinClass;
+    
+    // Versuche BitmapSkin auf verschiedene Arten zu bekommen
+    let BitmapSkin = null;
+    
+    // Methode 1: renderer.exports (alte Versionen)
+    if (renderer.exports && renderer.exports.BitmapSkin) {
+        BitmapSkin = renderer.exports.BitmapSkin;
+        console.log('[sidekick] Found BitmapSkin via renderer.exports');
+    }
+    
+    // Methode 2: Finde BitmapSkin durch eine existierende Skin im Renderer
+    if (!BitmapSkin && renderer._allSkins) {
+        for (const skin of renderer._allSkins) {
+            if (skin && skin.constructor && skin.constructor.name === 'BitmapSkin') {
+                BitmapSkin = skin.constructor;
+                console.log('[sidekick] Found BitmapSkin via existing skin');
+                break;
+            }
+        }
+    }
+    
+    // Methode 3: Erstelle eine temporäre Skin um die Klasse zu bekommen
+    if (!BitmapSkin) {
+        try {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 1;
+            tempCanvas.height = 1;
+            const tempSkinId = renderer.createBitmapSkin(tempCanvas, 1);
+            if (renderer._allSkins[tempSkinId]) {
+                BitmapSkin = renderer._allSkins[tempSkinId].constructor;
+                console.log('[sidekick] Found BitmapSkin via temp skin, constructor:', BitmapSkin.name);
+            }
+            renderer.destroySkin(tempSkinId);
+        } catch (e) {
+            console.error('[sidekick] Failed to create temp skin:', e);
+        }
+    }
+    
+    if (!BitmapSkin) {
+        console.error('[sidekick] Could not find BitmapSkin class');
+        return null;
+    }
+    
+    console.log('[sidekick] BitmapSkin prototype methods:', Object.getOwnPropertyNames(BitmapSkin.prototype));
+    
+    VideoSkinClass = class VideoSkin extends BitmapSkin {
+        constructor(id, renderer, videoName, videoSrc, runtime) {
+            super(id, renderer);
+            
+            this._renderer = renderer;
+            this._runtime = runtime;
+            this._skinId = id;
+            this.videoName = videoName;
+            this.videoSrc = videoSrc;
+            this.videoError = false;
+            this._videoPlaying = false;
+            this._lastTime = -1;
+            this._frameCount = 0;
+            
+            // Canvas für Video-Frame-Capture
+            this._canvas = document.createElement('canvas');
+            this._ctx = this._canvas.getContext('2d', { willReadFrequently: true });
+            
+            this.readyPromise = new Promise((resolve) => {
+                this.readyCallback = resolve;
+            });
+            
+            this.videoElement = document.createElement('video');
+            this.videoElement.crossOrigin = 'anonymous';
+            this.videoElement.playsInline = true;
+            this.videoElement.preload = 'auto';
+            this.videoElement.muted = false;
+            
+            this.videoElement.onloadeddata = () => {
+                console.log('[sidekick] Video loaded, dimensions:', this.videoElement.videoWidth, 'x', this.videoElement.videoHeight);
+                // Canvas-Größe setzen
+                this._canvas.width = this.videoElement.videoWidth;
+                this._canvas.height = this.videoElement.videoHeight;
+                this.readyCallback();
+                this._captureFrame();
+            };
+            
+            this.videoElement.onerror = (e) => {
+                console.error('[sidekick] Video error:', videoName, e);
+                this.videoError = true;
+                this.readyCallback();
+            };
+            
+            this.videoElement.src = videoSrc;
+            this.videoElement.load();
+        }
+        
+        _captureFrame() {
+            if (this.videoError || !this.videoElement.videoWidth) {
+                return;
+            }
+            
+            // Video-Frame auf Canvas zeichnen
+            this._ctx.drawImage(this.videoElement, 0, 0);
+            
+            // ImageData extrahieren - das ist was BitmapSkin am besten verarbeitet
+            const imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
+            
+            // setBitmap mit ImageData aufrufen
+            this.setBitmap(imageData, 1);
+            
+            this._frameCount++;
+            if (this._frameCount % 60 === 0) {
+                console.log('[sidekick] Frame captured:', this._frameCount, 'time:', this.videoElement.currentTime.toFixed(2));
+            }
+        }
+        
+        updateFrame() {
+            // Wird vom internen Animation-Loop aufgerufen
+            if (this._videoPlaying && !this.videoElement.paused && !this.videoElement.ended) {
+                const currentTime = this.videoElement.currentTime;
+                // Nur bei Zeitänderung updaten
+                if (Math.abs(currentTime - this._lastTime) > 0.01) {
+                    this._lastTime = currentTime;
+                    this._captureFrame();
+                }
+            }
+        }
+        
+        _startAnimationLoop() {
+            if (this._animationRunning) return;
+            this._animationRunning = true;
+            console.log('[sidekick] Starting animation loop');
+            
+            const loop = () => {
+                if (!this._animationRunning) return;
+                this.updateFrame();
+                requestAnimationFrame(loop);
+            };
+            requestAnimationFrame(loop);
+        }
+        
+        _stopAnimationLoop() {
+            this._animationRunning = false;
+            console.log('[sidekick] Stopping animation loop');
+        }
+        
+        setPlaying(playing) {
+            this._videoPlaying = playing;
+            console.log('[sidekick] VideoSkin setPlaying:', playing);
+            if (playing) {
+                this._startAnimationLoop();
+            } else {
+                this._stopAnimationLoop();
+            }
+        }
+        
+        // Manueller Frame-Update (für setVideoTime etc.)
+        forceUpdate() {
+            this._captureFrame();
+        }
+        
+        get size() {
+            if (this.videoElement && this.videoElement.videoWidth) {
+                return [this.videoElement.videoWidth, this.videoElement.videoHeight];
+            }
+            return super.size;
+        }
+        
+        dispose() {
+            this._stopAnimationLoop();
+            this.videoElement.pause();
+            this.videoElement.src = '';
+            this._canvas = null;
+            this._ctx = null;
+            super.dispose();
+        }
+    };
+    
+    console.log('[sidekick] VideoSkin class created');
+    return VideoSkinClass;
+}
+
+class Scratch3SidekickBlocks {
 
     constructor(runtime) {
         this._runtime = runtime;
 
         this._libraryReady = false;
         this._loadMQTT();
+        
+        // Video-System: Videos werden auf Sprites angewendet
+        /** @type {Object.<string, object>} VideoSkin instances */
+        this._videos = {};
+        this._debugCounter = 0;
+        
+        // Event-Handler für Video-Updates
+        runtime.on('PROJECT_STOP_ALL', () => this._resetVideos());
+        runtime.on('PROJECT_START', () => this._resetVideos());
+        
+        // Video-Frame Update Loop - markiert alle spielenden Videos als dirty
+        let frameCounter = 0;
+        runtime.on('BEFORE_EXECUTE', () => {
+            frameCounter++;
+            const videoNames = Object.keys(this._videos);
+            if (videoNames.length > 0 && frameCounter % 60 === 1) {
+                console.log('[sidekick] BEFORE_EXECUTE, videos:', videoNames.length);
+            }
+            for (const name of videoNames) {
+                const videoSkin = this._videos[name];
+                if (videoSkin && videoSkin.updateFrame) {
+                    videoSkin.updateFrame();
+                }
+            }
+        });
     }
 
     /**
@@ -283,8 +492,8 @@ class Scratch3SidekickBlocks {
             // colours to use for the extension blocks
             // colour for the blocks
             color1: '#660066',
-            // colour for the menus in the blocks
-            color2: '#ffffff',
+            // colour for the menus in the blocks (helles Lila für bessere Sichtbarkeit)
+            color2: '#994099',
             // border for blocks and parameter gaps
             color3: '#660066',
 
@@ -417,6 +626,179 @@ class Scratch3SidekickBlocks {
                             type: ArgumentType.STRING,
                             menu: 'buttonAction',
                             defaultValue: 'pressed'
+                        }
+                    }
+                },
+                '---',
+                // ========== Video Blöcke (Target-basiert) ==========
+                {
+                    opcode: 'loadVideoURL',
+                    text: 'Lade Video [NAME] von [URL]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        },
+                        URL: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'video.mp4'
+                        }
+                    }
+                },
+                {
+                    opcode: 'showVideoOnTarget',
+                    text: 'Zeige Video [NAME] auf [TARGET]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        },
+                        TARGET: {
+                            type: ArgumentType.STRING,
+                            menu: 'targetMenu',
+                            defaultValue: 'Figur1'
+                        }
+                    }
+                },
+                {
+                    opcode: 'showVideoAndPlay',
+                    text: 'Starte Video [NAME] auf [TARGET]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        },
+                        TARGET: {
+                            type: ArgumentType.STRING,
+                            menu: 'targetMenu',
+                            defaultValue: 'Figur1'
+                        }
+                    }
+                },
+                {
+                    opcode: 'stopShowingVideo',
+                    text: 'Verstecke Video auf [TARGET]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        TARGET: {
+                            type: ArgumentType.STRING,
+                            menu: 'targetMenu',
+                            defaultValue: 'Figur1'
+                        }
+                    }
+                },
+                {
+                    opcode: 'startVideo',
+                    text: 'Video [NAME] [ACTION]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        },
+                        ACTION: {
+                            type: ArgumentType.STRING,
+                            menu: 'videoActionMenu',
+                            defaultValue: 'play'
+                        }
+                    }
+                },
+                {
+                    opcode: 'setVideoTime',
+                    text: 'Setze Video [NAME] auf [TIME] Sekunden',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        },
+                        TIME: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'setVideoVolume',
+                    text: 'Setze Video [NAME] Lautstärke auf [VOLUME] %',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        },
+                        VOLUME: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 100
+                        }
+                    }
+                },
+                {
+                    opcode: 'setVideoLoop',
+                    text: 'Video [NAME] Wiederholen [LOOP]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        },
+                        LOOP: {
+                            type: ArgumentType.STRING,
+                            menu: 'onOffMenu',
+                            defaultValue: 'on'
+                        }
+                    }
+                },
+                {
+                    opcode: 'deleteVideo',
+                    text: 'Lösche Video [NAME]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        }
+                    }
+                },
+                {
+                    opcode: 'getVideoAttribute',
+                    text: '[ATTRIBUTE] von Video [NAME]',
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        ATTRIBUTE: {
+                            type: ArgumentType.STRING,
+                            menu: 'videoAttributeMenu',
+                            defaultValue: 'duration'
+                        },
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        }
+                    }
+                },
+                {
+                    opcode: 'isVideoPlaying',
+                    text: 'Video [NAME] läuft?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        }
+                    }
+                },
+                {
+                    opcode: 'getCurrentVideoOnTarget',
+                    text: 'Aktuelles Video auf [TARGET]',
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        TARGET: {
+                            type: ArgumentType.STRING,
+                            menu: 'targetMenu',
+                            defaultValue: 'Figur1'
                         }
                     }
                 },
@@ -561,9 +943,71 @@ class Scratch3SidekickBlocks {
                         { text: 'Cyan', value: 'cyan' },
                         { text: 'Pink', value: 'pink' }
                     ]
+                },
+                videoActionMenu: {
+                    acceptReporters: false,
+                    items: [
+                        { text: 'abspielen', value: 'play' },
+                        { text: 'pausieren', value: 'pause' },
+                        { text: 'stoppen', value: 'stop' }
+                    ]
+                },
+                videoAttributeMenu: {
+                    acceptReporters: false,
+                    items: [
+                        { text: 'Länge', value: 'duration' },
+                        { text: 'Position', value: 'currentTime' },
+                        { text: 'Lautstärke', value: 'volume' },
+                        { text: 'Breite', value: 'width' },
+                        { text: 'Höhe', value: 'height' }
+                    ]
+                },
+                onOffMenu: {
+                    acceptReporters: false,
+                    items: [
+                        { text: 'an', value: 'on' },
+                        { text: 'aus', value: 'off' }
+                    ]
+                },
+                targetMenu: {
+                    acceptReporters: true,
+                    items: '_getTargets'
                 }
             }
         };
+    }
+
+    /**
+     * Gibt Liste aller Sprites/Targets für das Menu zurück
+     */
+    _getTargets() {
+        const targets = [{ text: 'mir selbst', value: '_myself_' }];
+        
+        if (this._runtime.targets) {
+            for (const target of this._runtime.targets) {
+                if (!target.isStage && target.isOriginal) {
+                    targets.push({ text: target.getName(), value: target.getName() });
+                }
+            }
+        }
+        
+        // Bühne als Option
+        targets.push({ text: 'Bühne', value: '_stage_' });
+        
+        return targets;
+    }
+
+    /**
+     * Holt Target aus dem Menu-Wert
+     */
+    _getTargetFromMenu(targetName, util) {
+        if (targetName === '_myself_') {
+            return util.target;
+        }
+        if (targetName === '_stage_') {
+            return this._runtime.getTargetForStage();
+        }
+        return this._runtime.getSpriteTargetByName(targetName);
     }
 
 
@@ -677,6 +1121,294 @@ class Scratch3SidekickBlocks {
         if (this._mqttConnection) {
             return this._mqttConnection.mqttMessage(TOPIC);
         }
+    }
+
+    // ========== Video Steuerung (Target-basiert) ==========
+    
+    /**
+     * Setzt alle Videos zurück (bei Projekt-Start/Stop)
+     */
+    _resetVideos() {
+        const renderer = this._runtime.renderer;
+        
+        // Pausiere alle Videos
+        for (const name in this._videos) {
+            const videoSkin = this._videos[name];
+            if (videoSkin && videoSkin.videoElement) {
+                videoSkin.videoElement.pause();
+                videoSkin.videoElement.currentTime = 0;
+            }
+        }
+        
+        // Setze alle Targets zurück die ein Video zeigen
+        if (renderer && this._runtime.targets && VideoSkinClass) {
+            for (const target of this._runtime.targets) {
+                const drawable = renderer._allDrawables[target.drawableID];
+                if (drawable && drawable.skin instanceof VideoSkinClass) {
+                    target.setCostume(target.currentCostume);
+                }
+            }
+        }
+    }
+
+    /**
+     * Lädt ein Video von einer URL
+     */
+    async loadVideoURL(args) {
+        const videoName = Cast.toString(args.NAME);
+        const videoSrc = Cast.toString(args.URL);
+        
+        // Lösche altes Video mit gleichem Namen wenn vorhanden
+        this.deleteVideo({ NAME: videoName });
+        
+        const renderer = this._runtime.renderer;
+        if (!renderer) {
+            console.warn('[sidekick] Renderer not available');
+            return;
+        }
+        
+        // Hole oder erstelle VideoSkin-Klasse
+        const VideoSkin = getOrCreateVideoSkinClass(renderer);
+        if (!VideoSkin) {
+            console.error('[sidekick] Could not create VideoSkin class');
+            return;
+        }
+        
+        // Erstelle neue VideoSkin - registriere sie im Renderer
+        const skinId = renderer._nextSkinId++;
+        const videoSkin = new VideoSkin(skinId, renderer, videoName, videoSrc, this._runtime);
+        renderer._allSkins[skinId] = videoSkin;
+        this._videos[videoName] = videoSkin;
+        
+        console.log('[sidekick] Loading video:', videoName, 'from', videoSrc);
+        
+        // Warte bis Video geladen ist
+        return videoSkin.readyPromise;
+    }
+
+    /**
+     * Löscht ein Video
+     */
+    deleteVideo(args) {
+        const videoName = Cast.toString(args.NAME);
+        const videoSkin = this._videos[videoName];
+        if (!videoSkin) return;
+        
+        const renderer = this._runtime.renderer;
+        
+        // Setze alle Targets zurück die dieses Video zeigen
+        if (renderer && this._runtime.targets) {
+            for (const target of this._runtime.targets) {
+                const drawable = renderer._allDrawables[target.drawableID];
+                if (drawable && drawable.skin === videoSkin) {
+                    target.setCostume(target.currentCostume);
+                }
+            }
+        }
+        
+        // Zerstöre die Skin
+        if (renderer) {
+            renderer.destroySkin(videoSkin._id);
+        }
+        delete this._videos[videoName];
+        
+        console.log('[sidekick] Video deleted:', videoName);
+    }
+
+    /**
+     * Zeigt Video auf einem Sprite/Target
+     */
+    showVideoOnTarget(args, util) {
+        const targetName = Cast.toString(args.TARGET);
+        const videoName = Cast.toString(args.NAME);
+        const target = this._getTargetFromMenu(targetName, util);
+        const videoSkin = this._videos[videoName];
+        
+        if (!target || !videoSkin) {
+            console.warn('[sidekick] showVideoOnTarget: target or video not found', targetName, videoName);
+            return;
+        }
+        
+        const renderer = this._runtime.renderer;
+        if (renderer) {
+            renderer.updateDrawableSkinId(target.drawableID, videoSkin._id);
+            console.log('[sidekick] Showing video', videoName, 'on', targetName);
+        }
+    }
+
+    /**
+     * Zeigt Video auf einem Sprite und startet es
+     */
+    showVideoAndPlay(args, util) {
+        const targetName = Cast.toString(args.TARGET);
+        const videoName = Cast.toString(args.NAME);
+        const target = this._getTargetFromMenu(targetName, util);
+        const videoSkin = this._videos[videoName];
+        
+        if (!target || !videoSkin) {
+            console.warn('[sidekick] showVideoAndPlay: target or video not found', targetName, videoName);
+            return;
+        }
+        
+        const renderer = this._runtime.renderer;
+        if (renderer) {
+            renderer.updateDrawableSkinId(target.drawableID, videoSkin._id);
+            videoSkin.setPlaying(true);
+            videoSkin.videoElement.play();
+            console.log('[sidekick] Playing video', videoName, 'on', targetName);
+        }
+    }
+
+    /**
+     * Versteckt Video auf einem Target (setzt Kostüm zurück)
+     */
+    stopShowingVideo(args, util) {
+        const targetName = Cast.toString(args.TARGET);
+        const target = this._getTargetFromMenu(targetName, util);
+        
+        if (!target) return;
+        
+        target.setCostume(target.currentCostume);
+        console.log('[sidekick] Stopped showing video on', targetName);
+    }
+
+    /**
+     * Startet/Pausiert/Stoppt ein Video
+     */
+    startVideo(args) {
+        const videoName = Cast.toString(args.NAME);
+        const action = Cast.toString(args.ACTION);
+        const videoSkin = this._videos[videoName];
+        
+        if (!videoSkin) return;
+        
+        switch (action) {
+            case 'play':
+                console.log('[sidekick] Attempting to play video');
+                videoSkin.setPlaying(true);
+                videoSkin.videoElement.play().then(() => {
+                    console.log('[sidekick] Video play started successfully');
+                }).catch(e => {
+                    console.error('[sidekick] Video play failed:', e);
+                    videoSkin.setPlaying(false);
+                });
+                break;
+            case 'pause':
+                videoSkin.setPlaying(false);
+                videoSkin.videoElement.pause();
+                break;
+            case 'stop':
+                videoSkin.setPlaying(false);
+                videoSkin.videoElement.pause();
+                videoSkin.videoElement.currentTime = 0;
+                videoSkin.forceUpdate();
+                break;
+        }
+        console.log('[sidekick] Video', videoName, action);
+    }
+
+    /**
+     * Setzt die Video-Zeit
+     */
+    setVideoTime(args) {
+        const videoName = Cast.toString(args.NAME);
+        const time = Cast.toNumber(args.TIME);
+        const videoSkin = this._videos[videoName];
+        
+        if (!videoSkin || !videoSkin.videoElement) return;
+        
+        videoSkin.videoElement.currentTime = Math.max(0, time);
+        // Warte kurz bis der Frame geladen ist, dann update
+        setTimeout(() => videoSkin.forceUpdate(), 50);
+        console.log('[sidekick] Video', videoName, 'time set to', time);
+    }
+
+    /**
+     * Setzt die Video-Lautstärke
+     */
+    setVideoVolume(args) {
+        const videoName = Cast.toString(args.NAME);
+        const volume = Cast.toNumber(args.VOLUME);
+        const videoSkin = this._videos[videoName];
+        
+        if (!videoSkin || !videoSkin.videoElement) return;
+        
+        videoSkin.videoElement.volume = Math.max(0, Math.min(100, volume)) / 100;
+        console.log('[sidekick] Video', videoName, 'volume set to', volume);
+    }
+
+    /**
+     * Setzt ob das Video wiederholt wird
+     */
+    setVideoLoop(args) {
+        const videoName = Cast.toString(args.NAME);
+        const loop = Cast.toString(args.LOOP) === 'on';
+        const videoSkin = this._videos[videoName];
+        
+        if (!videoSkin || !videoSkin.videoElement) return;
+        
+        videoSkin.videoElement.loop = loop;
+        console.log('[sidekick] Video', videoName, 'loop', loop ? 'on' : 'off');
+    }
+
+    /**
+     * Gibt ein Attribut des Videos zurück
+     */
+    getVideoAttribute(args) {
+        const videoName = Cast.toString(args.NAME);
+        const attribute = Cast.toString(args.ATTRIBUTE);
+        const videoSkin = this._videos[videoName];
+        
+        if (!videoSkin || !videoSkin.videoElement) return 0;
+        
+        switch (attribute) {
+            case 'currentTime':
+                return Math.round(videoSkin.videoElement.currentTime * 10) / 10;
+            case 'duration':
+                return Math.round(videoSkin.videoElement.duration * 10) / 10 || 0;
+            case 'volume':
+                return Math.round(videoSkin.videoElement.volume * 100);
+            case 'width':
+                return videoSkin.videoElement.videoWidth || 0;
+            case 'height':
+                return videoSkin.videoElement.videoHeight || 0;
+            default:
+                return 0;
+        }
+    }
+
+    /**
+     * Prüft ob ein Video läuft
+     */
+    isVideoPlaying(args) {
+        const videoName = Cast.toString(args.NAME);
+        const videoSkin = this._videos[videoName];
+        
+        if (!videoSkin || !videoSkin.videoElement) return false;
+        
+        return !videoSkin.videoElement.paused && !videoSkin.videoElement.ended;
+    }
+
+    /**
+     * Gibt das aktuelle Video auf einem Target zurück
+     */
+    getCurrentVideoOnTarget(args, util) {
+        const targetName = Cast.toString(args.TARGET);
+        const target = this._getTargetFromMenu(targetName, util);
+        
+        if (!target) return '';
+        
+        const renderer = this._runtime.renderer;
+        if (!renderer) return '';
+        
+        const drawable = renderer._allDrawables[target.drawableID];
+        const skin = drawable && drawable.skin;
+        
+        // Prüfe ob die Skin eine VideoSkin ist und gib den Namen zurück
+        if (VideoSkinClass && skin instanceof VideoSkinClass) {
+            return skin.videoName;
+        }
+        return '';
     }
 
     _loadMQTT() {
