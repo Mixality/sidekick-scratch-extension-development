@@ -491,19 +491,26 @@ class Scratch3SidekickBlocks {
 
             // colours to use for the extension blocks
             // colour for the blocks
-            color1: '#660066',
+            // color1: '#660066',
+            color1: '#0E9D59',
+            // color1: '#389438',
             // colour for the menus in the blocks (helles Lila für bessere Sichtbarkeit)
-            color2: '#994099',
+            // color2: '#994099',
+            // color2: '#59c059',
+            color2: '#0E9D59',
             // border for blocks and parameter gaps
-            color3: '#660066',
+            // color3: '#660066',
+            color3: '#0C7B37',
 
             showStatusButton: true,
 
 
             // icons to display
             // blockIconURI: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAFCAAAAACyOJm3AAAAFklEQVQYV2P4DwMMEMgAI/+DEUIMBgAEWB7i7uidhAAAAABJRU5ErkJggg==',
+            // blockIconURI: 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjxzdmcgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgd2lkdGg9IjEwMjRweCIgaGVpZ2h0PSIxMDI0cHgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+DQogICAgPGcgaWQ9ImctMSIgdHJhbnNmb3JtPSJtYXRyaXgoMS4xNjMxMzQsIDAsIDAsIDEuMTYzMDgxLCAtOS4wMjYwNDQsIC0zNS4zNTM0ODkpIiBzdHlsZT0iIj4NCiAgICAgICAgPHRpdGxlPmxvZ280PC90aXRsZT4NCiAgICAgICAgPGcgc3R5bGU9IiIgdHJhbnNmb3JtPSJtYXRyaXgoMC44MzI1MTcsIDAsIDAsIDAuODMyNTE3LCA3NS4wMjQxNzgsIDgyLjg0NjI2OCkiPg0KICAgICAgICAgICAgPHRpdGxlPmhpbnRlcmdydW5kPC90aXRsZT4NCiAgICAgICAgICAgIDxwYXRoDQogICAgICAgICAgICAgICAgZD0iTSAwIDM0OC4xNzkgTCAzMzcuNjMgNzYxLjEzIEwgMzgyLjk5NCA3NjEuMTMgTCA0MDMuMDgxIDc4Ni41OTIgTCA0NjAuMzgyIDc4Ni41OTIgTCA0ODQuMDkgNzYxLjEzIEwgNTM1LjAyMyA3NjEuMTMgTCA4OTYgMzQ4LjE3OSBMIDg5NS41NjcgMzIwLjI0NiBMIC0wLjEgMzE5LjkzNSBMIDAgMzQ4LjE3OSBaIg0KICAgICAgICAgICAgICAgIGlkPSJwYXRoLTEiDQogICAgICAgICAgICAgICAgc3R5bGU9InN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgc3Ryb2tlLXdpZHRoOiAzMHB4OyBzdHJva2U6IHJnYigxNDYsIDE3MCwgMTIxKTsgZmlsbDogcmdiKDE4MiwgMjEzLCAxNTEpOyI+DQogICAgICAgICAgICAgICAgPHRpdGxlPmZ1ZWxsdW5nPC90aXRsZT4NCiAgICAgICAgICAgIDwvcGF0aD4NCiAgICAgICAgICAgIDxwYXRoDQogICAgICAgICAgICAgICAgZD0iTSAxLjE0OCAzMTkuNTE3IEwgMzM3LjkxMyA3MzEuNDA5IEwgMzgzLjE2MSA3MzEuNDA5IEwgNDAzLjE5NiA3NTYuODA2IEwgNDYwLjM1IDc1Ni44MDYgTCA0ODMuOTk3IDczMS40MDkgTCA1MzQuOCA3MzEuNDA5IEwgODk0Ljg1MiAzMTkuNTE3IEwgNzI5LjQzNSAxNDQuOTQ1IEwgMTY5Ljc2MyAxNDQuOTQ1IEwgMS4xNDggMzE5LjUxNyBaIg0KICAgICAgICAgICAgICAgIGlkPSJwYXRoLTIiDQogICAgICAgICAgICAgICAgc3R5bGU9InN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgc3Ryb2tlLXdpZHRoOiAzMHB4OyBmaWxsOiByZ2IoMTgyLCAyMTMsIDE1MSk7IHN0cm9rZTogcmdiKDE5NywgMjIxLCAxNzIpOyI+DQogICAgICAgICAgICAgICAgPHRpdGxlPmRpbWVuc2lvbjwvdGl0bGU+DQogICAgICAgICAgICA8L3BhdGg+DQogICAgICAgIDwvZz4NCiAgICAgICAgPGcgaWQ9ImctMiIgdHJhbnNmb3JtPSJtYXRyaXgoMC45MzE2NDksIDAsIDAsIDAuOTMxNjQ5LCAyNDYuNDIxODc1LCAxMzkuNzk1Njg1KSIgc3R5bGU9IiI+DQogICAgICAgICAgICA8dGl0bGU+d2FwcGVuPC90aXRsZT4NCiAgICAgICAgICAgIDxwYXRoDQogICAgICAgICAgICAgICAgZD0iTSAyMTMuMDY5MDAwMjQ0MTQwNjIgMjA1Ljg1MDAwNjEwMzUxNTYyIEwgMTY1Ljg1Njk5NDYyODkwNjI1IDMyMy42ODcwMTE3MTg3NSBMIDI0Mi42MjM5OTI5MTk5MjE4OCAyNzQuNjQwOTkxMjEwOTM3NSBMIDIyNS4zNzMwMDEwOTg2MzI4IDM2Ni4xNDA5OTEyMTA5Mzc1IEwgMTM3Ljc3OTAwNjk1ODAwNzggNDUyLjEwNDAwMzkwNjI1IEwgMTI5IDUwNC42NzU5OTQ4NzMwNDY5IEwgMTQyLjk2Mjk5NzQzNjUyMzQ0IDQ1Ni4xNjQwMDE0NjQ4NDM3NSBMIDI0MC41MDcwMDM3ODQxNzk3IDM4NS4yNjMwMDA0ODgyODEyNSBMIDI5Ny40NjQ5OTYzMzc4OTA2IDIwOC41ODIwMDA3MzI0MjE4OCBMIDIwOC4zNjA5OTI0MzE2NDA2MiAyNzMuMzgwMDA0ODgyODEyNSBMIDIzMS40NjIwMDU2MTUyMzQzOCAyMTYuOTg4MDA2NTkxNzk2ODggTCAzMTguMjk5OTg3NzkyOTY4NzUgMTMzLjk3NTk5NzkyNDgwNDcgWiINCiAgICAgICAgICAgICAgICBzdHlsZT0iZmlsbC1ydWxlOiBub256ZXJvOyBwYWludC1vcmRlcjogc3Ryb2tlOyBzdHJva2U6IHJnYigxOTcsIDIyMSwgMTcyKTsgc3Ryb2tlLXdpZHRoOiAxNTAuMzgxcHg7IHN0cm9rZS1saW5lam9pbjogcm91bmQ7IGZpbGw6IHJnYigxOTcsIDIyMSwgMTcyKTsiIC8+DQogICAgICAgICAgICA8cGF0aA0KICAgICAgICAgICAgICAgIGQ9Ik0gMjEzLjA2OTAwMDI0NDE0MDYyIDIwNS44NTAwMDYxMDM1MTU2MiBMIDE2NS44NTY5OTQ2Mjg5MDYyNSAzMjMuNjg3MDExNzE4NzUgTCAyNDIuNjIzOTkyOTE5OTIxODggMjc0LjY0MDk5MTIxMDkzNzUgTCAyMjUuMzczMDAxMDk4NjMyOCAzNjYuMTQwOTkxMjEwOTM3NSBMIDEzNy43NzkwMDY5NTgwMDc4IDQ1Mi4xMDQwMDM5MDYyNSBMIDEyOSA1MDQuNjc1OTk0ODczMDQ2OSBMIDE0Mi45NjI5OTc0MzY1MjM0NCA0NTYuMTY0MDAxNDY0ODQzNzUgTCAyNDAuNTA3MDAzNzg0MTc5NyAzODUuMjYzMDAwNDg4MjgxMjUgTCAyOTcuNDY0OTk2MzM3ODkwNiAyMDguNTgyMDAwNzMyNDIxODggTCAyMDguMzYwOTkyNDMxNjQwNjIgMjczLjM4MDAwNDg4MjgxMjUgTCAyMzEuNDYyMDA1NjE1MjM0MzggMjE2Ljk4ODAwNjU5MTc5Njg4IEwgMzE4LjI5OTk4Nzc5Mjk2ODc1IDEzMy45NzU5OTc5MjQ4MDQ3IFoiDQogICAgICAgICAgICAgICAgc3R5bGU9ImZpbGwtcnVsZTogbm9uemVybzsgcGFpbnQtb3JkZXI6IHN0cm9rZTsgc3Ryb2tlOiByZ2IoMjU1LCAyNTUsIDI1NSk7IHN0cm9rZS13aWR0aDogNzUuMTkwNnB4OyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyBmaWxsOiByZ2IoMjU1LCAyNTUsIDI1NSk7IiAvPg0KICAgICAgICAgICAgPHBvbHlnb24NCiAgICAgICAgICAgICAgICBzdHlsZT0iZmlsbC1ydWxlOiBub256ZXJvOyBwYWludC1vcmRlcjogc3Ryb2tlOyBmaWxsOiByZ2IoMTgyLCAyMTMsIDE1MSk7IHN0cm9rZS13aWR0aDogNzUuMTkwNnB4OyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyINCiAgICAgICAgICAgICAgICBwb2ludHM9IjIxMy4wNjkgMjA1Ljg1IDE2NS44NTcgMzIzLjY4NyAyNDIuNjI0IDI3NC42NDEgMjI1LjM3MyAzNjYuMTQxIDEzNy43NzkgNDUyLjEwNCAxMjkgNTA0LjY3NiAxNDIuOTYzIDQ1Ni4xNjQgMjQwLjUwNyAzODUuMjYzIDI5Ny40NjUgMjA4LjU4MiAyMDguMzYxIDI3My4zOCAyMzEuNDYyIDIxNi45ODggMzE4LjMgMTMzLjk3NiIgLz4NCiAgICAgICAgPC9nPg0KICAgIDwvZz4NCjwvc3ZnPg==',
             // menuIconURI: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAFCAAAAACyOJm3AAAAFklEQVQYV2P4DwMMEMgAI/+DEUIMBgAEWB7i7uidhAAAAABJRU5ErkJggg==',
-            menuIconURI: 'data:image/png;base64,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',
+            // menuIconURI: 'data:image/png;base64,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',
+            menuIconURI: 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjxzdmcgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgd2lkdGg9IjEwMjRweCIgaGVpZ2h0PSIxMDI0cHgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+DQogICAgPGcgaWQ9ImctMSIgdHJhbnNmb3JtPSJtYXRyaXgoMS4xNjMxMzQsIDAsIDAsIDEuMTYzMDgxLCAtOS4wMjYwNDQsIC0zNS4zNTM0ODkpIiBzdHlsZT0iIj4NCiAgICAgICAgPHRpdGxlPmxvZ280PC90aXRsZT4NCiAgICAgICAgPGcgc3R5bGU9IiIgdHJhbnNmb3JtPSJtYXRyaXgoMC44MzI1MTcsIDAsIDAsIDAuODMyNTE3LCA3NS4wMjQxNzgsIDgyLjg0NjI2OCkiPg0KICAgICAgICAgICAgPHRpdGxlPmhpbnRlcmdydW5kPC90aXRsZT4NCiAgICAgICAgICAgIDxwYXRoDQogICAgICAgICAgICAgICAgZD0iTSAwIDM0OC4xNzkgTCAzMzcuNjMgNzYxLjEzIEwgMzgyLjk5NCA3NjEuMTMgTCA0MDMuMDgxIDc4Ni41OTIgTCA0NjAuMzgyIDc4Ni41OTIgTCA0ODQuMDkgNzYxLjEzIEwgNTM1LjAyMyA3NjEuMTMgTCA4OTYgMzQ4LjE3OSBMIDg5NS41NjcgMzIwLjI0NiBMIC0wLjEgMzE5LjkzNSBMIDAgMzQ4LjE3OSBaIg0KICAgICAgICAgICAgICAgIGlkPSJwYXRoLTEiDQogICAgICAgICAgICAgICAgc3R5bGU9InN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgc3Ryb2tlLXdpZHRoOiAzMHB4OyBzdHJva2U6IHJnYigxNDYsIDE3MCwgMTIxKTsgZmlsbDogcmdiKDE4MiwgMjEzLCAxNTEpOyI+DQogICAgICAgICAgICAgICAgPHRpdGxlPmZ1ZWxsdW5nPC90aXRsZT4NCiAgICAgICAgICAgIDwvcGF0aD4NCiAgICAgICAgICAgIDxwYXRoDQogICAgICAgICAgICAgICAgZD0iTSAxLjE0OCAzMTkuNTE3IEwgMzM3LjkxMyA3MzEuNDA5IEwgMzgzLjE2MSA3MzEuNDA5IEwgNDAzLjE5NiA3NTYuODA2IEwgNDYwLjM1IDc1Ni44MDYgTCA0ODMuOTk3IDczMS40MDkgTCA1MzQuOCA3MzEuNDA5IEwgODk0Ljg1MiAzMTkuNTE3IEwgNzI5LjQzNSAxNDQuOTQ1IEwgMTY5Ljc2MyAxNDQuOTQ1IEwgMS4xNDggMzE5LjUxNyBaIg0KICAgICAgICAgICAgICAgIGlkPSJwYXRoLTIiDQogICAgICAgICAgICAgICAgc3R5bGU9InN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgc3Ryb2tlLXdpZHRoOiAzMHB4OyBmaWxsOiByZ2IoMTgyLCAyMTMsIDE1MSk7IHN0cm9rZTogcmdiKDE5NywgMjIxLCAxNzIpOyI+DQogICAgICAgICAgICAgICAgPHRpdGxlPmRpbWVuc2lvbjwvdGl0bGU+DQogICAgICAgICAgICA8L3BhdGg+DQogICAgICAgIDwvZz4NCiAgICAgICAgPGcgaWQ9ImctMiIgdHJhbnNmb3JtPSJtYXRyaXgoMC45MzE2NDksIDAsIDAsIDAuOTMxNjQ5LCAyNDYuNDIxODc1LCAxMzkuNzk1Njg1KSIgc3R5bGU9IiI+DQogICAgICAgICAgICA8dGl0bGU+d2FwcGVuPC90aXRsZT4NCiAgICAgICAgICAgIDxwYXRoDQogICAgICAgICAgICAgICAgZD0iTSAyMTMuMDY5MDAwMjQ0MTQwNjIgMjA1Ljg1MDAwNjEwMzUxNTYyIEwgMTY1Ljg1Njk5NDYyODkwNjI1IDMyMy42ODcwMTE3MTg3NSBMIDI0Mi42MjM5OTI5MTk5MjE4OCAyNzQuNjQwOTkxMjEwOTM3NSBMIDIyNS4zNzMwMDEwOTg2MzI4IDM2Ni4xNDA5OTEyMTA5Mzc1IEwgMTM3Ljc3OTAwNjk1ODAwNzggNDUyLjEwNDAwMzkwNjI1IEwgMTI5IDUwNC42NzU5OTQ4NzMwNDY5IEwgMTQyLjk2Mjk5NzQzNjUyMzQ0IDQ1Ni4xNjQwMDE0NjQ4NDM3NSBMIDI0MC41MDcwMDM3ODQxNzk3IDM4NS4yNjMwMDA0ODgyODEyNSBMIDI5Ny40NjQ5OTYzMzc4OTA2IDIwOC41ODIwMDA3MzI0MjE4OCBMIDIwOC4zNjA5OTI0MzE2NDA2MiAyNzMuMzgwMDA0ODgyODEyNSBMIDIzMS40NjIwMDU2MTUyMzQzOCAyMTYuOTg4MDA2NTkxNzk2ODggTCAzMTguMjk5OTg3NzkyOTY4NzUgMTMzLjk3NTk5NzkyNDgwNDcgWiINCiAgICAgICAgICAgICAgICBzdHlsZT0iZmlsbC1ydWxlOiBub256ZXJvOyBwYWludC1vcmRlcjogc3Ryb2tlOyBzdHJva2U6IHJnYigxOTcsIDIyMSwgMTcyKTsgc3Ryb2tlLXdpZHRoOiAxNTAuMzgxcHg7IHN0cm9rZS1saW5lam9pbjogcm91bmQ7IGZpbGw6IHJnYigxOTcsIDIyMSwgMTcyKTsiIC8+DQogICAgICAgICAgICA8cGF0aA0KICAgICAgICAgICAgICAgIGQ9Ik0gMjEzLjA2OTAwMDI0NDE0MDYyIDIwNS44NTAwMDYxMDM1MTU2MiBMIDE2NS44NTY5OTQ2Mjg5MDYyNSAzMjMuNjg3MDExNzE4NzUgTCAyNDIuNjIzOTkyOTE5OTIxODggMjc0LjY0MDk5MTIxMDkzNzUgTCAyMjUuMzczMDAxMDk4NjMyOCAzNjYuMTQwOTkxMjEwOTM3NSBMIDEzNy43NzkwMDY5NTgwMDc4IDQ1Mi4xMDQwMDM5MDYyNSBMIDEyOSA1MDQuNjc1OTk0ODczMDQ2OSBMIDE0Mi45NjI5OTc0MzY1MjM0NCA0NTYuMTY0MDAxNDY0ODQzNzUgTCAyNDAuNTA3MDAzNzg0MTc5NyAzODUuMjYzMDAwNDg4MjgxMjUgTCAyOTcuNDY0OTk2MzM3ODkwNiAyMDguNTgyMDAwNzMyNDIxODggTCAyMDguMzYwOTkyNDMxNjQwNjIgMjczLjM4MDAwNDg4MjgxMjUgTCAyMzEuNDYyMDA1NjE1MjM0MzggMjE2Ljk4ODAwNjU5MTc5Njg4IEwgMzE4LjI5OTk4Nzc5Mjk2ODc1IDEzMy45NzU5OTc5MjQ4MDQ3IFoiDQogICAgICAgICAgICAgICAgc3R5bGU9ImZpbGwtcnVsZTogbm9uemVybzsgcGFpbnQtb3JkZXI6IHN0cm9rZTsgc3Ryb2tlOiByZ2IoMjU1LCAyNTUsIDI1NSk7IHN0cm9rZS13aWR0aDogNzUuMTkwNnB4OyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyBmaWxsOiByZ2IoMjU1LCAyNTUsIDI1NSk7IiAvPg0KICAgICAgICAgICAgPHBvbHlnb24NCiAgICAgICAgICAgICAgICBzdHlsZT0iZmlsbC1ydWxlOiBub256ZXJvOyBwYWludC1vcmRlcjogc3Ryb2tlOyBmaWxsOiByZ2IoMTgyLCAyMTMsIDE1MSk7IHN0cm9rZS13aWR0aDogNzUuMTkwNnB4OyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyINCiAgICAgICAgICAgICAgICBwb2ludHM9IjIxMy4wNjkgMjA1Ljg1IDE2NS44NTcgMzIzLjY4NyAyNDIuNjI0IDI3NC42NDEgMjI1LjM3MyAzNjYuMTQxIDEzNy43NzkgNDUyLjEwNCAxMjkgNTA0LjY3NiAxNDIuOTYzIDQ1Ni4xNjQgMjQwLjUwNyAzODUuMjYzIDI5Ny40NjUgMjA4LjU4MiAyMDguMzYxIDI3My4zOCAyMzEuNDYyIDIxNi45ODggMzE4LjMgMTMzLjk3NiIgLz4NCiAgICAgICAgPC9nPg0KICAgIDwvZz4NCjwvc3ZnPg==',
 
             // Scratch blocks
             blocks: [
@@ -630,7 +637,18 @@ class Scratch3SidekickBlocks {
                     }
                 },
                 '---',
-                // ========== Video Blöcke (Target-basiert) ==========
+                // ========== Video Blöcke ==========
+                {
+                    opcode: 'loadVideoFromFile',
+                    text: 'Lade Video [NAME] von Datei',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        }
+                    }
+                },
                 {
                     opcode: 'loadVideoURL',
                     text: 'Lade Video [NAME] von [URL]',
@@ -647,34 +665,23 @@ class Scratch3SidekickBlocks {
                     }
                 },
                 {
-                    opcode: 'showVideoOnTarget',
-                    text: 'Zeige Video [NAME] auf [TARGET]',
+                    opcode: 'videoOnTarget',
+                    text: 'Video [NAME] auf [TARGET] [ACTION]',
                     blockType: BlockType.COMMAND,
                     arguments: {
                         NAME: {
                             type: ArgumentType.STRING,
-                            defaultValue: 'meinVideo'
+                            menu: 'loadedVideosMenu'
                         },
                         TARGET: {
                             type: ArgumentType.STRING,
                             menu: 'targetMenu',
-                            defaultValue: 'Figur1'
-                        }
-                    }
-                },
-                {
-                    opcode: 'showVideoAndPlay',
-                    text: 'Starte Video [NAME] auf [TARGET]',
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        NAME: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'meinVideo'
+                            defaultValue: '_myself_'
                         },
-                        TARGET: {
+                        ACTION: {
                             type: ArgumentType.STRING,
-                            menu: 'targetMenu',
-                            defaultValue: 'Figur1'
+                            menu: 'videoShowActionMenu',
+                            defaultValue: 'showAndPlay'
                         }
                     }
                 },
@@ -686,34 +693,34 @@ class Scratch3SidekickBlocks {
                         TARGET: {
                             type: ArgumentType.STRING,
                             menu: 'targetMenu',
-                            defaultValue: 'Figur1'
+                            defaultValue: '_myself_'
                         }
                     }
                 },
                 {
-                    opcode: 'startVideo',
+                    opcode: 'videoControl',
                     text: 'Video [NAME] [ACTION]',
                     blockType: BlockType.COMMAND,
                     arguments: {
                         NAME: {
                             type: ArgumentType.STRING,
-                            defaultValue: 'meinVideo'
+                            menu: 'loadedVideosMenu'
                         },
                         ACTION: {
                             type: ArgumentType.STRING,
-                            menu: 'videoActionMenu',
+                            menu: 'videoControlMenu',
                             defaultValue: 'play'
                         }
                     }
                 },
                 {
                     opcode: 'setVideoTime',
-                    text: 'Setze Video [NAME] auf [TIME] Sekunden',
+                    text: 'Setze Spielzeit von Video [NAME] auf [TIME] Sekunden',
                     blockType: BlockType.COMMAND,
                     arguments: {
                         NAME: {
                             type: ArgumentType.STRING,
-                            defaultValue: 'meinVideo'
+                            menu: 'loadedVideosMenu'
                         },
                         TIME: {
                             type: ArgumentType.NUMBER,
@@ -723,12 +730,12 @@ class Scratch3SidekickBlocks {
                 },
                 {
                     opcode: 'setVideoVolume',
-                    text: 'Setze Video [NAME] Lautstärke auf [VOLUME] %',
+                    text: 'Setze Lautstärke von Video [NAME] auf [VOLUME] %',
                     blockType: BlockType.COMMAND,
                     arguments: {
                         NAME: {
                             type: ArgumentType.STRING,
-                            defaultValue: 'meinVideo'
+                            menu: 'loadedVideosMenu'
                         },
                         VOLUME: {
                             type: ArgumentType.NUMBER,
@@ -743,23 +750,12 @@ class Scratch3SidekickBlocks {
                     arguments: {
                         NAME: {
                             type: ArgumentType.STRING,
-                            defaultValue: 'meinVideo'
+                            menu: 'loadedVideosMenu'
                         },
                         LOOP: {
                             type: ArgumentType.STRING,
                             menu: 'onOffMenu',
                             defaultValue: 'on'
-                        }
-                    }
-                },
-                {
-                    opcode: 'deleteVideo',
-                    text: 'Lösche Video [NAME]',
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        NAME: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'meinVideo'
                         }
                     }
                 },
@@ -770,12 +766,12 @@ class Scratch3SidekickBlocks {
                     arguments: {
                         ATTRIBUTE: {
                             type: ArgumentType.STRING,
-                            menu: 'videoAttributeMenu',
+                            menu: 'videoGetAttributeMenu',
                             defaultValue: 'duration'
                         },
                         NAME: {
                             type: ArgumentType.STRING,
-                            defaultValue: 'meinVideo'
+                            menu: 'loadedVideosMenu'
                         }
                     }
                 },
@@ -786,19 +782,7 @@ class Scratch3SidekickBlocks {
                     arguments: {
                         NAME: {
                             type: ArgumentType.STRING,
-                            defaultValue: 'meinVideo'
-                        }
-                    }
-                },
-                {
-                    opcode: 'getCurrentVideoOnTarget',
-                    text: 'Aktuelles Video auf [TARGET]',
-                    blockType: BlockType.REPORTER,
-                    arguments: {
-                        TARGET: {
-                            type: ArgumentType.STRING,
-                            menu: 'targetMenu',
-                            defaultValue: 'Figur1'
+                            menu: 'loadedVideosMenu'
                         }
                     }
                 },
@@ -944,22 +928,30 @@ class Scratch3SidekickBlocks {
                         { text: 'Pink', value: 'pink' }
                     ]
                 },
-                videoActionMenu: {
+                videoShowActionMenu: {
+                    acceptReporters: false,
+                    items: [
+                        { text: 'zeigen', value: 'show' },
+                        { text: 'zeigen & starten', value: 'showAndPlay' }
+                    ]
+                },
+                videoControlMenu: {
                     acceptReporters: false,
                     items: [
                         { text: 'abspielen', value: 'play' },
                         { text: 'pausieren', value: 'pause' },
-                        { text: 'stoppen', value: 'stop' }
+                        { text: 'stoppen', value: 'stop' },
+                        { text: 'löschen', value: 'delete' }
                     ]
                 },
-                videoAttributeMenu: {
+                videoGetAttributeMenu: {
                     acceptReporters: false,
                     items: [
-                        { text: 'Länge', value: 'duration' },
-                        { text: 'Position', value: 'currentTime' },
-                        { text: 'Lautstärke', value: 'volume' },
-                        { text: 'Breite', value: 'width' },
-                        { text: 'Höhe', value: 'height' }
+                        { text: 'Länge [s]', value: 'duration' },
+                        { text: 'Spielzeit [s]', value: 'currentTime' },
+                        { text: 'Lautstärke [%]', value: 'volume' },
+                        { text: 'Breite [px]', value: 'width' },
+                        { text: 'Höhe [px]', value: 'height' }
                     ]
                 },
                 onOffMenu: {
@@ -969,12 +961,31 @@ class Scratch3SidekickBlocks {
                         { text: 'aus', value: 'off' }
                     ]
                 },
+                loadedVideosMenu: {
+                    acceptReporters: true,
+                    items: '_getLoadedVideos'
+                },
                 targetMenu: {
                     acceptReporters: true,
                     items: '_getTargets'
                 }
             }
         };
+    }
+
+    /**
+     * Gibt Liste aller geladenen Videos für das Menu zurück
+     */
+    _getLoadedVideos() {
+        const videoNames = Object.keys(this._videos);
+        
+        if (videoNames.length === 0) {
+            // Kein Video geladen - zeige Platzhalter (text und value gleich damit es konsistent aussieht)
+            return [{ text: '…', value: '…' }];
+        }
+        
+        // Alle geladenen Videos als Dropdown-Items
+        return videoNames.map(name => ({ text: name, value: name }));
     }
 
     /**
@@ -1152,6 +1163,47 @@ class Scratch3SidekickBlocks {
     }
 
     /**
+     * Öffnet Datei-Dialog zum Laden eines Videos
+     */
+    loadVideoFromFile(args) {
+        const videoName = Cast.toString(args.NAME);
+        
+        return new Promise((resolve) => {
+            // Erstelle verstecktes File-Input Element
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'video/*';  // Nur Video-Dateien
+            fileInput.style.display = 'none';
+            document.body.appendChild(fileInput);
+            
+            fileInput.onchange = async (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    // Erstelle Blob URL aus der Datei
+                    const blobUrl = URL.createObjectURL(file);
+                    console.log('[sidekick] Loading video from file:', file.name, 'as', videoName);
+                    
+                    // Lade Video mit der bestehenden loadVideoURL Funktion
+                    await this.loadVideoURL({ NAME: videoName, URL: blobUrl });
+                }
+                
+                // Räume auf
+                document.body.removeChild(fileInput);
+                resolve();
+            };
+            
+            fileInput.oncancel = () => {
+                // User hat abgebrochen
+                document.body.removeChild(fileInput);
+                resolve();
+            };
+            
+            // Öffne den Datei-Dialog
+            fileInput.click();
+        });
+    }
+
+    /**
      * Lädt ein Video von einer URL
      */
     async loadVideoURL(args) {
@@ -1159,7 +1211,7 @@ class Scratch3SidekickBlocks {
         const videoSrc = Cast.toString(args.URL);
         
         // Lösche altes Video mit gleichem Namen wenn vorhanden
-        this.deleteVideo({ NAME: videoName });
+        this._deleteVideoInternal(videoName);
         
         const renderer = this._runtime.renderer;
         if (!renderer) {
@@ -1187,75 +1239,31 @@ class Scratch3SidekickBlocks {
     }
 
     /**
-     * Löscht ein Video
+     * Video auf Target zeigen oder zeigen & starten
      */
-    deleteVideo(args) {
+    videoOnTarget(args, util) {
+        const targetName = Cast.toString(args.TARGET);
         const videoName = Cast.toString(args.NAME);
+        const action = Cast.toString(args.ACTION);
+        const target = this._getTargetFromMenu(targetName, util);
         const videoSkin = this._videos[videoName];
-        if (!videoSkin) return;
+        
+        if (!target || !videoSkin) {
+            console.warn('[sidekick] videoOnTarget: target or video not found', targetName, videoName);
+            return;
+        }
         
         const renderer = this._runtime.renderer;
-        
-        // Setze alle Targets zurück die dieses Video zeigen
-        if (renderer && this._runtime.targets) {
-            for (const target of this._runtime.targets) {
-                const drawable = renderer._allDrawables[target.drawableID];
-                if (drawable && drawable.skin === videoSkin) {
-                    target.setCostume(target.currentCostume);
-                }
+        if (renderer) {
+            renderer.updateDrawableSkinId(target.drawableID, videoSkin._id);
+            
+            if (action === 'showAndPlay') {
+                videoSkin.setPlaying(true);
+                videoSkin.videoElement.play();
+                console.log('[sidekick] Playing video', videoName, 'on', targetName);
+            } else {
+                console.log('[sidekick] Showing video', videoName, 'on', targetName);
             }
-        }
-        
-        // Zerstöre die Skin
-        if (renderer) {
-            renderer.destroySkin(videoSkin._id);
-        }
-        delete this._videos[videoName];
-        
-        console.log('[sidekick] Video deleted:', videoName);
-    }
-
-    /**
-     * Zeigt Video auf einem Sprite/Target
-     */
-    showVideoOnTarget(args, util) {
-        const targetName = Cast.toString(args.TARGET);
-        const videoName = Cast.toString(args.NAME);
-        const target = this._getTargetFromMenu(targetName, util);
-        const videoSkin = this._videos[videoName];
-        
-        if (!target || !videoSkin) {
-            console.warn('[sidekick] showVideoOnTarget: target or video not found', targetName, videoName);
-            return;
-        }
-        
-        const renderer = this._runtime.renderer;
-        if (renderer) {
-            renderer.updateDrawableSkinId(target.drawableID, videoSkin._id);
-            console.log('[sidekick] Showing video', videoName, 'on', targetName);
-        }
-    }
-
-    /**
-     * Zeigt Video auf einem Sprite und startet es
-     */
-    showVideoAndPlay(args, util) {
-        const targetName = Cast.toString(args.TARGET);
-        const videoName = Cast.toString(args.NAME);
-        const target = this._getTargetFromMenu(targetName, util);
-        const videoSkin = this._videos[videoName];
-        
-        if (!target || !videoSkin) {
-            console.warn('[sidekick] showVideoAndPlay: target or video not found', targetName, videoName);
-            return;
-        }
-        
-        const renderer = this._runtime.renderer;
-        if (renderer) {
-            renderer.updateDrawableSkinId(target.drawableID, videoSkin._id);
-            videoSkin.setPlaying(true);
-            videoSkin.videoElement.play();
-            console.log('[sidekick] Playing video', videoName, 'on', targetName);
         }
     }
 
@@ -1273,22 +1281,25 @@ class Scratch3SidekickBlocks {
     }
 
     /**
-     * Startet/Pausiert/Stoppt ein Video
+     * Video Steuerung: abspielen/pausieren/stoppen/löschen
      */
-    startVideo(args) {
+    videoControl(args) {
         const videoName = Cast.toString(args.NAME);
         const action = Cast.toString(args.ACTION);
         const videoSkin = this._videos[videoName];
+        
+        // Löschen braucht keine videoSkin Prüfung
+        if (action === 'delete') {
+            this._deleteVideoInternal(videoName);
+            return;
+        }
         
         if (!videoSkin) return;
         
         switch (action) {
             case 'play':
-                console.log('[sidekick] Attempting to play video');
                 videoSkin.setPlaying(true);
-                videoSkin.videoElement.play().then(() => {
-                    console.log('[sidekick] Video play started successfully');
-                }).catch(e => {
+                videoSkin.videoElement.play().catch(e => {
                     console.error('[sidekick] Video play failed:', e);
                     videoSkin.setPlaying(false);
                 });
@@ -1308,7 +1319,35 @@ class Scratch3SidekickBlocks {
     }
 
     /**
-     * Setzt die Video-Zeit
+     * Interne Funktion zum Löschen eines Videos
+     */
+    _deleteVideoInternal(videoName) {
+        const videoSkin = this._videos[videoName];
+        if (!videoSkin) return;
+        
+        const renderer = this._runtime.renderer;
+        
+        // Setze alle Targets zurück die dieses Video zeigen
+        if (this._runtime.targets) {
+            for (const target of this._runtime.targets) {
+                const drawable = renderer._allDrawables[target.drawableID];
+                if (drawable && drawable.skin === videoSkin) {
+                    target.setCostume(target.currentCostume);
+                }
+            }
+        }
+        
+        // Stoppe und entferne Video
+        videoSkin.setPlaying(false);
+        videoSkin.videoElement.pause();
+        videoSkin.dispose();
+        delete this._videos[videoName];
+        
+        console.log('[sidekick] Video deleted:', videoName);
+    }
+
+    /**
+     * Setzt die Video-Spielzeit
      */
     setVideoTime(args) {
         const videoName = Cast.toString(args.NAME);
@@ -1318,7 +1357,6 @@ class Scratch3SidekickBlocks {
         if (!videoSkin || !videoSkin.videoElement) return;
         
         videoSkin.videoElement.currentTime = Math.max(0, time);
-        // Warte kurz bis der Frame geladen ist, dann update
         setTimeout(() => videoSkin.forceUpdate(), 50);
         console.log('[sidekick] Video', videoName, 'time set to', time);
     }
@@ -1387,28 +1425,6 @@ class Scratch3SidekickBlocks {
         if (!videoSkin || !videoSkin.videoElement) return false;
         
         return !videoSkin.videoElement.paused && !videoSkin.videoElement.ended;
-    }
-
-    /**
-     * Gibt das aktuelle Video auf einem Target zurück
-     */
-    getCurrentVideoOnTarget(args, util) {
-        const targetName = Cast.toString(args.TARGET);
-        const target = this._getTargetFromMenu(targetName, util);
-        
-        if (!target) return '';
-        
-        const renderer = this._runtime.renderer;
-        if (!renderer) return '';
-        
-        const drawable = renderer._allDrawables[target.drawableID];
-        const skin = drawable && drawable.skin;
-        
-        // Prüfe ob die Skin eine VideoSkin ist und gib den Namen zurück
-        if (VideoSkinClass && skin instanceof VideoSkinClass) {
-            return skin.videoName;
-        }
-        return '';
     }
 
     _loadMQTT() {
