@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=SIDEKICK Update
+Comment=Aktualisiert SIDEKICK vom GitHub Repository
+Exec=lxterminal -e "bash -c '~/Sidekick/update-sidekick.sh; echo; echo Druecke Enter zum Schliessen...; read'"
+Icon=system-software-update
+Terminal=false
+Type=Application
+Categories=Utility;

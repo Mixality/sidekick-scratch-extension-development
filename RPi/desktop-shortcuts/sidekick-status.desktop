@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=SIDEKICK Status
+Comment=Zeigt den Status der SIDEKICK-Dienste
+Exec=lxterminal -e "bash -c 'echo === SIDEKICK Status ===; echo; echo --- Webapp ---; systemctl status sidekick-webapp --no-pager; echo; echo --- Sensoren ---; systemctl status sidekick-sensors --no-pager; echo; echo Druecke Enter zum Schliessen...; read'"
+Icon=dialog-information
+Terminal=false
+Type=Application
+Categories=Utility;

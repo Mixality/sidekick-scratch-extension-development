@@ -3,6 +3,63 @@
 Das Sidekick Assisstenzsystem unterstützt Menschen mit Einschränkungen bei prozeduralen Arbeitsabläufen, indem es für einzelnen Arbeitsschritte Anweisungen anzeigt.
 Arbeitsabläufe können über die Programmieroberfläche Scratch erstellt werden. 
 
+
+## Erstinstallations-Skript
+
+Aktuell muss man Mosquitto und den Hotspot einmalig manuell einrichten (siehe Readme).
+Nachfolgende automatisiert:
+
+Komplettes Erstinstallations-Skript erstellen, das alles einrichtet:
+
+## Übersicht der Skripte:
+
+Skript	              Zweck
+install-sidekick.sh	  Komplett-Installation (einmalig auf frischem Pi)
+setup-autostart.sh	  Nur Autostart einrichten (wenn Rest schon da)
+update-sidekick.sh	  Dateien aktualisieren
+
+### Funktionalitäten von `install-sidekick.sh`:
+
+- Mosquitto installieren & konfigurieren (Port 1883 + WebSocket 9001)
+- Hotspot einrichten (mit eindeutigem Namen basierend auf Pi-Seriennummer)
+- Python-Pakete installieren (paho-mqtt, rpi_ws281x, etc.)
+- SIDEKICK-Dateien herunterladen (Python + Webapp)
+- Autostart-Services einrichten
+- Desktop-Shortcuts installieren
+
+### Verwendung auf einem frischen Pi:
+
+```shell
+# Einzeiler zum Herunterladen und Ausführen:
+curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi/install-sidekick.sh | sudo bash
+```
+
+Oder:
+
+```shell
+wget https://raw.githubusercontent.com/.../install-sidekick.sh
+sudo bash install-sidekick.sh
+```
+
+Danach: Pi neu starten --> Alles sollte automatisch laufen.
+
+## Schnellstart (Raspberry Pi bereits eingerichtet)
+
+Falls der Pi bereits eingerichtet ist, hier die wichtigsten Infos:
+
+### Verbinden (Tablet/Laptop):
+1. Mit WLAN verbinden: **SIDEKICK-RPi-...** (Passwort: `sidekick`)
+2. Browser öffnen: **http://10.42.0.1:8000**
+3. In Scratch: SIDEKICK-Extension → "Verbinde mit [ws://10.42.0.1:9001]"
+
+### Dienste starten (falls nicht automatisch):
+```bash
+sudo systemctl start sidekick-webapp
+sudo systemctl start sidekick-sensors
+```
+
+---
+
 ## Was wird benötigt?
 
 - Raspberry Pi
@@ -166,75 +223,212 @@ nmcli connection modify Hotspot autoconnect yes
 nmcli connection modify Hotspot connection.autoconnect-priority 100
 ```
 
-### PI:
+---
 
-- Set up MQTT connection.
+## Autostart einrichten (WICHTIG!)
 
-- Set up sensor (messages):
-  - Start the Python script on the RPi:
-    ```sh
-    sudo python3 ~/Sidekick/python/ScratchConnect.py
-    ```
-    - Python script origin / source: https://github.com/Mixality/Sidekick/tree/main/python
+Damit nach jedem Neustart alles automatisch läuft:
 
-- In Scratch: Create a Hat block listening on the topic (example here: Box 1, ultrasonic hand detection):
-  - `sidekick/box/1/hand_detected`
+### Option A: Setup-Skript verwenden (empfohlen)
 
-- Download published Scratch webapp (on GitHub Pages, modified version with SIDEKICK extentions):
-  - https://github.com/Mixality/sidekick-scratch-extension-development/tree/gh-pages
+```bash
+# Skript herunterladen (falls nicht vorhanden)
+curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi/setup-autostart.sh -o ~/setup-autostart.sh
 
-- Run the webapp private / locally:
+# Ausführen
+sudo bash ~/setup-autostart.sh
+```
 
-  ```sh
-  python3 -m http.server -d sidekick-scratch-extension-development-gh-pages/scratch
-  ```
-  
-  - Open webapp via: http://0.0.0.0:8000/
+Das Skript erstellt zwei systemd-Services:
+- **sidekick-webapp**: HTTP-Server für die Scratch-Webapp
+- **sidekick-sensors**: ScratchConnect.py für Sensoren/LEDs
 
-### Tablet etc.:
-  - Use Wi-Fi (Hotspot):
-    - SSID: **SIDEKICK-RPi-100000005f7b6f00**
-    - Password: **sidekick**
-  - Open webapp:
-    - Via: http://10.42.0.1:8000
-  - Set broker of / via `connect to [BROKER]` block:
-    - ws://10.42.0.1:9001
+### Option B: Manuell einrichten
 
-### Development
+#### 1. HTTP-Server Service
 
-#### Home LAN Development Connection:
+```bash
+sudo nano /etc/systemd/system/sidekick-webapp.service
+```
 
-1. Setup: Get everything from the RPi
-   
+Inhalt:
+```ini
+[Unit]
+Description=SIDEKICK Scratch Webapp HTTP Server
+After=network.target mosquitto.service
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/Sidekick/sidekick-scratch-extension-development-gh-pages/scratch
+ExecStart=/usr/bin/python3 -m http.server 8000 --bind 0.0.0.0
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+#### 2. Sensor Service
+
+```bash
+sudo nano /etc/systemd/system/sidekick-sensors.service
+```
+
+Inhalt:
+```ini
+[Unit]
+Description=SIDEKICK ScratchConnect Sensor Service
+After=network.target mosquitto.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/pi/Sidekick/python
+ExecStart=/usr/bin/python3 /home/pi/Sidekick/python/ScratchConnect.py
+Restart=always
+RestartSec=5
+ExecStartPre=/bin/sleep 3
+
+[Install]
+WantedBy=multi-user.target
+```
+
+#### 3. Services aktivieren
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable sidekick-webapp
+sudo systemctl enable sidekick-sensors
+sudo systemctl start sidekick-webapp
+sudo systemctl start sidekick-sensors
+```
+
+### Service-Verwaltung
+
+```bash
+# Status prüfen
+sudo systemctl status sidekick-webapp
+sudo systemctl status sidekick-sensors
+
+# Logs ansehen (live)
+sudo journalctl -u sidekick-webapp -f
+sudo journalctl -u sidekick-sensors -f
+
+# Neu starten
+sudo systemctl restart sidekick-webapp
+sudo systemctl restart sidekick-sensors
+
+# Stoppen
+sudo systemctl stop sidekick-webapp
+sudo systemctl stop sidekick-sensors
+```
+
+---
+
+## SIDEKICK aktualisieren
+
+Um die neuesten Dateien vom GitHub herunterzuladen:
+
+```bash
+# Update-Skript herunterladen und ausführen
+curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi/update-sidekick.sh | bash
+```
+
+Oder manuell:
+
+```bash
+# Python-Skripte (main Branch)
+cd ~/Sidekick/python
+curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi/python/ScratchConnect.py -o ScratchConnect.py
+curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi/python/SmartBox.py -o SmartBox.py
+
+# Webapp (gh-pages Branch) - als ZIP
+cd ~/Sidekick
+rm -rf sidekick-scratch-extension-development-gh-pages
+curl -sSL https://github.com/Mixality/sidekick-scratch-extension-development/archive/refs/heads/gh-pages.zip -o gh-pages.zip
+unzip gh-pages.zip
+rm gh-pages.zip
+
+# Services neu starten
+sudo systemctl restart sidekick-webapp sidekick-sensors
+```
+
+---
+
+## Offline-Betrieb (kein Internet nötig!)
+
+Das System ist für den **vollständigen Offline-Betrieb** konzipiert:
+
+1. **Raspberry Pi als Hotspot**: Der Pi erstellt sein eigenes WLAN-Netzwerk
+2. **Lokaler HTTP-Server**: Die Scratch-Webapp läuft direkt auf dem Pi
+3. **Lokaler MQTT-Broker**: Mosquitto läuft auf dem Pi
+
+**Ablauf:**
+1. Pi einschalten → Hotspot, Webapp & Sensoren starten automatisch
+2. Tablet/Laptop mit "SIDEKICK-RPi-..." WLAN verbinden
+3. Browser: http://10.42.0.1:8000 öffnen
+4. Fertig! Keine Internetverbindung erforderlich.
+
+---
+
+## Verwendung
+
+### Auf dem RPi (manuell, falls Autostart nicht eingerichtet):
+
+```sh
+# HTTP-Server starten
+python3 -m http.server -d ~/Sidekick/sidekick-scratch-extension-development-gh-pages/scratch
+
+# In einem anderen Terminal: Sensoren starten
+sudo python3 ~/Sidekick/python/ScratchConnect.py
+```
+
+### Auf Tablet/Laptop:
+
+1. Mit WLAN verbinden:
+   - SSID: **SIDEKICK-RPi-100000005f7b6f00** (kann abweichen)
+   - Password: **sidekick**
+
+2. Browser öffnen: **http://10.42.0.1:8000**
+
+3. In Scratch SIDEKICK-Extension laden und verbinden:
+   - `Verbinde mit [ws://10.42.0.1:9001]`
+
+4. Hat-Block für Sensor-Events erstellen:
+   - Topic-Beispiel: `sidekick/box/1/hand_detected`
+
+---
+
+## Development
+
+### Home LAN Development Connection:
+
+1. **Setup A**: Alles vom RPi
    - Browser: http://192.168.178.117:8000/
-     - `connect to [BROKER]` block: ws://192.168.178.117:9001
+   - Broker: ws://192.168.178.117:9001
   
-2. Setup: Run webapp on PC, Broker on RPi
-   
-   - Prerequisite: Build and run webapp on the PC:
-     1. Run: `./2-build.ps1`
-     2. Run: `./3-run-private.ps1`
-   
+2. **Setup B**: Webapp auf PC, Broker auf RPi
+   - Auf dem PC:
+     1. `./2-build.ps1`
+     2. `./3-run-private.ps1`
    - Browser: http://localhost:8000/
-     - `connect to [BROKER]` block: ws://192.168.178.117:9001
+   - Broker: ws://192.168.178.117:9001
 
-## IP Address Setup
+### Statische IP für RPi im LAN:
 
-### During Development:
+```shell
+sudo nmcli connection modify "Wired connection 1" ipv4.addresses 192.168.178.117/24
+sudo nmcli connection modify "Wired connection 1" ipv4.gateway 192.168.178.1
+sudo nmcli connection modify "Wired connection 1" ipv4.dns "192.168.178.1"
+sudo nmcli connection modify "Wired connection 1" ipv4.method manual
+sudo nmcli connection up "Wired connection 1"
+```
 
-- Development setup, via LAN, with 192.168.178.x
-  - Problem: Dynamic DHCP IP assignment
-  - Possible solution: Static IP configuration  on the RPi:
+---
 
-  ```shell
-  sudo nmcli connection modify "Wired connection 1" ipv4.addresses 192.168.178.117/24
-  sudo nmcli connection modify "Wired connection 1" ipv4.gateway 192.168.178.1
-  sudo nmcli connection modify "Wired connection 1" ipv4.dns "192.168.178.1"
-  sudo nmcli connection modify "Wired connection 1" ipv4.method manual
-  sudo nmcli connection up "Wired connection 1"
-  ```
+## Hinweise
 
-### For Release Version / End User:
-
-- The RPi is router, in hotspot mode
-  - Thus, its gateway IP (ws://10.42.0.1:9001) always stays the same
+- Im **Hotspot-Modus** ist die IP immer `10.42.0.1`
+- **Mosquitto** (MQTT-Broker) startet automatisch beim Booten
+- Die Python-Skripte stammen ursprünglich von: https://github.com/Mixality/Sidekick/tree/main/python

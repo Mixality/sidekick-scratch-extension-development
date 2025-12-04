@@ -4,7 +4,6 @@ import RPi.GPIO as GPIO
 import SimpleLED
 import neopixel
 import os
-from pynput.keyboard import Key, Controller
 import paho.mqtt.client as mqtt
 
 TEMPERATURE = 20
@@ -218,7 +217,6 @@ class SmartBox:
         self.GPIO_LED_MESSAGEPIN = GPIO_LED_MESSAGEPIN
         self.GPIO_US_ECHO = GPIO_US_ECHO
         self.box_nr = box_nr
-        self.keyboard = Controller()
         self.startTime = 0
         self.endTime = 0
         self.elapsed = 0
@@ -361,14 +359,7 @@ class SmartBox:
             # Therfore the message pin is signaled.
             if self.handDetected:
                 self.notDetectedCounter += 1
-                if self.notDetectedCounter ==15:
-                    # Keyboard-Input (Original-Methode)
-                    self.keyboard.press(str(self.box_nr))
-                    # GPIO.output(self.GPIO_US_MESSAGEPIN, GPIO.HIGH)
-                    # time.sleep(0.1)
-                    # GPIO.output(self.GPIO_US_MESSAGEPIN, GPIO.LOW)
-                    self.keyboard.release(str(self.box_nr))
-                    
+                if self.notDetectedCounter == 15:
                     # MQTT-Nachricht senden
                     publish_hand_detected(self.box_nr)
                     

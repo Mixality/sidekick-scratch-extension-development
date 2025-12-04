@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=SIDEKICK Dienste neustarten
+Comment=Startet Webapp und Sensor-Dienste neu
+Exec=lxterminal -e "bash -c 'sudo systemctl restart sidekick-webapp sidekick-sensors; echo; echo Dienste neu gestartet!; echo Druecke Enter zum Schliessen...; read'"
+Icon=view-refresh
+Terminal=false
+Type=Application
+Categories=Utility;

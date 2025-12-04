@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=SIDEKICK Logs (Webapp)
+Comment=Zeigt Live-Logs des HTTP-Servers
+Exec=lxterminal -e "bash -c 'echo === SIDEKICK Webapp Logs ===; echo Druecke Strg+C zum Beenden; echo; sudo journalctl -u sidekick-webapp -f'"
+Icon=utilities-terminal
+Terminal=false
+Type=Application
+Categories=Utility;

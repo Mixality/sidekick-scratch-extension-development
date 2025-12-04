@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=SIDEKICK Logs (Sensoren)
+Comment=Zeigt Live-Logs der Sensor-Kommunikation
+Exec=lxterminal -e "bash -c 'echo === SIDEKICK Sensor Logs ===; echo Druecke Strg+C zum Beenden; echo; sudo journalctl -u sidekick-sensors -f'"
+Icon=utilities-terminal
+Terminal=false
+Type=Application
+Categories=Utility;
