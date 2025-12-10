@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=SIDEKICK Dashboard
+Comment=Öffnet das SIDEKICK Dashboard im Browser
+Exec=chromium-browser --start-fullscreen http://10.42.0.1:8080/
+Icon=applications-internet
+Terminal=false
+Type=Application
+Categories=Utility;

@@ -40,6 +40,8 @@ curl -sSL "$REPO_URL/ScratchConnect.py" -o "$PYTHON_DIR/ScratchConnect.py"
 curl -sSL "$REPO_URL/SmartBox.py" -o "$PYTHON_DIR/SmartBox.py"
 curl -sSL "$REPO_URL/neopixel.py" -o "$PYTHON_DIR/neopixel.py"
 curl -sSL "$REPO_URL/SimpleLED.py" -o "$PYTHON_DIR/SimpleLED.py"
+curl -sSL "$REPO_URL/sidekick-dashboard.py" -o "$PYTHON_DIR/sidekick-dashboard.py"
+curl -sSL "$REPO_URL/generate-video-list.py" -o "$PYTHON_DIR/generate-video-list.py"
 
 echo "   Abgeschlossen: Python-Skripte aktualisiert"
 

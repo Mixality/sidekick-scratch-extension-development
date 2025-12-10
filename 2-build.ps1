@@ -56,6 +56,20 @@ if (Test-Path $thirdPartySource) {
     Write-Host "No third-party libraries found to copy." -ForegroundColor Yellow
 }
 
+# Ensure videos folder exists with video-list.json
+$videosTarget = Join-Path $SCRIPT_DIR "scratch-gui\build\videos"
+if (-not (Test-Path $videosTarget)) {
+    Write-Host "Creating videos folder..." -ForegroundColor Yellow
+    New-Item -ItemType Directory -Path $videosTarget -Force | Out-Null
+}
+# Create empty video-list.json if not exists
+$videoListFile = Join-Path $videosTarget "video-list.json"
+if (-not (Test-Path $videoListFile)) {
+    Write-Host "Creating empty video-list.json..." -ForegroundColor Yellow
+    "[]" | Out-File -FilePath $videoListFile -Encoding UTF8
+}
+Write-Host "✓ Videos folder ready!" -ForegroundColor Green
+
 Write-Host ""
 Write-Host "=== BUILD COMPLETE ===" -ForegroundColor Green
 Write-Host "Run .\3-run-private.ps1 to test your extension" -ForegroundColor Cyan

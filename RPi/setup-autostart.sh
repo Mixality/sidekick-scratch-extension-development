@@ -35,7 +35,24 @@ echo ""
 # -----------------------------------------------------------------------------
 SIDEKICK_DIR="$USER_HOME/Sidekick"
 WEBAPP_DIR="$SIDEKICK_DIR/sidekick-scratch-extension-development-gh-pages/scratch"
+VIDEOS_DIR="$WEBAPP_DIR/videos"
 PYTHON_SCRIPT="$SIDEKICK_DIR/python/ScratchConnect.py"
+
+# -----------------------------------------------------------------------------
+# 0. Videos-Ordner erstellen und initiale video-list.json
+# -----------------------------------------------------------------------------
+echo "[0/4] Erstelle Videos-Ordner..."
+
+mkdir -p "$VIDEOS_DIR"
+chown -R "$ACTUAL_USER:$ACTUAL_USER" "$VIDEOS_DIR"
+
+# Erstelle leere video-list.json falls nicht vorhanden
+if [ ! -f "$VIDEOS_DIR/video-list.json" ]; then
+    echo "[]" > "$VIDEOS_DIR/video-list.json"
+    chown "$ACTUAL_USER:$ACTUAL_USER" "$VIDEOS_DIR/video-list.json"
+fi
+
+echo "   Abgeschlossen: Videos-Ordner bereit ($VIDEOS_DIR)"
 
 # -----------------------------------------------------------------------------
 # 1. Systemd Service: SIDEKICK HTTP Server
@@ -65,7 +82,7 @@ echo "   Abgeschlossen: sidekick-webapp.service erstellt"
 # -----------------------------------------------------------------------------
 # 2. Systemd Service: SIDEKICK ScratchConnect (Sensoren)
 # -----------------------------------------------------------------------------
-echo "[2/4] Erstelle sidekick-sensors.service..."
+echo "[2/5] Erstelle sidekick-sensors.service..."
 
 cat > /etc/systemd/system/sidekick-sensors.service << EOF
 [Unit]
@@ -90,23 +107,52 @@ EOF
 echo "   Abgeschlossen: sidekick-sensors.service erstellt"
 
 # -----------------------------------------------------------------------------
-# 3. Services aktivieren
+# 3. Systemd Service: SIDEKICK Dashboard (Upload & Verwaltung)
 # -----------------------------------------------------------------------------
-echo "[3/4] Aktiviere Services..."
+echo "[3/5] Erstelle sidekick-dashboard.service..."
+
+DASHBOARD_SCRIPT="$SIDEKICK_DIR/python/sidekick-dashboard.py"
+
+cat > /etc/systemd/system/sidekick-dashboard.service << EOF
+[Unit]
+Description=SIDEKICK Dashboard (Video/Projekt Upload)
+After=network.target sidekick-webapp.service
+Wants=sidekick-webapp.service
+
+[Service]
+Type=simple
+User=$ACTUAL_USER
+WorkingDirectory=$SIDEKICK_DIR/python
+ExecStart=/usr/bin/python3 $DASHBOARD_SCRIPT
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "   Abgeschlossen: sidekick-dashboard.service erstellt"
+
+# -----------------------------------------------------------------------------
+# 4. Services aktivieren
+# -----------------------------------------------------------------------------
+echo "[4/5] Aktiviere Services..."
 
 systemctl daemon-reload
 systemctl enable sidekick-webapp.service
 systemctl enable sidekick-sensors.service
+systemctl enable sidekick-dashboard.service
 
 echo "   Abgeschlossen: Services aktiviert"
 
 # -----------------------------------------------------------------------------
-# 4. Services starten (optional)
+# 5. Services starten (optional)
 # -----------------------------------------------------------------------------
-echo "[4/4] Starte Services..."
+echo "[5/5] Starte Services..."
 
 systemctl start sidekick-webapp.service
 systemctl start sidekick-sensors.service
+systemctl start sidekick-dashboard.service
 
 echo "   Abgeschlossen: Services gestartet"
 
@@ -128,23 +174,35 @@ echo "  - sidekick-sensors.service"
 echo "    - ScratchConnect.py (Sensoren + LEDs)"
 echo "    - Script: $PYTHON_SCRIPT"
 echo ""
+echo "  - sidekick-dashboard.service"
+echo "    - Dashboard auf Port 8080"
+echo "    - Video/Projekt Upload & Verwaltung"
+echo ""
 echo "Nuetzliche Befehle:"
 echo ""
 echo "  Status pruefen:"
 echo "    sudo systemctl status sidekick-webapp"
 echo "    sudo systemctl status sidekick-sensors"
+echo "    sudo systemctl status sidekick-dashboard"
 echo ""
 echo "  Logs ansehen:"
 echo "    sudo journalctl -u sidekick-webapp -f"
 echo "    sudo journalctl -u sidekick-sensors -f"
+echo "    sudo journalctl -u sidekick-dashboard -f"
 echo ""
 echo "  Neu starten:"
 echo "    sudo systemctl restart sidekick-webapp"
 echo "    sudo systemctl restart sidekick-sensors"
+echo "    sudo systemctl restart sidekick-dashboard"
 echo ""
 echo "  Deaktivieren:"
 echo "    sudo systemctl disable sidekick-webapp"
 echo "    sudo systemctl disable sidekick-sensors"
+echo "    sudo systemctl disable sidekick-dashboard"
+echo ""
+echo "URLs (im Hotspot-Modus):"
+echo "  Scratch Editor: http://10.42.0.1:8000/"
+echo "  Dashboard:      http://10.42.0.1:8080/"
 echo ""
 echo "Nach einem Neustart starten alle Dienste automatisch!"
 echo ""
