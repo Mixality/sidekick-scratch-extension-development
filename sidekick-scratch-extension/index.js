@@ -457,6 +457,20 @@ class Scratch3SidekickBlocks {
         this._videos = {};
         this._debugCounter = 0;
         
+        // Server-Video-System: Liste der verfügbaren Videos vom Server
+        /** @type {Array<{text: string, value: string}>} */
+        this._serverVideos = [{ text: '(wird geladen...)', value: '' }];
+        this._serverVideosLoaded = false;
+        
+        // Basis-URL für Videos (wird automatisch erkannt oder kann gesetzt werden)
+        // Im Hotspot-Modus: http://10.42.0.1:8000/videos/
+        // Lokal: http://localhost:8000/videos/
+        this._videoServerBaseUrl = null;
+        this._detectVideoServerUrl();
+        
+        // Lade Video-Liste beim Start
+        this._loadServerVideoList();
+        
         // Event-Handler für Video-Updates
         runtime.on('PROJECT_STOP_ALL', () => this._resetVideos());
         runtime.on('PROJECT_START', () => this._resetVideos());
@@ -476,6 +490,63 @@ class Scratch3SidekickBlocks {
                 }
             }
         });
+    }
+    
+    /**
+     * Erkennt automatisch die Video-Server URL basierend auf der aktuellen Seite
+     */
+    _detectVideoServerUrl() {
+        if (typeof window !== 'undefined' && window.location) {
+            const baseUrl = `${window.location.protocol}//${window.location.host}`;
+            this._videoServerBaseUrl = `${baseUrl}/videos`;
+            console.log('[sidekick] Video server URL detected:', this._videoServerBaseUrl);
+        } else {
+            // Fallback für Hotspot-Modus
+            this._videoServerBaseUrl = 'http://10.42.0.1:8000/videos';
+            console.log('[sidekick] Video server URL fallback:', this._videoServerBaseUrl);
+        }
+    }
+    
+    /**
+     * Lädt die Liste verfügbarer Videos vom Server
+     */
+    async _loadServerVideoList() {
+        try {
+            // Versuche die Video-Liste vom Server zu laden
+            // Der Server muss eine JSON-Datei mit der Video-Liste bereitstellen
+            const listUrl = `${this._videoServerBaseUrl}/video-list.json`;
+            console.log('[sidekick] Loading video list from:', listUrl);
+            
+            const response = await fetch(listUrl);
+            if (response.ok) {
+                const videoFiles = await response.json();
+                if (Array.isArray(videoFiles) && videoFiles.length > 0) {
+                    this._serverVideos = videoFiles.map(filename => ({
+                        text: filename,
+                        value: filename
+                    }));
+                    this._serverVideosLoaded = true;
+                    console.log('[sidekick] Loaded', videoFiles.length, 'videos from server');
+                    return;
+                }
+            }
+        } catch (e) {
+            console.log('[sidekick] Could not load video list from server:', e.message);
+        }
+        
+        // Fallback: Zeige Hinweis dass keine Videos verfügbar sind
+        this._serverVideos = [{ text: '(keine Videos auf Server)', value: '' }];
+        this._serverVideosLoaded = true;
+        console.log('[sidekick] No videos available on server');
+    }
+    
+    /**
+     * Aktualisiert die Video-Liste vom Server (kann manuell aufgerufen werden)
+     */
+    async refreshServerVideos() {
+        this._serverVideosLoaded = false;
+        this._serverVideos = [{ text: '(wird geladen...)', value: '' }];
+        await this._loadServerVideoList();
     }
 
     /**
@@ -639,8 +710,28 @@ class Scratch3SidekickBlocks {
                 '---',
                 // ========== Video Blöcke ==========
                 {
+                    opcode: 'loadVideoFromServer',
+                    text: 'Lade Video [FILENAME] vom Server als [NAME]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        FILENAME: {
+                            type: ArgumentType.STRING,
+                            menu: 'serverVideosMenu'
+                        },
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'meinVideo'
+                        }
+                    }
+                },
+                {
+                    opcode: 'refreshVideoList',
+                    text: 'Aktualisiere Video-Liste vom Server',
+                    blockType: BlockType.COMMAND
+                },
+                {
                     opcode: 'loadVideoFromFile',
-                    text: 'Lade Video [NAME] von Datei',
+                    text: '⚠️ Lade Video [NAME] von Datei (nur Test)',
                     blockType: BlockType.COMMAND,
                     arguments: {
                         NAME: {
@@ -965,6 +1056,10 @@ class Scratch3SidekickBlocks {
                     acceptReporters: true,
                     items: '_getLoadedVideos'
                 },
+                serverVideosMenu: {
+                    acceptReporters: true,
+                    items: '_getServerVideos'
+                },
                 targetMenu: {
                     acceptReporters: true,
                     items: '_getTargets'
@@ -986,6 +1081,13 @@ class Scratch3SidekickBlocks {
         
         // Alle geladenen Videos als Dropdown-Items
         return videoNames.map(name => ({ text: name, value: name }));
+    }
+    
+    /**
+     * Gibt Liste der verfügbaren Server-Videos für das Menu zurück
+     */
+    _getServerVideos() {
+        return this._serverVideos;
     }
 
     /**
@@ -1160,6 +1262,34 @@ class Scratch3SidekickBlocks {
                 }
             }
         }
+    }
+    
+    /**
+     * Lädt ein Video vom Server
+     */
+    async loadVideoFromServer(args) {
+        const filename = Cast.toString(args.FILENAME);
+        const videoName = Cast.toString(args.NAME);
+        
+        if (!filename || filename === '' || filename === '(keine Videos auf Server)' || filename === '(wird geladen...)') {
+            console.warn('[sidekick] No valid video file selected');
+            return;
+        }
+        
+        // Baue die vollständige URL
+        const videoUrl = `${this._videoServerBaseUrl}/${filename}`;
+        console.log('[sidekick] Loading video from server:', videoUrl, 'as', videoName);
+        
+        // Nutze die bestehende loadVideoURL Funktion
+        return this.loadVideoURL({ NAME: videoName, URL: videoUrl });
+    }
+    
+    /**
+     * Aktualisiert die Video-Liste vom Server
+     */
+    async refreshVideoList() {
+        console.log('[sidekick] Refreshing video list from server...');
+        await this.refreshServerVideos();
     }
 
     /**
