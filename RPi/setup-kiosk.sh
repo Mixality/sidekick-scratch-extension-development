@@ -36,8 +36,22 @@ fi
 # Benötigte Pakete installieren
 echo "📦 Installiere benötigte Pakete..."
 sudo apt-get update
+
+# Chromium heißt je nach OS-Version unterschiedlich
+if apt-cache show chromium &> /dev/null; then
+    CHROMIUM_PKG="chromium"
+elif apt-cache show chromium-browser &> /dev/null; then
+    CHROMIUM_PKG="chromium-browser"
+else
+    echo "❌ Fehler: Weder 'chromium' noch 'chromium-browser' gefunden!"
+    echo "   Bitte installiere Chromium manuell."
+    exit 1
+fi
+
+echo "   Verwende Paket: $CHROMIUM_PKG"
+
 sudo apt-get install -y \
-    chromium-browser \
+    $CHROMIUM_PKG \
     unclutter \
     xdotool \
     --no-install-recommends
@@ -72,8 +86,18 @@ sed -i 's/"exit_type":"Crashed"/"exit_type":"Normal"/' ~/.config/chromium/Defaul
 # Kiosk URL - verwendet localhost da Scratch auf dem gleichen Pi läuft
 KIOSK_URL="http://localhost:8000/kiosk.html"
 
+# Finde den richtigen Chromium-Befehl
+if command -v chromium &> /dev/null; then
+    CHROMIUM_CMD="chromium"
+elif command -v chromium-browser &> /dev/null; then
+    CHROMIUM_CMD="chromium-browser"
+else
+    echo "Chromium nicht gefunden!"
+    exit 1
+fi
+
 # Chromium im Kiosk-Modus starten
-chromium-browser \
+$CHROMIUM_CMD \
     --kiosk \
     --noerrdialogs \
     --disable-infobars \
