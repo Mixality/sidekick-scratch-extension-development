@@ -153,6 +153,11 @@ window.addEventListener('message', event => {
             
         case 'greenFlag':
             console.log('[Kiosk] Starting project (green flag)');
+            // Stelle sicher dass die VM läuft bevor greenFlag
+            if (!window.vm.runtime._steppingInterval) {
+                console.log('[Kiosk] VM not running, starting first...');
+                window.vm.start();
+            }
             window.vm.greenFlag();
             break;
             
