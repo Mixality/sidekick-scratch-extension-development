@@ -17,12 +17,13 @@ Verwendung:
 import os
 import sys
 import json
-import cgi
 import html
+import re
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 import shutil
+import io
 
 # Konfiguration
 DASHBOARD_PORT = 8080
@@ -269,30 +270,33 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_error(404, 'Not Found')
     
     def handle_upload(self, target_dir, file_type, allowed_extensions):
-        """Handles file upload"""
+        """Handles file upload - without deprecated cgi module"""
         try:
-            content_type = self.headers.get('Content-Type')
+            content_type = self.headers.get('Content-Type', '')
             if not content_type or 'multipart/form-data' not in content_type:
                 self.send_redirect(f'/?status=error_invalid_content')
                 return
             
-            # Parse multipart form data
-            form = cgi.FieldStorage(
-                fp=self.rfile,
-                headers=self.headers,
-                environ={
-                    'REQUEST_METHOD': 'POST',
-                    'CONTENT_TYPE': content_type
-                }
-            )
+            # Extract boundary from content-type
+            boundary_match = re.search(r'boundary=([^\s;]+)', content_type)
+            if not boundary_match:
+                self.send_redirect(f'/?status=error_invalid_content')
+                return
             
-            file_item = form['file'] if 'file' in form else None
+            boundary = boundary_match.group(1).encode()
             
-            if not file_item or not file_item.filename:
+            # Read the entire body
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            
+            # Parse multipart data manually
+            filename, file_data = self.parse_multipart(body, boundary)
+            
+            if not filename or not file_data:
                 self.send_redirect(f'/?status=error_no_file')
                 return
             
-            filename = os.path.basename(file_item.filename)
+            filename = os.path.basename(filename)
             ext = os.path.splitext(filename)[1].lower()
             
             if ext not in allowed_extensions:
@@ -302,7 +306,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             # Save file
             filepath = target_dir / filename
             with open(filepath, 'wb') as f:
-                shutil.copyfileobj(file_item.file, f)
+                f.write(file_data)
             
             # Update video list if it was a video
             if file_type == 'video':
@@ -312,7 +316,58 @@ class DashboardHandler(BaseHTTPRequestHandler):
             
         except Exception as e:
             print(f"Upload error: {e}")
+            import traceback
+            traceback.print_exc()
             self.send_redirect(f'/?status=error_upload')
+    
+    def parse_multipart(self, body, boundary):
+        """Parse multipart form data and extract file"""
+        # Split by boundary
+        parts = body.split(b'--' + boundary)
+        
+        for part in parts:
+            if b'Content-Disposition' not in part:
+                continue
+            
+            # Check if this part has a filename (it's a file upload)
+            if b'filename="' not in part:
+                continue
+            
+            # Extract filename
+            filename_match = re.search(rb'filename="([^"]*)"', part)
+            if not filename_match:
+                continue
+            
+            filename = filename_match.group(1).decode('utf-8')
+            if not filename:
+                continue
+            
+            # Find where headers end and content begins (double newline)
+            header_end = part.find(b'\r\n\r\n')
+            if header_end == -1:
+                header_end = part.find(b'\n\n')
+                if header_end == -1:
+                    continue
+                content_start = header_end + 2
+            else:
+                content_start = header_end + 4
+            
+            # Extract file content (remove trailing boundary markers)
+            file_data = part[content_start:]
+            # Remove trailing \r\n or \n before next boundary
+            if file_data.endswith(b'\r\n'):
+                file_data = file_data[:-2]
+            elif file_data.endswith(b'\n'):
+                file_data = file_data[:-1]
+            # Also handle the case where there's a trailing --
+            if file_data.endswith(b'--'):
+                file_data = file_data[:-2]
+                if file_data.endswith(b'\r\n'):
+                    file_data = file_data[:-2]
+            
+            return filename, file_data
+        
+        return None, None
     
     def delete_video(self, filename):
         """Löscht ein Video"""
