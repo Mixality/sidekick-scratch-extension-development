@@ -470,7 +470,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     <td>{escaped_name}</td>
                     <td>{size}</td>
                     <td class="actions">
-                        <a href="/videos/{url_name}" target="_blank" class="btn btn-secondary" style="padding: 8px 15px;">▶️ Abspielen</a>
+                        <a href="http://10.42.0.1:{SCRATCH_PORT}/videos/{url_name}" target="_blank" class="btn btn-secondary" style="padding: 8px 15px;">▶️ Abspielen</a>
                         <a href="/delete-video?file={url_name}" class="btn btn-danger" style="padding: 8px 15px;" onclick="return confirm('Wirklich löschen?')">🗑️ Löschen</a>
                     </td>
                 </tr>'''
