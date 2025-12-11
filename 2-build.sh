@@ -7,6 +7,13 @@ if [ -z "$SCRATCH_SRC_HOME" ]; then
     exit 1
 fi
 
+# Patch player.jsx with Kiosk support BEFORE building
+echo "Patching player.jsx with Kiosk support..."
+if [ -f "/workspaces/sidekick-scratch-extension-development/patches/player.jsx" ]; then
+    cp /workspaces/sidekick-scratch-extension-development/patches/player.jsx $SCRATCH_SRC_HOME/scratch-gui/src/playground/player.jsx
+    echo "✓ player.jsx patched!"
+fi
+
 echo "BUILDING SCRATCH VM ..."
 cd $SCRATCH_SRC_HOME/scratch-vm
 NODE_OPTIONS='--openssl-legacy-provider' ./node_modules/.bin/webpack --bail

@@ -29,6 +29,15 @@ if (Test-Path $targetExt2) {
     Write-Host "✓ SIDEKICK extension files synchronized!" -ForegroundColor Green
 }
 
+# Patch player.jsx with Kiosk support BEFORE building
+$playerPatch = Join-Path $SCRIPT_DIR "patches\player.jsx"
+$playerTarget = Join-Path $SCRIPT_DIR "scratch-gui\src\playground\player.jsx"
+if (Test-Path $playerPatch) {
+    Write-Host "Patching player.jsx with Kiosk support..." -ForegroundColor Yellow
+    Copy-Item $playerPatch $playerTarget -Force
+    Write-Host "✓ player.jsx patched!" -ForegroundColor Green
+}
+
 Write-Host "Building Scratch VM..." -ForegroundColor Yellow
 Set-Location "scratch-vm"
 $env:NODE_OPTIONS = "--openssl-legacy-provider"
