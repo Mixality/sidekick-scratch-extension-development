@@ -16,6 +16,7 @@ Komplettes Erstinstallations-Skript erstellen, das alles einrichtet:
 Skript	              Zweck
 install-sidekick.sh	  Komplett-Installation (einmalig auf frischem Pi)
 setup-autostart.sh	  Nur Autostart einrichten (wenn Rest schon da)
+setup-kiosk.sh	      Kiosk-Modus einrichten (Pi als Display)
 update-sidekick.sh	  Dateien aktualisieren
 
 ### Funktionalitäten von `install-sidekick.sh`:
@@ -56,7 +57,66 @@ Falls der Pi bereits eingerichtet ist, hier die wichtigsten Infos:
 ```bash
 sudo systemctl start sidekick-webapp
 sudo systemctl start sidekick-sensors
+sudo systemctl start sidekick-dashboard
 ```
+
+---
+
+## 🖥️ Kiosk-Modus (Pi als Display)
+
+Der Kiosk-Modus ermöglicht es, einen Display direkt am Pi anzuschließen und diesen fernzusteuern - **ohne Maus/Tastatur am Pi!**
+
+### Wie funktioniert's?
+
+```
+┌────────────────────┐     MQTT      ┌───────────────────┐
+│      Tablet        │◄────────────►│   Raspberry Pi     │
+│   (Dashboard)      │               │   + Display        │
+│                    │               │                   │
+│  • Projekt wählen  │               │  Zeigt nur die    │
+│  • Start/Stop      │               │  Scratch-Bühne    │
+│                    │               │  (Kiosk-Modus)    │
+└────────────────────┘               └───────────────────┘
+```
+
+1. **Tablet/Handy**: Öffne das Dashboard → Projekte verwalten
+2. **Pi-Display**: Zeigt die Scratch-Bühne im Vollbild
+3. **Steuerung**: Über Dashboard Projekt laden, starten, stoppen
+
+### Kiosk-Modus einrichten:
+
+```bash
+cd ~/Sidekick/python
+chmod +x setup-kiosk.sh
+./setup-kiosk.sh
+```
+
+Das Script:
+- Installiert Chromium im Kiosk-Modus
+- Richtet Autostart ein
+- Blendet Mauszeiger aus
+- Deaktiviert Screensaver
+- Erstellt Desktop-Shortcuts
+
+### Nach dem Neustart:
+- Pi startet automatisch im Kiosk-Modus
+- Öffne Dashboard auf Tablet: `http://10.42.0.1:8080`
+- Wähle ein Projekt und klicke "Auf Display laden"
+- Drücke "Start" für die grüne Flagge
+
+### Kiosk manuell steuern:
+```bash
+# Starten
+~/start-kiosk.sh
+
+# Beenden
+pkill -f 'chromium.*kiosk'
+```
+
+### URLs:
+- **Dashboard**: `http://10.42.0.1:8080`
+- **Scratch Editor**: `http://10.42.0.1:8000`
+- **Kiosk Display**: `http://10.42.0.1:8000/kiosk.html`
 
 ---
 
