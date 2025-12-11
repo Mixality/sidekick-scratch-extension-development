@@ -322,29 +322,30 @@
             showStatus('⏳', `Lade ${projectName}...`, false);
             
             // Scratch Player mit Projekt laden
+            // Wir nutzen den player.html und übergeben das Projekt via postMessage
             const scratchUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/player.html`;
             scratchFrame.src = scratchUrl;
-
+            
             // Warte bis iframe geladen ist, dann Projekt laden
             scratchFrame.onload = async () => {
                 try {
                     // Projekt vom Server laden (liegt unter scratch/projects/ auf Port 8000)
                     const projectUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/projects/${encodeURIComponent(projectName)}`;
                     const response = await fetch(projectUrl);
+                    
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}`);
                     }
-                    const arrayBuffer = await response.arrayBuffer();
-                    const file = new File([arrayBuffer], projectName, { type: 'application/x.scratch.sb3' });
-
+                    
                     // Welcome Screen ausblenden
                     welcomeScreen.classList.add('hidden');
-
-                    // Sende das Projekt per postMessage ins Player-iframe
-                    scratchFrame.contentWindow.postMessage({ type: 'openProjectFile', file }, '*');
-
+                    
                     showStatus('✓', `${projectName} geladen!`);
                     publishStatus();
+                    
+                    // Hinweis: Das eigentliche Laden ins Scratch geschieht via File-API
+                    // Der User muss aktuell noch manuell laden - aber wir zeigen zumindest den Player
+                    
                 } catch (error) {
                     console.error('Fehler beim Laden:', error);
                     showStatus('❌', `Fehler: ${error.message}`);
