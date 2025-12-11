@@ -17,7 +17,7 @@ Verwendung:
 import os
 import sys
 import json
-import html
+import html as html_module
 import re
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -464,7 +464,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             for video in videos:
                 filepath = VIDEOS_DIR / video
                 size = get_file_size_str(filepath.stat().st_size) if filepath.exists() else '?'
-                escaped_name = html.escape(video)
+                escaped_name = html_module.escape(video)
                 url_name = urllib.parse.quote(video)
                 html += f'''<tr>
                     <td>{escaped_name}</td>
@@ -490,7 +490,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             for project in projects:
                 filepath = PROJECTS_DIR / project
                 size = get_file_size_str(filepath.stat().st_size) if filepath.exists() else '?'
-                escaped_name = html.escape(project)
+                escaped_name = html_module.escape(project)
                 url_name = urllib.parse.quote(project)
                 html += f'''<tr>
                     <td>{escaped_name}</td>
