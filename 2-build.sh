@@ -30,10 +30,3 @@ if [ -f "/workspaces/sidekick-scratch-extension-development/src/kiosk.html" ]; t
     cp /workspaces/sidekick-scratch-extension-development/src/kiosk.html $SCRATCH_SRC_HOME/scratch-gui/build/kiosk.html
     echo "✓ Kiosk display page copied!"
 fi
-
-# Copy custom-player.html for display mode
-echo "Copying custom-player.html..."
-if [ -f "/workspaces/sidekick-scratch-extension-development/src/custom-player.html" ]; then
-    cp /workspaces/sidekick-scratch-extension-development/src/custom-player.html $SCRATCH_SRC_HOME/scratch-gui/build/custom-player.html
-    echo "✓ Custom Player display page copied!"
-fi

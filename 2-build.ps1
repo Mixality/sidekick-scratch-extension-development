@@ -79,15 +79,6 @@ if (Test-Path $kioskSource) {
     Write-Host "✓ Kiosk display page copied!" -ForegroundColor Green
 }
 
-# Copy custom-player.html for display mode
-$customPlayerSource = Join-Path $SCRIPT_DIR "src\custom-player.html"
-$customPlayerTarget = Join-Path $SCRIPT_DIR "scratch-gui\build\custom-player.html"
-if (Test-Path $customPlayerSource) {
-    Write-Host "Copying custom-player.html..." -ForegroundColor Yellow
-    Copy-Item $customPlayerSource $customPlayerTarget -Force
-    Write-Host "✓ Custom-player display page copied!" -ForegroundColor Green
-}
-
 Write-Host ""
 Write-Host "=== BUILD COMPLETE ===" -ForegroundColor Green
 Write-Host "Run .\3-run-private.ps1 to test your extension" -ForegroundColor Cyan
