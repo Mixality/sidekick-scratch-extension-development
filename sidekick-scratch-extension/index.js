@@ -1085,8 +1085,13 @@ class Scratch3SidekickBlocks {
     
     /**
      * Gibt Liste der verfügbaren Server-Videos für das Menu zurück
+     * Triggert automatisch einen Refresh im Hintergrund
      */
     _getServerVideos() {
+        // Starte Hintergrund-Refresh bei jedem Dropdown-Öffnen
+        // Das sorgt dafür, dass die Liste immer aktuell ist
+        this._loadServerVideoList();
+        
         return this._serverVideos;
     }
 
