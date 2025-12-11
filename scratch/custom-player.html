@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>SIDEKICK Custom Scratch Player</title>
+    <script src="https://unpkg.com/scratch-vm/dist/scratch-vm.js"></script>
+    <script src="https://unpkg.com/scratch-render/dist/scratch-render.js"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        body { background: #111; color: #eee; font-family: sans-serif; }
+        #stage { background: #222; display: block; margin: 2rem auto; }
+        .controls { text-align: center; margin-top: 1rem; }
+        .status { text-align: center; margin-top: 1rem; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">🤖 SIDEKICK Custom Player</h1>
+    <canvas id="stage" width="480" height="360"></canvas>
+    <div class="controls">
+        <button onclick="startProject()">▶️ Grüne Flagge</button>
+        <button onclick="stopProject()">⏹️ Stop</button>
+    </div>
+    <div class="status" id="status">Warte auf Projekt...</div>
+    <script>
+    // MQTT Setup
+    const mqttBroker = window.location.hostname || '10.42.0.1';
+    const mqttPort = 9001;
+    const mqttClient = mqtt.connect(`ws://${mqttBroker}:${mqttPort}`);
+    let currentProject = null;
+    let vm = null;
+    let render = null;
+
+    mqttClient.on('connect', () => {
+        document.getElementById('status').textContent = 'MQTT verbunden. Warte auf Projekt...';
+        mqttClient.subscribe('sidekick/display/load');
+        mqttClient.subscribe('sidekick/display/start');
+        mqttClient.subscribe('sidekick/display/stop');
+        mqttClient.subscribe('sidekick/display/status');
+    });
+
+    mqttClient.on('message', (topic, message) => {
+        if (topic === 'sidekick/display/load') {
+            loadProject(message.toString());
+        } else if (topic === 'sidekick/display/start') {
+            startProject();
+        } else if (topic === 'sidekick/display/stop') {
+            stopProject();
+        } else if (topic === 'sidekick/display/status') {
+            publishStatus();
+        }
+    });
+
+    function publishStatus() {
+        if (mqttClient && mqttClient.connected) {
+            mqttClient.publish('sidekick/display/state', JSON.stringify({
+                status: currentProject ? 'loaded' : 'idle',
+                project: currentProject,
+                timestamp: new Date().toISOString()
+            }));
+        }
+    }
+
+    // Scratch Player Setup
+    function setupScratch() {
+        if (vm) return;
+        vm = new window.VirtualMachine();
+        render = new window.RenderWebGL(document.getElementById('stage'));
+        vm.attachRenderer(render);
+        vm.setCompatibilityMode(true);
+        vm.start();
+    }
+
+    async function loadProject(projectName) {
+        setupScratch();
+        currentProject = projectName;
+        document.getElementById('status').textContent = `Lade Projekt: ${projectName} ...`;
+        try {
+            const url = `http://${mqttBroker}:8000/projects/${encodeURIComponent(projectName)}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const buffer = await response.arrayBuffer();
+            await vm.loadProject(buffer);
+            document.getElementById('status').textContent = `Projekt geladen: ${projectName}`;
+            publishStatus();
+        } catch (e) {
+            document.getElementById('status').textContent = `Fehler: ${e.message}`;
+        }
+    }
+
+    function startProject() {
+        if (vm) {
+            vm.greenFlag();
+            document.getElementById('status').textContent = 'Projekt gestartet!';
+            publishStatus();
+        }
+    }
+    function stopProject() {
+        if (vm) {
+            vm.stopAll();
+            document.getElementById('status').textContent = 'Projekt gestoppt.';
+            publishStatus();
+        }
+    }
+    </script>
+</body>
+</html>
