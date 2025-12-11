@@ -26,12 +26,12 @@ fi
 cd "$SIDEKICK_DIR"
 
 # -----------------------------------------------------------------------------
-# 1. Python-Skripte aktualisieren (main branch)
+# 1. Python-Skripte aktualisieren (master branch)
 # -----------------------------------------------------------------------------
 echo "[1/2] Aktualisiere Python-Skripte..."
 
 PYTHON_DIR="$SIDEKICK_DIR/python"
-REPO_URL="https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi/python"
+REPO_URL="https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/python"
 
 mkdir -p "$PYTHON_DIR"
 

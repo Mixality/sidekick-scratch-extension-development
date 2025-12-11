@@ -149,7 +149,7 @@ echo -e "${GREEN}   Verzeichnis erstellt: $SIDEKICK_DIR${NC}"
 # -----------------------------------------------------------------------------
 echo -e "${YELLOW}[5/7] Lade SIDEKICK-Dateien herunter...${NC}"
 
-REPO_BASE="https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi"
+REPO_BASE="https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi"
 
 # Python-Skripte
 curl -sSL "$REPO_BASE/python/ScratchConnect.py" -o "$SIDEKICK_DIR/python/ScratchConnect.py"

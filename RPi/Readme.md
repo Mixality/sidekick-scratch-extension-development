@@ -31,7 +31,7 @@ update-sidekick.sh	  Dateien aktualisieren
 
 ```shell
 # Einzeiler zum Herunterladen und Ausführen:
-curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi/install-sidekick.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/install-sidekick.sh | sudo bash
 ```
 
 Oder:
@@ -233,7 +233,7 @@ Damit nach jedem Neustart alles automatisch läuft:
 
 ```bash
 # Skript herunterladen (falls nicht vorhanden)
-curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi/setup-autostart.sh -o ~/setup-autostart.sh
+curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/setup-autostart.sh -o ~/setup-autostart.sh
 
 # Ausführen
 sudo bash ~/setup-autostart.sh
@@ -332,7 +332,7 @@ Um die neuesten Dateien vom GitHub herunterzuladen:
 
 ```bash
 # Update-Skript herunterladen und ausführen
-curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi/update-sidekick.sh | bash
+curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/update-sidekick.sh | bash
 ```
 
 Oder manuell:
@@ -340,8 +340,8 @@ Oder manuell:
 ```bash
 # Python-Skripte (main Branch)
 cd ~/Sidekick/python
-curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi/python/ScratchConnect.py -o ScratchConnect.py
-curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/main/RPi/python/SmartBox.py -o SmartBox.py
+curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/python/ScratchConnect.py -o ScratchConnect.py
+curl -sSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/python/SmartBox.py -o SmartBox.py
 
 # Webapp (gh-pages Branch) - als ZIP
 cd ~/Sidekick
