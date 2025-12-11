@@ -41,9 +41,16 @@ curl -sSL "$REPO_URL/SmartBox.py" -o "$PYTHON_DIR/SmartBox.py"
 curl -sSL "$REPO_URL/neopixel.py" -o "$PYTHON_DIR/neopixel.py"
 curl -sSL "$REPO_URL/SimpleLED.py" -o "$PYTHON_DIR/SimpleLED.py"
 curl -sSL "$REPO_URL/sidekick-dashboard.py" -o "$PYTHON_DIR/sidekick-dashboard.py"
-curl -sSL "$REPO_URL/generate-video-list.py" -o "$PYTHON_DIR/generate-video-list.py"
+curl -sSL "$REPO_URL/generate-video-list.py" -o "$PYTHON_DIR/generate-video-list.py" 2>/dev/null || true
 
-echo "   Abgeschlossen: Python-Skripte aktualisiert"
+# Auch Setup-Scripts herunterladen
+SCRIPTS_URL="https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi"
+curl -sSL "$SCRIPTS_URL/setup-autostart.sh" -o "$SIDEKICK_DIR/setup-autostart.sh"
+curl -sSL "$SCRIPTS_URL/setup-kiosk.sh" -o "$SIDEKICK_DIR/setup-kiosk.sh"
+curl -sSL "$SCRIPTS_URL/update-sidekick.sh" -o "$SIDEKICK_DIR/update-sidekick.sh"
+chmod +x "$SIDEKICK_DIR"/*.sh
+
+echo "   Abgeschlossen: Python-Skripte und Setup-Scripts aktualisiert"
 
 # -----------------------------------------------------------------------------
 # 2. Webapp aktualisieren (gh-pages branch)

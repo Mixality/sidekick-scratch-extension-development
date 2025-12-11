@@ -36,15 +36,26 @@ echo ""
 SIDEKICK_DIR="$USER_HOME/Sidekick"
 WEBAPP_DIR="$SIDEKICK_DIR/sidekick-scratch-extension-development-gh-pages/scratch"
 VIDEOS_DIR="$WEBAPP_DIR/videos"
+PROJECTS_DIR="$WEBAPP_DIR/projects"
 PYTHON_SCRIPT="$SIDEKICK_DIR/python/ScratchConnect.py"
 
 # -----------------------------------------------------------------------------
-# 0. Videos-Ordner erstellen und initiale video-list.json
+# 0. Setup-Scripts und Ordner erstellen
 # -----------------------------------------------------------------------------
-echo "[0/4] Erstelle Videos-Ordner..."
+echo "[0/5] Erstelle Ordner und kopiere Scripts..."
 
+mkdir -p "$SIDEKICK_DIR"
 mkdir -p "$VIDEOS_DIR"
+mkdir -p "$PROJECTS_DIR"
 chown -R "$ACTUAL_USER:$ACTUAL_USER" "$VIDEOS_DIR"
+chown -R "$ACTUAL_USER:$ACTUAL_USER" "$PROJECTS_DIR"
+
+# Setup-Scripts herunterladen (falls sie noch nicht da sind)
+SCRIPTS_URL="https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi"
+curl -sSL "$SCRIPTS_URL/update-sidekick.sh" -o "$SIDEKICK_DIR/update-sidekick.sh"
+curl -sSL "$SCRIPTS_URL/setup-kiosk.sh" -o "$SIDEKICK_DIR/setup-kiosk.sh"
+chmod +x "$SIDEKICK_DIR"/*.sh
+chown "$ACTUAL_USER:$ACTUAL_USER" "$SIDEKICK_DIR"/*.sh
 
 # Erstelle leere video-list.json falls nicht vorhanden
 if [ ! -f "$VIDEOS_DIR/video-list.json" ]; then
@@ -52,12 +63,23 @@ if [ ! -f "$VIDEOS_DIR/video-list.json" ]; then
     chown "$ACTUAL_USER:$ACTUAL_USER" "$VIDEOS_DIR/video-list.json"
 fi
 
-echo "   Abgeschlossen: Videos-Ordner bereit ($VIDEOS_DIR)"
+# Erstelle leere project-list.json falls nicht vorhanden
+if [ ! -f "$PROJECTS_DIR/project-list.json" ]; then
+    echo "[]" > "$PROJECTS_DIR/project-list.json"
+    chown "$ACTUAL_USER:$ACTUAL_USER" "$PROJECTS_DIR/project-list.json"
+fi
+
+echo "   Abgeschlossen: Ordner und Scripts bereit"
+    echo "[]" > "$VIDEOS_DIR/video-list.json"
+    chown "$ACTUAL_USER:$ACTUAL_USER" "$VIDEOS_DIR/video-list.json"
+fi
+
+echo "   Abgeschlossen: Ordner und Scripts bereit"
 
 # -----------------------------------------------------------------------------
 # 1. Systemd Service: SIDEKICK HTTP Server
 # -----------------------------------------------------------------------------
-echo "[1/4] Erstelle sidekick-webapp.service..."
+echo "[1/5] Erstelle sidekick-webapp.service..."
 
 cat > /etc/systemd/system/sidekick-webapp.service << EOF
 [Unit]
