@@ -73,6 +73,20 @@ def update_video_list():
     return video_files
 
 
+def update_project_list():
+    """Aktualisiert project-list.json basierend auf den Dateien im Projects-Ordner"""
+    project_files = []
+    for f in sorted(PROJECTS_DIR.iterdir()):
+        if f.suffix.lower() in PROJECT_EXTENSIONS:
+            project_files.append(f.name)
+    
+    list_file = PROJECTS_DIR / "project-list.json"
+    with open(list_file, 'w', encoding='utf-8') as f:
+        json.dump(project_files, f, indent=2, ensure_ascii=False)
+    
+    return project_files
+
+
 def get_file_size_str(size_bytes):
     """Formatiert Dateigröße als lesbare Zeichenkette"""
     if size_bytes < 1024:
@@ -308,9 +322,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
             with open(filepath, 'wb') as f:
                 f.write(file_data)
             
-            # Update video list if it was a video
+            # Update list based on file type
             if file_type == 'video':
                 update_video_list()
+            elif file_type == 'project':
+                update_project_list()
             
             self.send_redirect(f'/?status=success_{file_type}')
             
@@ -389,6 +405,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             filepath = PROJECTS_DIR / filename
             if filepath.exists() and filepath.suffix.lower() in PROJECT_EXTENSIONS:
                 filepath.unlink()
+                update_project_list()
                 self.send_redirect('/?status=deleted_project')
             else:
                 self.send_redirect('/?status=error_not_found')

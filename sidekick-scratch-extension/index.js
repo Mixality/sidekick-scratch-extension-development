@@ -462,14 +462,21 @@ class Scratch3SidekickBlocks {
         this._serverVideos = [{ text: '(wird geladen...)', value: '' }];
         this._serverVideosLoaded = false;
         
-        // Basis-URL für Videos (wird automatisch erkannt oder kann gesetzt werden)
+        // Server-Projekt-System: Liste der verfügbaren Projekte vom Server
+        /** @type {Array<{text: string, value: string}>} */
+        this._serverProjects = [{ text: '(wird geladen...)', value: '' }];
+        this._serverProjectsLoaded = false;
+        
+        // Basis-URL für Videos/Projekte (wird automatisch erkannt oder kann gesetzt werden)
         // Im Hotspot-Modus: http://10.42.0.1:8000/videos/
         // Lokal: http://localhost:8000/videos/
         this._videoServerBaseUrl = null;
-        this._detectVideoServerUrl();
+        this._projectServerBaseUrl = null;
+        this._detectServerUrls();
         
-        // Lade Video-Liste beim Start
+        // Lade Video- und Projekt-Liste beim Start
         this._loadServerVideoList();
+        this._loadServerProjectList();
         
         // Event-Handler für Video-Updates
         runtime.on('PROJECT_STOP_ALL', () => this._resetVideos());
@@ -493,17 +500,19 @@ class Scratch3SidekickBlocks {
     }
     
     /**
-     * Erkennt automatisch die Video-Server URL basierend auf der aktuellen Seite
+     * Erkennt automatisch die Server URLs basierend auf der aktuellen Seite
      */
-    _detectVideoServerUrl() {
+    _detectServerUrls() {
         if (typeof window !== 'undefined' && window.location) {
             const baseUrl = `${window.location.protocol}//${window.location.host}`;
             this._videoServerBaseUrl = `${baseUrl}/videos`;
-            console.log('[sidekick] Video server URL detected:', this._videoServerBaseUrl);
+            this._projectServerBaseUrl = `${baseUrl}/projects`;
+            console.log('[sidekick] Server URLs detected:', this._videoServerBaseUrl, this._projectServerBaseUrl);
         } else {
             // Fallback für Hotspot-Modus
             this._videoServerBaseUrl = 'http://10.42.0.1:8000/videos';
-            console.log('[sidekick] Video server URL fallback:', this._videoServerBaseUrl);
+            this._projectServerBaseUrl = 'http://10.42.0.1:8000/projects';
+            console.log('[sidekick] Server URLs fallback:', this._videoServerBaseUrl, this._projectServerBaseUrl);
         }
     }
     
@@ -547,6 +556,45 @@ class Scratch3SidekickBlocks {
         this._serverVideosLoaded = false;
         this._serverVideos = [{ text: '(wird geladen...)', value: '' }];
         await this._loadServerVideoList();
+    }
+    
+    /**
+     * Lädt die Liste verfügbarer Projekte vom Server
+     */
+    async _loadServerProjectList() {
+        try {
+            const listUrl = `${this._projectServerBaseUrl}/project-list.json`;
+            console.log('[sidekick] Loading project list from:', listUrl);
+            
+            const response = await fetch(listUrl);
+            if (response.ok) {
+                const projectFiles = await response.json();
+                if (Array.isArray(projectFiles) && projectFiles.length > 0) {
+                    this._serverProjects = projectFiles.map(filename => ({
+                        text: filename.replace('.sb3', ''),
+                        value: filename
+                    }));
+                    this._serverProjectsLoaded = true;
+                    console.log('[sidekick] Loaded', projectFiles.length, 'projects from server');
+                    return;
+                }
+            }
+        } catch (e) {
+            console.log('[sidekick] Could not load project list from server:', e.message);
+        }
+        
+        // Fallback
+        this._serverProjects = [{ text: '(keine Projekte auf Server)', value: '' }];
+        this._serverProjectsLoaded = true;
+    }
+    
+    /**
+     * Gibt Liste der verfügbaren Server-Projekte für das Menu zurück
+     */
+    _getServerProjects() {
+        // Starte Hintergrund-Refresh bei jedem Dropdown-Öffnen
+        this._loadServerProjectList();
+        return this._serverProjects;
     }
 
     /**
@@ -729,6 +777,19 @@ class Scratch3SidekickBlocks {
                     text: 'Aktualisiere Video-Liste vom Server',
                     blockType: BlockType.COMMAND
                 },
+                '---',
+                {
+                    opcode: 'loadProjectFromServer',
+                    text: 'Lade Projekt [PROJECT] vom Server',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PROJECT: {
+                            type: ArgumentType.STRING,
+                            menu: 'serverProjectsMenu'
+                        }
+                    }
+                },
+                '---',
                 {
                     opcode: 'loadVideoFromFile',
                     text: '⚠️ Lade Video [NAME] von Datei (nur Test)',
@@ -1060,6 +1121,10 @@ class Scratch3SidekickBlocks {
                     acceptReporters: true,
                     items: '_getServerVideos'
                 },
+                serverProjectsMenu: {
+                    acceptReporters: true,
+                    items: '_getServerProjects'
+                },
                 targetMenu: {
                     acceptReporters: true,
                     items: '_getTargets'
@@ -1295,6 +1360,40 @@ class Scratch3SidekickBlocks {
     async refreshVideoList() {
         console.log('[sidekick] Refreshing video list from server...');
         await this.refreshServerVideos();
+    }
+    
+    /**
+     * Lädt ein Projekt vom Server und öffnet es
+     */
+    async loadProjectFromServer(args) {
+        const filename = Cast.toString(args.PROJECT);
+        
+        if (!filename || filename === '' || filename === '(keine Projekte auf Server)' || filename === '(wird geladen...)') {
+            console.warn('[sidekick] No valid project file selected');
+            return;
+        }
+        
+        // Baue die vollständige URL
+        const projectUrl = `${this._projectServerBaseUrl}/${filename}`;
+        console.log('[sidekick] Loading project from server:', projectUrl);
+        
+        try {
+            // Lade die .sb3 Datei
+            const response = await fetch(projectUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const projectData = await response.arrayBuffer();
+            
+            // Lade das Projekt in Scratch
+            // Die VM hat eine loadProject Funktion
+            await this._runtime.vm.loadProject(projectData);
+            console.log('[sidekick] Project loaded successfully:', filename);
+            
+        } catch (e) {
+            console.error('[sidekick] Failed to load project:', e);
+        }
     }
 
     /**
