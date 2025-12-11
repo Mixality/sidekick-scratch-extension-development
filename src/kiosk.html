@@ -321,36 +321,34 @@
             
             showStatus('⏳', `Lade ${projectName}...`, false);
             
-            // Scratch Player mit Projekt laden
-            // Wir nutzen den player.html und übergeben das Projekt via postMessage
-            const scratchUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/player.html`;
+            // Scratch Player mit Projekt-URL als Parameter laden
+            // Der player.html lädt das Projekt automatisch via ?project= Parameter
+            const projectUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/projects/${encodeURIComponent(projectName)}`;
+            const scratchUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/player.html?project=${encodeURIComponent(projectUrl)}`;
+            
+            console.log('Loading Scratch URL:', scratchUrl);
             scratchFrame.src = scratchUrl;
             
-            // Warte bis iframe geladen ist, dann Projekt laden
-            scratchFrame.onload = async () => {
-                try {
-                    // Projekt vom Server laden (liegt unter scratch/projects/ auf Port 8000)
-                    const projectUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/projects/${encodeURIComponent(projectName)}`;
-                    const response = await fetch(projectUrl);
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    
-                    // Welcome Screen ausblenden
-                    welcomeScreen.classList.add('hidden');
-                    
-                    showStatus('✓', `${projectName} geladen!`);
-                    publishStatus();
-                    
-                    // Hinweis: Das eigentliche Laden ins Scratch geschieht via File-API
-                    // Der User muss aktuell noch manuell laden - aber wir zeigen zumindest den Player
-                    
-                } catch (error) {
-                    console.error('Fehler beim Laden:', error);
-                    showStatus('❌', `Fehler: ${error.message}`);
-                }
+            // Welcome Screen ausblenden sobald iframe geladen
+            scratchFrame.onload = () => {
+                welcomeScreen.classList.add('hidden');
+                showStatus('✓', `${projectName} geladen!`);
+                publishStatus();
             };
+            
+            // Listen for project load confirmation from iframe
+            window.addEventListener('message', function handler(event) {
+                if (event.data && event.data.type === 'projectLoaded') {
+                    window.removeEventListener('message', handler);
+                    if (event.data.success) {
+                        console.log('Projekt erfolgreich in VM geladen');
+                        showStatus('✓', `${projectName} bereit!`);
+                    } else {
+                        console.error('Projekt laden fehlgeschlagen:', event.data.error);
+                        showStatus('❌', `Fehler: ${event.data.error}`);
+                    }
+                }
+            });
         }
         
         function startProject() {
