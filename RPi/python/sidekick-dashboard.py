@@ -48,7 +48,7 @@ def setup_paths():
     SIDEKICK_DIR = home / "Sidekick"
     SCRATCH_DIR = SIDEKICK_DIR / "sidekick-scratch-extension-development-gh-pages" / "scratch"
     VIDEOS_DIR = SCRATCH_DIR / "videos"
-    PROJECTS_DIR = SIDEKICK_DIR / "projects"
+    PROJECTS_DIR = SCRATCH_DIR / "projects"  # Auch unter scratch/ für HTTP-Zugriff
     
     # Erstelle Ordner falls nicht vorhanden
     VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
@@ -496,7 +496,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     <td>{escaped_name}</td>
                     <td>{size}</td>
                     <td class="actions">
-                        <a href="/projects/{url_name}" download class="btn btn-secondary" style="padding: 8px 15px;">💾 Download</a>
+                        <a href="http://10.42.0.1:{SCRATCH_PORT}/projects/{url_name}" download class="btn btn-secondary" style="padding: 8px 15px;">💾 Download</a>
                         <a href="/delete-project?file={url_name}" class="btn btn-danger" style="padding: 8px 15px;" onclick="return confirm('Wirklich löschen?')">🗑️ Löschen</a>
                     </td>
                 </tr>'''
