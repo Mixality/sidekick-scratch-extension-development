@@ -478,9 +478,15 @@ class Scratch3SidekickBlocks {
         this._loadServerVideoList();
         this._loadServerProjectList();
         
+        // Aktualisiere Listen auch bei Projektstart (grüne Flagge)
+        runtime.on('PROJECT_START', () => {
+            this._loadServerVideoList();
+            this._loadServerProjectList();
+            this._resetVideos();
+        });
+        
         // Event-Handler für Video-Updates
         runtime.on('PROJECT_STOP_ALL', () => this._resetVideos());
-        runtime.on('PROJECT_START', () => this._resetVideos());
         
         // Video-Frame Update Loop - markiert alle spielenden Videos als dirty
         let frameCounter = 0;
@@ -590,9 +596,10 @@ class Scratch3SidekickBlocks {
     
     /**
      * Gibt Liste der verfügbaren Server-Projekte für das Menu zurück
+     * Triggert im Hintergrund einen Refresh - beim nächsten Öffnen ist die Liste aktuell
      */
     _getServerProjects() {
-        // Starte Hintergrund-Refresh bei jedem Dropdown-Öffnen
+        // Starte Fetch im Hintergrund (async, blockiert nicht)
         this._loadServerProjectList();
         return this._serverProjects;
     }
@@ -776,18 +783,6 @@ class Scratch3SidekickBlocks {
                     opcode: 'refreshVideoList',
                     text: 'Aktualisiere Video-Liste vom Server',
                     blockType: BlockType.COMMAND
-                },
-                '---',
-                {
-                    opcode: 'loadProjectFromServer',
-                    text: 'Lade Projekt [PROJECT] vom Server',
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        PROJECT: {
-                            type: ArgumentType.STRING,
-                            menu: 'serverProjectsMenu'
-                        }
-                    }
                 },
                 '---',
                 {
@@ -1150,13 +1145,11 @@ class Scratch3SidekickBlocks {
     
     /**
      * Gibt Liste der verfügbaren Server-Videos für das Menu zurück
-     * Triggert automatisch einen Refresh im Hintergrund
+     * Triggert im Hintergrund einen Refresh - beim nächsten Öffnen ist die Liste aktuell
      */
     _getServerVideos() {
-        // Starte Hintergrund-Refresh bei jedem Dropdown-Öffnen
-        // Das sorgt dafür, dass die Liste immer aktuell ist
+        // Starte Fetch im Hintergrund (async, blockiert nicht)
         this._loadServerVideoList();
-        
         return this._serverVideos;
     }
 
