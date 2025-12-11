@@ -70,6 +70,15 @@ if (-not (Test-Path $videoListFile)) {
 }
 Write-Host "✓ Videos folder ready!" -ForegroundColor Green
 
+# Copy kiosk.html for display mode
+$kioskSource = Join-Path $SCRIPT_DIR "src\kiosk.html"
+$kioskTarget = Join-Path $SCRIPT_DIR "scratch-gui\build\kiosk.html"
+if (Test-Path $kioskSource) {
+    Write-Host "Copying kiosk.html..." -ForegroundColor Yellow
+    Copy-Item $kioskSource $kioskTarget -Force
+    Write-Host "✓ Kiosk display page copied!" -ForegroundColor Green
+}
+
 Write-Host ""
 Write-Host "=== BUILD COMPLETE ===" -ForegroundColor Green
 Write-Host "Run .\3-run-private.ps1 to test your extension" -ForegroundColor Cyan

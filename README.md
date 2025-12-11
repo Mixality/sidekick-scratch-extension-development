@@ -63,3 +63,14 @@ USB-Watcher: USB-StickÜberwachung für Auto-Import.
         │ Browser:  │           │ Browser:  │
         │ 10.42.0.1 │           │ 10.42.0.1 │
         └───────────┘           └───────────┘
+
+## Ablauf
+
+### Beispiel
+
+Der Ablauf wäre:
+1. User öffnet Dashboard auf Tablet.
+2. Lädt / wählt ein Projekt.
+3. Klickt "Auf Display starten"
+4. Pi-Display zeigt das Projekt im Player-Modus
+5. Grüne Flagge kann über Dashboard oder sogar über einen Hardware-Button am Pi gedrückt werden

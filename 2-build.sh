@@ -23,3 +23,10 @@ if [ -d "/workspaces/sidekick-scratch-extension-development/sidekick-thirdparty-
 else
     echo "No third-party libraries found to copy."
 fi
+
+# Copy kiosk.html for display mode
+echo "Copying kiosk.html..."
+if [ -f "/workspaces/sidekick-scratch-extension-development/src/kiosk.html" ]; then
+    cp /workspaces/sidekick-scratch-extension-development/src/kiosk.html $SCRATCH_SRC_HOME/scratch-gui/build/kiosk.html
+    echo "✓ Kiosk display page copied!"
+fi

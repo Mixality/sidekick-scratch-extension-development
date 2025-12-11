@@ -7,6 +7,7 @@ Ein einfacher Webserver für:
 - Projekt-Upload (.sb3 Dateien)
 - Übersicht aller Dateien
 - Automatische video-list.json Generierung
+- Display/Kiosk-Steuerung via MQTT
 
 Startet auf Port 8080 (Scratch läuft auf 8000)
 
@@ -28,6 +29,7 @@ import io
 # Konfiguration
 DASHBOARD_PORT = 8080
 SCRATCH_PORT = 8000
+KIOSK_PORT = 8000  # Kiosk läuft auf dem gleichen Port wie Scratch
 
 # Pfade (werden beim Start gesetzt)
 SIDEKICK_DIR = None
@@ -211,6 +213,53 @@ HTML_HEADER = """<!DOCTYPE html>
             text-align: center;
             padding: 40px;
             color: #888;
+        }
+        /* Display Control Styles */
+        .display-control {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .display-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #888;
+        }
+        .status-dot.connected { background: #4CAF50; box-shadow: 0 0 10px #4CAF50; }
+        .status-dot.disconnected { background: #ff9800; animation: pulse 1.5s infinite; }
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-start { background: #4CAF50; }
+        .btn-start:hover { background: #45a049; }
+        .btn-stop { background: #f44336; }
+        .btn-stop:hover { background: #da190b; }
+        .btn-display { background: #9c27b0; }
+        .btn-display:hover { background: #7b1fa2; }
+        .project-select {
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid #0E9D59;
+            background: rgba(14, 157, 89, 0.1);
+            color: #eee;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .project-select option { background: #1a1a2e; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         @media (max-width: 600px) {
             .grid { grid-template-columns: 1fr; }
@@ -439,6 +488,128 @@ class DashboardHandler(BaseHTTPRequestHandler):
             msg = messages.get(status_msg, status_msg)
             html += f'<div class="status {status_class}">{msg}</div>'
         
+        # Display Control Card (Kiosk-Steuerung)
+        projects = sorted([f.name for f in PROJECTS_DIR.iterdir() if f.suffix.lower() in PROJECT_EXTENSIONS])
+        project_options = ''.join([f'<option value="{html_module.escape(p)}">{html_module.escape(p)}</option>' for p in projects])
+        
+        html += f'''
+        <div class="card">
+            <h2>🖥️ Display-Steuerung (Kiosk-Modus)</h2>
+            <div class="display-control">
+                <div class="display-status">
+                    <div class="status-dot" id="mqttStatusDot"></div>
+                    <span id="mqttStatusText">Verbinde...</span>
+                </div>
+                
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <select class="project-select" id="projectSelect" style="flex: 1; min-width: 200px;">
+                        <option value="">-- Projekt auswählen --</option>
+                        {project_options}
+                    </select>
+                    <button class="btn btn-display" onclick="loadProjectOnDisplay()">📤 Auf Display laden</button>
+                </div>
+                
+                <div class="control-buttons">
+                    <button class="btn btn-start" onclick="startProject()">▶️ Start (Grüne Flagge)</button>
+                    <button class="btn btn-stop" onclick="stopProject()">⏹️ Stop</button>
+                    <a href="http://10.42.0.1:{KIOSK_PORT}/kiosk.html" target="_blank" class="btn btn-secondary">🔗 Kiosk-Display öffnen</a>
+                </div>
+                
+                <div id="displayStatus" style="color: #888; font-size: 0.9em;">
+                    Aktuelles Projekt: <span id="currentProject">-</span><br>
+                    Status: <span id="projectStatus">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+        <script>
+            let mqttClient = null;
+            
+            function connectMQTT() {{
+                const statusDot = document.getElementById('mqttStatusDot');
+                const statusText = document.getElementById('mqttStatusText');
+                
+                mqttClient = mqtt.connect('ws://10.42.0.1:9001', {{
+                    clientId: 'dashboard-' + Math.random().toString(16).substr(2, 8),
+                    clean: true,
+                    reconnectPeriod: 5000
+                }});
+                
+                mqttClient.on('connect', function() {{
+                    console.log('MQTT verbunden');
+                    statusDot.className = 'status-dot connected';
+                    statusText.textContent = 'Verbunden';
+                    
+                    // Status-Topic abonnieren
+                    mqttClient.subscribe('sidekick/display/state');
+                    
+                    // Status anfragen
+                    mqttClient.publish('sidekick/display/status', '');
+                }});
+                
+                mqttClient.on('error', function(err) {{
+                    console.error('MQTT Fehler:', err);
+                    statusDot.className = 'status-dot disconnected';
+                    statusText.textContent = 'Fehler: ' + err.message;
+                }});
+                
+                mqttClient.on('close', function() {{
+                    statusDot.className = 'status-dot disconnected';
+                    statusText.textContent = 'Nicht verbunden';
+                }});
+                
+                mqttClient.on('message', function(topic, message) {{
+                    if (topic === 'sidekick/display/state') {{
+                        try {{
+                            const state = JSON.parse(message.toString());
+                            document.getElementById('currentProject').textContent = state.project || '-';
+                            document.getElementById('projectStatus').textContent = state.status || '-';
+                        }} catch(e) {{
+                            console.error('Status parse error:', e);
+                        }}
+                    }}
+                }});
+            }}
+            
+            function loadProjectOnDisplay() {{
+                const select = document.getElementById('projectSelect');
+                const projectName = select.value;
+                if (!projectName) {{
+                    alert('Bitte wähle ein Projekt aus!');
+                    return;
+                }}
+                if (mqttClient && mqttClient.connected) {{
+                    mqttClient.publish('sidekick/display/load', projectName);
+                    console.log('Lade Projekt:', projectName);
+                }} else {{
+                    alert('Nicht mit MQTT verbunden!');
+                }}
+            }}
+            
+            function startProject() {{
+                if (mqttClient && mqttClient.connected) {{
+                    mqttClient.publish('sidekick/display/start', '');
+                    console.log('Start gesendet');
+                }} else {{
+                    alert('Nicht mit MQTT verbunden!');
+                }}
+            }}
+            
+            function stopProject() {{
+                if (mqttClient && mqttClient.connected) {{
+                    mqttClient.publish('sidekick/display/stop', '');
+                    console.log('Stop gesendet');
+                }} else {{
+                    alert('Nicht mit MQTT verbunden!');
+                }}
+            }}
+            
+            // MQTT beim Laden verbinden
+            document.addEventListener('DOMContentLoaded', connectMQTT);
+        </script>
+        '''
+        
         html += '<div class="grid">'
         
         # Video Upload Card
@@ -529,6 +700,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             <h2>ℹ️ Verbindung</h2>
             <table>
                 <tr><td><strong>Scratch Editor:</strong></td><td><a href="http://10.42.0.1:{SCRATCH_PORT}/" target="_blank">http://10.42.0.1:{SCRATCH_PORT}/</a></td></tr>
+                <tr><td><strong>Kiosk Display:</strong></td><td><a href="http://10.42.0.1:{KIOSK_PORT}/kiosk.html" target="_blank">http://10.42.0.1:{KIOSK_PORT}/kiosk.html</a></td></tr>
                 <tr><td><strong>Dashboard:</strong></td><td>http://10.42.0.1:{DASHBOARD_PORT}/</td></tr>
                 <tr><td><strong>MQTT Broker:</strong></td><td>ws://10.42.0.1:9001</td></tr>
                 <tr><td><strong>Videos Ordner:</strong></td><td>{VIDEOS_DIR}</td></tr>
