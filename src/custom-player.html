@@ -63,7 +63,17 @@
     // Scratch Player Setup
     function setupScratch() {
         if (vm) return;
-        vm = new window.VirtualMachine();
+        // Try all possible global names for scratch-vm
+        if (window.VirtualMachine) {
+            vm = new window.VirtualMachine();
+        } else if (window.ScratchVM) {
+            vm = new window.ScratchVM();
+        } else if (window.vm) {
+            vm = new window.vm();
+        } else {
+            document.getElementById('status').textContent = 'Scratch VM nicht gefunden!';
+            return;
+        }
         render = new window.RenderWebGL(document.getElementById('stage'));
         vm.attachRenderer(render);
         vm.setCompatibilityMode(true);
