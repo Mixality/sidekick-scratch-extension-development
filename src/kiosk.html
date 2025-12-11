@@ -329,8 +329,8 @@
             // Warte bis iframe geladen ist, dann Projekt laden
             scratchFrame.onload = async () => {
                 try {
-                    // Projekt vom Server laden
-                    const projectUrl = `http://${CONFIG.mqttBroker}:${CONFIG.dashboardPort}/projects/${encodeURIComponent(projectName)}`;
+                    // Projekt vom Server laden (liegt unter scratch/projects/ auf Port 8000)
+                    const projectUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/projects/${encodeURIComponent(projectName)}`;
                     const response = await fetch(projectUrl);
                     
                     if (!response.ok) {
