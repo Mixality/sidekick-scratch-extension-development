@@ -728,12 +728,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
             document.addEventListener('DOMContentLoaded', connectMQTT);
             
             // Rename field functions
-            function showRenameField(type) {
+            function showRenameField(type) {{
                 const fileInput = document.getElementById(type + 'FileInput');
                 const renameRow = document.getElementById(type + 'RenameRow');
                 const nameInput = document.getElementById(type + 'NameInput');
                 
-                if (fileInput.files.length > 0) {
+                if (fileInput.files.length > 0) {{
                     const fullName = fileInput.files[0].name;
                     const lastDot = fullName.lastIndexOf('.');
                     const baseName = lastDot > 0 ? fullName.substring(0, lastDot) : fullName;
@@ -743,26 +743,26 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     renameRow.classList.add('visible');
                     
                     // Update extension label for videos
-                    if (type === 'video') {
+                    if (type === 'video') {{
                         document.getElementById('videoExtLabel').textContent = ext;
-                    }
-                } else {
+                    }}
+                }} else {{
                     renameRow.classList.remove('visible');
-                }
-            }
+                }}
+            }}
             
             // Rename existing file
-            function renameFile(type, oldName) {
+            function renameFile(type, oldName) {{
                 const lastDot = oldName.lastIndexOf('.');
                 const baseName = lastDot > 0 ? oldName.substring(0, lastDot) : oldName;
                 const ext = lastDot > 0 ? oldName.substring(lastDot) : '';
                 
                 const newBaseName = prompt('Neuer Name für "' + oldName + '":', baseName);
-                if (newBaseName && newBaseName !== baseName) {
+                if (newBaseName && newBaseName !== baseName) {{
                     const newName = newBaseName + ext;
                     window.location.href = '/rename-' + type + '?old=' + encodeURIComponent(oldName) + '&new=' + encodeURIComponent(newName);
-                }
-            }
+                }}
+            }}
         </script>
         '''
         
