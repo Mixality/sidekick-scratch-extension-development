@@ -101,17 +101,18 @@ echo "   Abgeschlossen: Webapp aktualisiert"
 echo ""
 echo "Starte Services neu..."
 
-if systemctl is-active --quiet sidekick-webapp 2>/dev/null; then
+# Restart services if they are enabled (even if currently crashed/inactive)
+if systemctl is-enabled --quiet sidekick-webapp 2>/dev/null; then
     sudo systemctl restart sidekick-webapp
     echo "   ✓ sidekick-webapp neu gestartet"
 fi
 
-if systemctl is-active --quiet sidekick-sensors 2>/dev/null; then
+if systemctl is-enabled --quiet sidekick-sensors 2>/dev/null; then
     sudo systemctl restart sidekick-sensors
     echo "   ✓ sidekick-sensors neu gestartet"
 fi
 
-if systemctl is-active --quiet sidekick-dashboard 2>/dev/null; then
+if systemctl is-enabled --quiet sidekick-dashboard 2>/dev/null; then
     sudo systemctl restart sidekick-dashboard
     echo "   ✓ sidekick-dashboard neu gestartet"
 fi
