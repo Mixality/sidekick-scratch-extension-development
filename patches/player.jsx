@@ -166,6 +166,21 @@ window.addEventListener('message', event => {
             window.vm.stopAll();
             break;
             
+        case 'fullscreen':
+            console.log('[Kiosk] Activating fullscreen');
+            // Klicke auf den Fullscreen-Button
+            const fullscreenBtn = document.querySelector('[class*="full-screen"]');
+            if (fullscreenBtn) {
+                fullscreenBtn.click();
+            } else {
+                // Fallback: Manuell Fullscreen aktivieren
+                const stage = document.querySelector('[class*="stage"]');
+                if (stage && stage.requestFullscreen) {
+                    stage.requestFullscreen();
+                }
+            }
+            break;
+            
         case 'getStatus':
             if (event.source) {
                 event.source.postMessage({

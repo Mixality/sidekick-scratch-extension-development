@@ -58,6 +58,16 @@ echo "   Abgeschlossen: Python-Skripte und Setup-Scripts aktualisiert"
 echo "[2/2] Aktualisiere Webapp..."
 
 WEBAPP_DIR="$SIDEKICK_DIR/sidekick-scratch-extension-development-gh-pages"
+SCRATCH_DIR="$WEBAPP_DIR/scratch"
+
+# Sichere Benutzer-Dateien (Projekte, Videos) vor dem Löschen
+BACKUP_DIR="$SIDEKICK_DIR/.backup_temp"
+if [ -d "$SCRATCH_DIR/projects" ] || [ -d "$SCRATCH_DIR/videos" ]; then
+    echo "   Sichere Projekte und Videos..."
+    mkdir -p "$BACKUP_DIR"
+    [ -d "$SCRATCH_DIR/projects" ] && cp -r "$SCRATCH_DIR/projects" "$BACKUP_DIR/"
+    [ -d "$SCRATCH_DIR/videos" ] && cp -r "$SCRATCH_DIR/videos" "$BACKUP_DIR/"
+fi
 
 # Falls der Ordner existiert, entfernen
 if [ -d "$WEBAPP_DIR" ]; then
@@ -71,6 +81,18 @@ unzip -q gh-pages.zip
 mv sidekick-scratch-extension-development-gh-pages "$WEBAPP_DIR" 2>/dev/null || true
 rm -f gh-pages.zip
 
+# Stelle Benutzer-Dateien wieder her
+if [ -d "$BACKUP_DIR" ]; then
+    echo "   Stelle Projekte und Videos wieder her..."
+    [ -d "$BACKUP_DIR/projects" ] && cp -r "$BACKUP_DIR/projects" "$SCRATCH_DIR/"
+    [ -d "$BACKUP_DIR/videos" ] && cp -r "$BACKUP_DIR/videos" "$SCRATCH_DIR/"
+    rm -rf "$BACKUP_DIR"
+fi
+
+# Stelle sicher dass die Ordner existieren
+mkdir -p "$SCRATCH_DIR/projects"
+mkdir -p "$SCRATCH_DIR/videos"
+
 echo "   Abgeschlossen: Webapp aktualisiert"
 
 # -----------------------------------------------------------------------------
@@ -81,12 +103,17 @@ echo "Starte Services neu..."
 
 if systemctl is-active --quiet sidekick-webapp 2>/dev/null; then
     sudo systemctl restart sidekick-webapp
-    echo "   Abgeschlossen: sidekick-webapp neu gestartet"
+    echo "   ✓ sidekick-webapp neu gestartet"
 fi
 
 if systemctl is-active --quiet sidekick-sensors 2>/dev/null; then
     sudo systemctl restart sidekick-sensors
-    echo "   Abgeschlossen: sidekick-sensors neu gestartet"
+    echo "   ✓ sidekick-sensors neu gestartet"
+fi
+
+if systemctl is-active --quiet sidekick-dashboard 2>/dev/null; then
+    sudo systemctl restart sidekick-dashboard
+    echo "   ✓ sidekick-dashboard neu gestartet"
 fi
 
 echo ""
