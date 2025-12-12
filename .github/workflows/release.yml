@@ -37,37 +37,48 @@ jobs:
           node-version: '18'
           # Kein Caching, da package-lock.json nicht im Repo ist
       
-      # 3. Scratch-VM Setup
-      - name: Setup Scratch-VM
-        working-directory: scratch-vm
+      # 3. Scratch-VM und Scratch-GUI klonen (wie 0-setup.sh)
+      - name: Clone Scratch repositories
         run: |
-          npm ci
-          # Extensions synchronisieren
-          cp -r ../sidekick-scratch-mqtt-extension/* src/extensions/scratch3_sidekickmqtt/ 2>/dev/null || mkdir -p src/extensions/scratch3_sidekickmqtt && cp -r ../sidekick-scratch-mqtt-extension/* src/extensions/scratch3_sidekickmqtt/
-          cp -r ../sidekick-scratch-extension/* src/extensions/scratch3_sidekick/ 2>/dev/null || mkdir -p src/extensions/scratch3_sidekick && cp -r ../sidekick-scratch-extension/* src/extensions/scratch3_sidekick/
+          echo "Cloning scratch-vm..."
+          git clone --depth 1 https://github.com/scratchfoundation/scratch-vm.git
+          
+          echo "Cloning scratch-gui..."
+          git clone --depth 1 https://github.com/scratchfoundation/scratch-gui.git
+          
+          echo "Linking scratch-vm in scratch-gui..."
+          cd scratch-gui
+          npm link ../scratch-vm
       
-      # 4. Scratch-GUI Setup
-      - name: Setup Scratch-GUI
-        working-directory: scratch-gui
-        run: npm ci
+      # 4. Extensions in scratch-vm kopieren
+      - name: Copy extensions to scratch-vm
+        run: |
+          mkdir -p scratch-vm/src/extensions/scratch3_sidekickmqtt
+          mkdir -p scratch-vm/src/extensions/scratch3_sidekick
+          cp -r sidekick-scratch-mqtt-extension/* scratch-vm/src/extensions/scratch3_sidekickmqtt/
+          cp -r sidekick-scratch-extension/* scratch-vm/src/extensions/scratch3_sidekick/
       
-      # 5. Player.jsx patchen
+      # 5. Scratch-VM Setup und Build
+      - name: Setup and Build Scratch-VM
+        working-directory: scratch-vm
+        env:
+          NODE_OPTIONS: '--openssl-legacy-provider'
+        run: |
+          npm install
+          npm run build
+      
+      # 6. Player.jsx patchen
       - name: Patch player.jsx
         run: cp patches/player.jsx scratch-gui/src/playground/player.jsx
       
-      # 6. Scratch-VM bauen
-      - name: Build Scratch-VM
-        working-directory: scratch-vm
-        env:
-          NODE_OPTIONS: '--openssl-legacy-provider'
-        run: npm run build
-      
-      # 7. Scratch-GUI bauen
-      - name: Build Scratch-GUI
+      # 7. Scratch-GUI Setup und Build
+      - name: Setup and Build Scratch-GUI
         working-directory: scratch-gui
         env:
           NODE_OPTIONS: '--openssl-legacy-provider'
-        run: npm run build
+        run: |
+          npm install
+          npm run build
       
       # 8. Release-Paket zusammenstellen
       - name: Prepare release package
