@@ -119,8 +119,9 @@ jobs:
           cd release
           zip -r ../sidekick-${{ github.ref_name }}.zip .
       
-      # 9. Release erstellen
+      # 9. Release erstellen (nur bei Tag-Push, nicht bei manuellem Trigger)
       - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: sidekick-${{ github.ref_name }}.zip
@@ -137,3 +138,19 @@ jobs:
           name: sidekick-build
           path: release/
           retention-days: 7
+      
+      # 11. Build Summary
+      - name: Build Summary
+        run: |
+          echo "========================================"
+          echo "✅ SIDEKICK Build erfolgreich!"
+          echo "========================================"
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "📦 Release erstellt: ${{ github.ref_name }}"
+            echo "🔗 Download verfügbar unter GitHub Releases"
+          else
+            echo "🔧 Test-Build (manueller Trigger)"
+            echo "ℹ️  Kein Release erstellt - nur zum Testen"
+            echo "💡 Für echtes Release: git tag v1.x.x && git push origin v1.x.x"
+          fi
+          echo "========================================"
