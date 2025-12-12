@@ -64,7 +64,8 @@ jobs:
           HUSKY: '0'
         run: |
           npm install --ignore-scripts
-          npm run build
+          # Skip docs generation (jsdoc has issues), only run webpack
+          ./node_modules/.bin/webpack --progress
       
       # 6. Player.jsx patchen
       - name: Patch player.jsx
