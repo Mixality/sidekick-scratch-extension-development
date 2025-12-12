@@ -332,18 +332,7 @@
             // Welcome Screen ausblenden sobald iframe geladen
             scratchFrame.onload = () => {
                 welcomeScreen.classList.add('hidden');
-                showStatus('✓', `${projectName} geladen!`);
-                publishStatus();
-                
-                // Aktiviere Fullscreen im Player nach kurzer Verzögerung
-                setTimeout(() => {
-                    try {
-                        scratchFrame.contentWindow.postMessage({ type: 'fullscreen' }, '*');
-                        console.log('Fullscreen-Request gesendet');
-                    } catch (e) {
-                        console.log('Konnte Fullscreen nicht aktivieren:', e);
-                    }
-                }, 1500);
+                showStatus('⏳', `${projectName} wird vorbereitet...`);
             };
             
             // Listen for project load confirmation from iframe
@@ -353,6 +342,15 @@
                     if (event.data.success) {
                         console.log('Projekt erfolgreich in VM geladen');
                         showStatus('✓', `${projectName} bereit!`);
+                        publishStatus();
+                        
+                        // Fullscreen aktivieren - nur wenn nicht bereits im Kiosk-Modus
+                        // (Chromium --kiosk ist bereits fullscreen, aber für manuelles Testen nützlich)
+                        try {
+                            scratchFrame.contentWindow.postMessage({ type: 'fullscreen' }, '*');
+                        } catch (e) {
+                            // Ignorieren - im Kiosk-Modus nicht nötig
+                        }
                     } else {
                         console.error('Projekt laden fehlgeschlagen:', event.data.error);
                         showStatus('❌', `Fehler: ${event.data.error}`);
