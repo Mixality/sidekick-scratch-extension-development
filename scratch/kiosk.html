@@ -323,8 +323,9 @@
             
             // Scratch Player mit Projekt-URL als Parameter laden
             // Der player.html lädt das Projekt automatisch via ?project= Parameter
+            // &fullscreen=1 startet den Player direkt im Stage-Fullscreen-Modus
             const projectUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/projects/${encodeURIComponent(projectName)}`;
-            const scratchUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/player.html?project=${encodeURIComponent(projectUrl)}`;
+            const scratchUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/player.html?project=${encodeURIComponent(projectUrl)}&fullscreen=1`;
             
             console.log('Loading Scratch URL:', scratchUrl);
             scratchFrame.src = scratchUrl;
@@ -332,18 +333,7 @@
             // Welcome Screen ausblenden sobald iframe geladen
             scratchFrame.onload = () => {
                 welcomeScreen.classList.add('hidden');
-                showStatus('✓', `${projectName} geladen!`);
-                publishStatus();
-                
-                // Aktiviere Fullscreen im Player nach kurzer Verzögerung
-                setTimeout(() => {
-                    try {
-                        scratchFrame.contentWindow.postMessage({ type: 'fullscreen' }, '*');
-                        console.log('Fullscreen-Request gesendet');
-                    } catch (e) {
-                        console.log('Konnte Fullscreen nicht aktivieren:', e);
-                    }
-                }, 1500);
+                showStatus('⏳', `${projectName} wird vorbereitet...`);
             };
             
             // Listen for project load confirmation from iframe
@@ -353,6 +343,8 @@
                     if (event.data.success) {
                         console.log('Projekt erfolgreich in VM geladen');
                         showStatus('✓', `${projectName} bereit!`);
+                        publishStatus();
+                        // Player startet bereits im Fullscreen-Modus dank &fullscreen=1 Parameter
                     } else {
                         console.error('Projekt laden fehlgeschlagen:', event.data.error);
                         showStatus('❌', `Fehler: ${event.data.error}`);
