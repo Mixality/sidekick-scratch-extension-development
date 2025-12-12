@@ -35,10 +35,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: |
-            scratch-vm/package-lock.json
-            scratch-gui/package-lock.json
+          # Kein Caching, da package-lock.json nicht im Repo ist
       
       # 3. Scratch-VM Setup
       - name: Setup Scratch-VM
