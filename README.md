@@ -82,3 +82,14 @@ Der Ablauf wäre:
 - RPi updaten (Test): `update-sidekick.sh --pre`
 - Stabile Version: `git tag v1.0.1` --> `git push origin v1.0.1`
 - RPi updaten (Stable): `update-sidekick.sh`
+
+
+### Update und Installation
+
+(Script, Stable, Pre-Release)
+- 'install-sidekick.sh':
+  - Stable: Standard
+  - Pre-Release: --pre
+- 'update-sidekick.sh':
+  - Stable: Standard
+  - Pre-Release: --pre
