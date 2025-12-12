@@ -1,0 +1,129 @@
+# =============================================================================
+# SIDEKICK Release Workflow
+# =============================================================================
+# Baut das Projekt automatisch und erstellt ein Release wenn ein Tag gepusht wird.
+#
+# Verwendung:
+#   git tag v1.0.0
+#   git push origin v1.0.0
+#
+# Das erstellt automatisch ein Release mit der gebauten Webapp als ZIP.
+# =============================================================================
+
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggered bei Tags wie v1.0.0, v1.2.3, etc.
+  
+  # Erlaubt manuelles Triggern für Tests
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build SIDEKICK
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Code auschecken
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # 2. Node.js einrichten
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            scratch-vm/package-lock.json
+            scratch-gui/package-lock.json
+      
+      # 3. Scratch-VM Setup
+      - name: Setup Scratch-VM
+        working-directory: scratch-vm
+        run: |
+          npm ci
+          # Extensions synchronisieren
+          cp -r ../sidekick-scratch-mqtt-extension/* src/extensions/scratch3_sidekickmqtt/ 2>/dev/null || mkdir -p src/extensions/scratch3_sidekickmqtt && cp -r ../sidekick-scratch-mqtt-extension/* src/extensions/scratch3_sidekickmqtt/
+          cp -r ../sidekick-scratch-extension/* src/extensions/scratch3_sidekick/ 2>/dev/null || mkdir -p src/extensions/scratch3_sidekick && cp -r ../sidekick-scratch-extension/* src/extensions/scratch3_sidekick/
+      
+      # 4. Scratch-GUI Setup
+      - name: Setup Scratch-GUI
+        working-directory: scratch-gui
+        run: npm ci
+      
+      # 5. Player.jsx patchen
+      - name: Patch player.jsx
+        run: cp patches/player.jsx scratch-gui/src/playground/player.jsx
+      
+      # 6. Scratch-VM bauen
+      - name: Build Scratch-VM
+        working-directory: scratch-vm
+        env:
+          NODE_OPTIONS: '--openssl-legacy-provider'
+        run: npm run build
+      
+      # 7. Scratch-GUI bauen
+      - name: Build Scratch-GUI
+        working-directory: scratch-gui
+        env:
+          NODE_OPTIONS: '--openssl-legacy-provider'
+        run: npm run build
+      
+      # 8. Release-Paket zusammenstellen
+      - name: Prepare release package
+        run: |
+          mkdir -p release/sidekick
+          
+          # Webapp (gebaute Scratch-GUI)
+          cp -r scratch-gui/build/* release/sidekick/
+          
+          # Third-party libraries
+          cp -r sidekick-thirdparty-libraries release/sidekick/
+          
+          # Kiosk-Dateien
+          cp src/kiosk.html release/sidekick/
+          cp src/dashboard-qr.png release/sidekick/
+          
+          # Videos und Projects Ordner anlegen
+          mkdir -p release/sidekick/videos
+          mkdir -p release/sidekick/projects
+          echo "[]" > release/sidekick/videos/video-list.json
+          echo "[]" > release/sidekick/projects/project-list.json
+          
+          # Python-Skripte
+          mkdir -p release/python
+          cp RPi/python/*.py release/python/
+          
+          # Setup-Skripte
+          mkdir -p release/scripts
+          cp RPi/*.sh release/scripts/
+          chmod +x release/scripts/*.sh
+          
+          # Version info
+          echo "${{ github.ref_name }}" > release/VERSION
+          
+          # ZIP erstellen
+          cd release
+          zip -r ../sidekick-${{ github.ref_name }}.zip .
+      
+      # 9. Release erstellen
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: sidekick-${{ github.ref_name }}.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # 10. Artefakt auch als Download verfügbar machen (für Tests)
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sidekick-build
+          path: release/
+          retention-days: 7
