@@ -475,21 +475,14 @@
         // ============================================
         
         function generateQRCode() {
-            // Auf dem Pi immer die Hotspot-IP verwenden
+            // Statischer QR-Code für die Dashboard-URL (10.42.0.1:8080)
             const dashboardUrl = `http://10.42.0.1:${CONFIG.dashboardPort}/`;
             const qrImage = document.getElementById('qrcode');
             const urlDisplay = document.getElementById('dashboardUrl');
             
             if (qrImage) {
-                // Verwende Google Charts API für QR-Code (funktioniert offline nicht, aber zuverlässig)
-                // Alternative: QR-Code als Data-URL generieren
-                const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(dashboardUrl)}`;
-                qrImage.src = qrApiUrl;
-                qrImage.onerror = function() {
-                    // Fallback: Zeige nur die URL
-                    qrImage.style.display = 'none';
-                    console.log('QR Code API nicht erreichbar');
-                };
+                // Verwende lokales statisches QR-Code Bild (funktioniert offline!)
+                qrImage.src = 'dashboard-qr.png';
             }
             
             if (urlDisplay) {

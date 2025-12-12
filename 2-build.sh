@@ -37,3 +37,10 @@ if [ -f "/workspaces/sidekick-scratch-extension-development/src/kiosk.html" ]; t
     cp /workspaces/sidekick-scratch-extension-development/src/kiosk.html $SCRATCH_SRC_HOME/scratch-gui/build/kiosk.html
     echo "✓ Kiosk display page copied!"
 fi
+
+# Copy dashboard QR code
+echo "Copying dashboard QR code..."
+if [ -f "/workspaces/sidekick-scratch-extension-development/src/dashboard-qr.png" ]; then
+    cp /workspaces/sidekick-scratch-extension-development/src/dashboard-qr.png $SCRATCH_SRC_HOME/scratch-gui/build/dashboard-qr.png
+    echo "✓ Dashboard QR code copied!"
+fi

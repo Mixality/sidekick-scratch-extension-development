@@ -88,6 +88,15 @@ if (Test-Path $kioskSource) {
     Write-Host "✓ Kiosk display page copied!" -ForegroundColor Green
 }
 
+# Copy dashboard QR code
+$qrSource = Join-Path $SCRIPT_DIR "src\dashboard-qr.png"
+$qrTarget = Join-Path $SCRIPT_DIR "scratch-gui\build\dashboard-qr.png"
+if (Test-Path $qrSource) {
+    Write-Host "Copying dashboard QR code..." -ForegroundColor Yellow
+    Copy-Item $qrSource $qrTarget -Force
+    Write-Host "✓ Dashboard QR code copied!" -ForegroundColor Green
+}
+
 Write-Host ""
 Write-Host "=== BUILD COMPLETE ===" -ForegroundColor Green
 Write-Host "Run .\3-run-private.ps1 to test your extension" -ForegroundColor Cyan
