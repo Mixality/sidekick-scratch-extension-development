@@ -127,7 +127,8 @@ jobs:
           files: sidekick-${{ github.ref_name }}.zip
           generate_release_notes: true
           draft: false
-          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+          # Pre-Release wenn 'test', 'beta', 'alpha' oder 'dev' im Tag-Namen
+          prerelease: ${{ contains(github.ref_name, 'test') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'dev') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
