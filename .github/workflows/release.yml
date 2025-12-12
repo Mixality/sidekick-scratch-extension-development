@@ -78,7 +78,7 @@ jobs:
           NODE_OPTIONS: '--openssl-legacy-provider'
           HUSKY: '0'
         run: |
-          npm install --ignore-scripts
+          npm install
           npm link ../scratch-vm
           npm run build
       
