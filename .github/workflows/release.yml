@@ -63,7 +63,7 @@ jobs:
           NODE_OPTIONS: '--openssl-legacy-provider'
           HUSKY: '0'
         run: |
-          npm install --ignore-scripts
+          npm install
           # Skip docs generation (jsdoc has issues), only run webpack
           ./node_modules/.bin/webpack --progress
       
