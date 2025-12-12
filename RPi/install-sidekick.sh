@@ -8,7 +8,9 @@
 # - SIDEKICK-Dateien herunterladen
 # - Autostart-Services einrichten
 #
-# Verwendung: sudo bash install-sidekick.sh
+# Verwendung: 
+#   sudo bash install-sidekick.sh          → Installiert neuestes stabiles Release
+#   sudo bash install-sidekick.sh --pre    → Installiert auch Pre-Releases (Test)
 # =============================================================================
 
 set -e
@@ -19,10 +21,29 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Standard: nur stabile Releases
+INCLUDE_PRERELEASE=false
+
+# Argumente verarbeiten
+for arg in "$@"; do
+    case $arg in
+        --pre|--dev|--test)
+            INCLUDE_PRERELEASE=true
+            ;;
+    esac
+done
+
 echo ""
 echo "=============================================="
 echo "  SIDEKICK Komplett-Installation"
 echo "=============================================="
+echo ""
+
+if [ "$INCLUDE_PRERELEASE" = true ]; then
+    echo -e "${YELLOW}Modus: Inklusive Pre-Releases (Test/Dev)${NC}"
+else
+    echo "Modus: Nur stabile Releases"
+fi
 echo ""
 
 # -----------------------------------------------------------------------------
@@ -153,7 +174,13 @@ GITHUB_REPO="Mixality/sidekick-scratch-extension-development"
 
 # Neuestes Release ermitteln
 echo "   Ermittle neueste Version..."
-LATEST_VERSION=$(curl -sSL "https://api.github.com/repos/$GITHUB_REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
+if [ "$INCLUDE_PRERELEASE" = true ]; then
+    # Hole alle Releases (inklusive Pre-Releases), nimm das erste (neueste)
+    LATEST_VERSION=$(curl -sSL "https://api.github.com/repos/$GITHUB_REPO/releases" | grep -m 1 '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
+else
+    # Hole nur das neueste stabile Release
+    LATEST_VERSION=$(curl -sSL "https://api.github.com/repos/$GITHUB_REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
+fi
 
 if [ -z "$LATEST_VERSION" ]; then
     echo -e "${RED}   FEHLER: Konnte neueste Version nicht ermitteln!${NC}"

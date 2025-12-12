@@ -74,3 +74,11 @@ Der Ablauf wäre:
 3. Klickt "Auf Display starten"
 4. Pi-Display zeigt das Projekt im Player-Modus
 5. Grüne Flagge kann über Dashboard oder sogar über einen Hardware-Button am Pi gedrückt werden
+
+## Workflow
+
+(Ziel, Befehl)
+- Entwickeln / Testen: `git tag v1.0.1-test1` --> `git push origin v1.0.1-test1`
+- RPi updaten (Test): `update-sidekick.sh --pre`
+- Stabile Version: `git tag v1.0.1` --> `git push origin v1.0.1`
+- RPi updaten (Stable): `update-sidekick.sh`
