@@ -70,7 +70,11 @@ const WrappedPlayer = compose(
 const appTarget = document.createElement('div');
 document.body.appendChild(appTarget);
 
-ReactDOM.render(<WrappedPlayer isPlayerOnly />, appTarget);
+// Check for fullscreen URL parameter (for Kiosk mode)
+const kioskParams = new URLSearchParams(window.location.search);
+const startFullScreen = kioskParams.has('fullscreen') || kioskParams.has('kiosk');
+
+ReactDOM.render(<WrappedPlayer isPlayerOnly isFullScreen={startFullScreen} />, appTarget);
 
 // ============================================
 // SIDEKICK Kiosk Control
@@ -167,18 +171,20 @@ window.addEventListener('message', event => {
             break;
             
         case 'fullscreen':
-            console.log('[Kiosk] Activating fullscreen');
-            // Klicke auf den Fullscreen-Button
-            const fullscreenBtn = document.querySelector('[class*="full-screen"]');
-            if (fullscreenBtn) {
-                fullscreenBtn.click();
+            // Stage-Fullscreen ein/ausschalten via Redux
+            // Hinweis: Bei URL-Parameter ?fullscreen startet der Player bereits im Fullscreen
+            console.log('[Kiosk] Fullscreen toggle requested');
+            // Der Store wird von AppStateHOC verwaltet - wir können ihn nicht direkt ändern
+            // Stattdessen: Seite neu laden mit/ohne Parameter
+            const url = new URL(window.location.href);
+            const isCurrentlyFullscreen = url.searchParams.has('fullscreen') || url.searchParams.has('kiosk');
+            if (isCurrentlyFullscreen) {
+                url.searchParams.delete('fullscreen');
+                url.searchParams.delete('kiosk');
             } else {
-                // Fallback: Manuell Fullscreen aktivieren
-                const stage = document.querySelector('[class*="stage"]');
-                if (stage && stage.requestFullscreen) {
-                    stage.requestFullscreen();
-                }
+                url.searchParams.set('fullscreen', '1');
             }
+            window.location.href = url.toString();
             break;
             
         case 'getStatus':

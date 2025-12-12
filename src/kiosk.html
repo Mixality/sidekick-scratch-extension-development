@@ -323,8 +323,9 @@
             
             // Scratch Player mit Projekt-URL als Parameter laden
             // Der player.html lädt das Projekt automatisch via ?project= Parameter
+            // &fullscreen=1 startet den Player direkt im Stage-Fullscreen-Modus
             const projectUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/projects/${encodeURIComponent(projectName)}`;
-            const scratchUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/player.html?project=${encodeURIComponent(projectUrl)}`;
+            const scratchUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/player.html?project=${encodeURIComponent(projectUrl)}&fullscreen=1`;
             
             console.log('Loading Scratch URL:', scratchUrl);
             scratchFrame.src = scratchUrl;
@@ -343,14 +344,7 @@
                         console.log('Projekt erfolgreich in VM geladen');
                         showStatus('✓', `${projectName} bereit!`);
                         publishStatus();
-                        
-                        // Fullscreen aktivieren - nur wenn nicht bereits im Kiosk-Modus
-                        // (Chromium --kiosk ist bereits fullscreen, aber für manuelles Testen nützlich)
-                        try {
-                            scratchFrame.contentWindow.postMessage({ type: 'fullscreen' }, '*');
-                        } catch (e) {
-                            // Ignorieren - im Kiosk-Modus nicht nötig
-                        }
+                        // Player startet bereits im Fullscreen-Modus dank &fullscreen=1 Parameter
                     } else {
                         console.error('Projekt laden fehlgeschlagen:', event.data.error);
                         showStatus('❌', `Fehler: ${event.data.error}`);
