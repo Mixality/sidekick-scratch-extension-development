@@ -34,7 +34,7 @@ echo ""
 # Pfade definieren
 # -----------------------------------------------------------------------------
 SIDEKICK_DIR="$USER_HOME/Sidekick"
-WEBAPP_DIR="$SIDEKICK_DIR/sidekick-scratch-extension-development-gh-pages/scratch"
+WEBAPP_DIR="$SIDEKICK_DIR/sidekick"
 VIDEOS_DIR="$WEBAPP_DIR/videos"
 PROJECTS_DIR="$WEBAPP_DIR/projects"
 PYTHON_SCRIPT="$SIDEKICK_DIR/python/ScratchConnect.py"

@@ -19,7 +19,7 @@ import sys
 # Standard Video-Ordner Pfade
 DEFAULT_PATHS = [
     os.path.expanduser("~/Sidekick/videos"),
-    os.path.expanduser("~/Sidekick/sidekick-scratch-extension-development-gh-pages/scratch/videos"),
+    os.path.expanduser("~/Sidekick/sidekick/videos"),
     "/home/sidekick/Sidekick/videos"
 ]
 

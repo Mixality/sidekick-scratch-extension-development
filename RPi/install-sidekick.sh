@@ -145,28 +145,40 @@ chown -R "$ACTUAL_USER:$ACTUAL_USER" "$SIDEKICK_DIR"
 echo -e "${GREEN}   Verzeichnis erstellt: $SIDEKICK_DIR${NC}"
 
 # -----------------------------------------------------------------------------
-# 5. SIDEKICK-Dateien herunterladen
+# 5. SIDEKICK-Dateien herunterladen (von GitHub Releases)
 # -----------------------------------------------------------------------------
 echo -e "${YELLOW}[5/7] Lade SIDEKICK-Dateien herunter...${NC}"
 
-REPO_BASE="https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi"
+GITHUB_REPO="Mixality/sidekick-scratch-extension-development"
 
-# Python-Skripte
-curl -sSL "$REPO_BASE/python/ScratchConnect.py" -o "$SIDEKICK_DIR/python/ScratchConnect.py"
-curl -sSL "$REPO_BASE/python/SmartBox.py" -o "$SIDEKICK_DIR/python/SmartBox.py"
-curl -sSL "$REPO_BASE/python/neopixel.py" -o "$SIDEKICK_DIR/python/neopixel.py"
-curl -sSL "$REPO_BASE/python/SimpleLED.py" -o "$SIDEKICK_DIR/python/SimpleLED.py"
+# Neuestes Release ermitteln
+echo "   Ermittle neueste Version..."
+LATEST_VERSION=$(curl -sSL "https://api.github.com/repos/$GITHUB_REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
 
-# Update-Skript
-curl -sSL "$REPO_BASE/update-sidekick.sh" -o "$SIDEKICK_DIR/update-sidekick.sh"
-chmod +x "$SIDEKICK_DIR/update-sidekick.sh"
+if [ -z "$LATEST_VERSION" ]; then
+    echo -e "${RED}   FEHLER: Konnte neueste Version nicht ermitteln!${NC}"
+    exit 1
+fi
+echo -e "${GREEN}   Neueste Version: $LATEST_VERSION${NC}"
 
-# Webapp (gh-pages Branch)
+# Release herunterladen
 cd "$SIDEKICK_DIR"
-curl -sSL "https://github.com/Mixality/sidekick-scratch-extension-development/archive/refs/heads/gh-pages.zip" -o gh-pages.zip
-unzip -q gh-pages.zip
-rm -f gh-pages.zip
+DOWNLOAD_URL="https://github.com/$GITHUB_REPO/releases/download/$LATEST_VERSION/sidekick-$LATEST_VERSION.zip"
+echo "   Lade herunter..."
+curl -sSL "$DOWNLOAD_URL" -o sidekick-release.zip
+unzip -q sidekick-release.zip
+rm -f sidekick-release.zip
 
+# VERSION-Datei speichern
+echo "$LATEST_VERSION" > "$SIDEKICK_DIR/VERSION"
+
+# Update-Script ins Hauptverzeichnis kopieren
+if [ -f "$SIDEKICK_DIR/scripts/update-sidekick.sh" ]; then
+    cp "$SIDEKICK_DIR/scripts/update-sidekick.sh" "$SIDEKICK_DIR/update-sidekick.sh"
+fi
+
+chmod +x "$SIDEKICK_DIR"/*.sh 2>/dev/null || true
+chmod +x "$SIDEKICK_DIR/scripts"/*.sh 2>/dev/null || true
 chown -R "$ACTUAL_USER:$ACTUAL_USER" "$SIDEKICK_DIR"
 
 echo -e "${GREEN}   Dateien heruntergeladen${NC}"
@@ -176,7 +188,7 @@ echo -e "${GREEN}   Dateien heruntergeladen${NC}"
 # -----------------------------------------------------------------------------
 echo -e "${YELLOW}[6/7] Richte Autostart-Services ein...${NC}"
 
-WEBAPP_DIR="$SIDEKICK_DIR/sidekick-scratch-extension-development-gh-pages/scratch"
+WEBAPP_DIR="$SIDEKICK_DIR/sidekick"
 PYTHON_SCRIPT="$SIDEKICK_DIR/python/ScratchConnect.py"
 
 # HTTP-Server Service

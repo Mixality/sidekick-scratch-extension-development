@@ -48,7 +48,7 @@ def setup_paths():
     
     home = Path.home()
     SIDEKICK_DIR = home / "Sidekick"
-    SCRATCH_DIR = SIDEKICK_DIR / "sidekick-scratch-extension-development-gh-pages" / "scratch"
+    SCRATCH_DIR = SIDEKICK_DIR / "sidekick"
     VIDEOS_DIR = SCRATCH_DIR / "videos"
     PROJECTS_DIR = SCRATCH_DIR / "projects"  # Auch unter scratch/ für HTTP-Zugriff
     

@@ -2,22 +2,104 @@
 # =============================================================================
 # SIDEKICK Update Script
 # =============================================================================
-# Aktualisiert die SIDEKICK-Dateien vom GitHub Repository
+# Aktualisiert die SIDEKICK-Dateien von GitHub Releases
 #
-# Verwendung: bash update-sidekick.sh
+# Verwendung:
+#   ./update-sidekick.sh          → Lädt neuestes stabiles Release
+#   ./update-sidekick.sh --pre    → Lädt auch Pre-Releases (für Entwicklung/Tests)
+#   ./update-sidekick.sh --dev    → Alias für --pre
+#   ./update-sidekick.sh --help   → Zeigt diese Hilfe
+#
 # =============================================================================
 
 set -e
 
+# -----------------------------------------------------------------------------
+# Konfiguration
+# -----------------------------------------------------------------------------
+GITHUB_REPO="Mixality/sidekick-scratch-extension-development"
+USER_HOME="$HOME"
+SIDEKICK_DIR="$USER_HOME/Sidekick"
+WEBAPP_DIR="$SIDEKICK_DIR/sidekick"
+PYTHON_DIR="$SIDEKICK_DIR/python"
+SCRIPTS_DIR="$SIDEKICK_DIR/scripts"
+
+# Standard: nur stabile Releases
+INCLUDE_PRERELEASE=false
+
+# -----------------------------------------------------------------------------
+# Argumente verarbeiten
+# -----------------------------------------------------------------------------
+show_help() {
+    echo "SIDEKICK Update Script"
+    echo ""
+    echo "Verwendung:"
+    echo "  ./update-sidekick.sh          Lädt neuestes stabiles Release"
+    echo "  ./update-sidekick.sh --pre    Lädt auch Pre-Releases (Test-Versionen)"
+    echo "  ./update-sidekick.sh --dev    Alias für --pre"
+    echo "  ./update-sidekick.sh --help   Zeigt diese Hilfe"
+    echo ""
+    echo "Pre-Releases haben Tags wie: v1.0.1-test1, v1.0.1-dev, v1.0.1-beta"
+    exit 0
+}
+
+for arg in "$@"; do
+    case $arg in
+        --pre|--dev|--test)
+            INCLUDE_PRERELEASE=true
+            ;;
+        --help|-h)
+            show_help
+            ;;
+        *)
+            echo "Unbekannte Option: $arg"
+            echo "Verwende --help für Hilfe"
+            exit 1
+            ;;
+    esac
+done
+
+# -----------------------------------------------------------------------------
+# Funktionen
+# -----------------------------------------------------------------------------
+get_latest_release() {
+    if [ "$INCLUDE_PRERELEASE" = true ]; then
+        # Hole alle Releases (inklusive Pre-Releases), nimm das erste (neueste)
+        curl -sSL "https://api.github.com/repos/$GITHUB_REPO/releases" | \
+            grep -m 1 '"tag_name":' | \
+            sed -E 's/.*"tag_name": "([^"]+)".*/\1/'
+    else
+        # Hole nur das neueste stabile Release
+        curl -sSL "https://api.github.com/repos/$GITHUB_REPO/releases/latest" | \
+            grep '"tag_name":' | \
+            sed -E 's/.*"tag_name": "([^"]+)".*/\1/'
+    fi
+}
+
+get_current_version() {
+    if [ -f "$SIDEKICK_DIR/VERSION" ]; then
+        cat "$SIDEKICK_DIR/VERSION"
+    else
+        echo "nicht installiert"
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# Start
+# -----------------------------------------------------------------------------
 echo "=============================================="
 echo "  SIDEKICK Update"
 echo "=============================================="
 echo ""
 
-USER_HOME="$HOME"
-SIDEKICK_DIR="$USER_HOME/Sidekick"
+if [ "$INCLUDE_PRERELEASE" = true ]; then
+    echo "Modus: Inklusive Pre-Releases (Test/Dev)"
+else
+    echo "Modus: Nur stabile Releases"
+fi
+echo ""
 
-# Pruefen ob Sidekick-Ordner existiert
+# Prüfen ob Sidekick-Ordner existiert
 if [ ! -d "$SIDEKICK_DIR" ]; then
     echo "Sidekick-Ordner nicht gefunden. Erstelle..."
     mkdir -p "$SIDEKICK_DIR"
@@ -26,82 +108,119 @@ fi
 cd "$SIDEKICK_DIR"
 
 # -----------------------------------------------------------------------------
-# 1. Python-Skripte aktualisieren (master branch)
+# 1. Aktuelle und neueste Version ermitteln
 # -----------------------------------------------------------------------------
-echo "[1/2] Aktualisiere Python-Skripte..."
+echo "[1/4] Prüfe Versionen..."
 
-PYTHON_DIR="$SIDEKICK_DIR/python"
-REPO_URL="https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/python"
+CURRENT_VERSION=$(get_current_version)
+echo "   Installierte Version: $CURRENT_VERSION"
 
-mkdir -p "$PYTHON_DIR"
+LATEST_VERSION=$(get_latest_release)
+if [ -z "$LATEST_VERSION" ]; then
+    echo "   FEHLER: Konnte neueste Version nicht ermitteln!"
+    echo "   Prüfe deine Internetverbindung."
+    exit 1
+fi
+echo "   Neueste Version: $LATEST_VERSION"
 
-# Dateien herunterladen
-curl -sSL "$REPO_URL/ScratchConnect.py" -o "$PYTHON_DIR/ScratchConnect.py"
-curl -sSL "$REPO_URL/SmartBox.py" -o "$PYTHON_DIR/SmartBox.py"
-curl -sSL "$REPO_URL/neopixel.py" -o "$PYTHON_DIR/neopixel.py"
-curl -sSL "$REPO_URL/SimpleLED.py" -o "$PYTHON_DIR/SimpleLED.py"
-curl -sSL "$REPO_URL/sidekick-dashboard.py" -o "$PYTHON_DIR/sidekick-dashboard.py"
-curl -sSL "$REPO_URL/generate-video-list.py" -o "$PYTHON_DIR/generate-video-list.py" 2>/dev/null || true
+if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
+    echo ""
+    echo "   ✓ Du hast bereits die neueste Version!"
+    echo ""
+    read -p "   Trotzdem neu installieren? (j/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Jj]$ ]]; then
+        echo "   Update abgebrochen."
+        exit 0
+    fi
+fi
 
-# Auch Setup-Scripts herunterladen
-SCRIPTS_URL="https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi"
-curl -sSL "$SCRIPTS_URL/setup-autostart.sh" -o "$SIDEKICK_DIR/setup-autostart.sh"
-curl -sSL "$SCRIPTS_URL/setup-kiosk.sh" -o "$SIDEKICK_DIR/setup-kiosk.sh"
-curl -sSL "$SCRIPTS_URL/update-sidekick.sh" -o "$SIDEKICK_DIR/update-sidekick.sh"
-chmod +x "$SIDEKICK_DIR"/*.sh
-
-echo "   Abgeschlossen: Python-Skripte und Setup-Scripts aktualisiert"
+echo ""
 
 # -----------------------------------------------------------------------------
-# 2. Webapp aktualisieren (gh-pages branch)
+# 2. Release herunterladen
 # -----------------------------------------------------------------------------
-echo "[2/2] Aktualisiere Webapp..."
+echo "[2/4] Lade Release $LATEST_VERSION herunter..."
 
-WEBAPP_DIR="$SIDEKICK_DIR/sidekick-scratch-extension-development-gh-pages"
-SCRATCH_DIR="$WEBAPP_DIR/scratch"
+DOWNLOAD_URL="https://github.com/$GITHUB_REPO/releases/download/$LATEST_VERSION/sidekick-$LATEST_VERSION.zip"
+TEMP_ZIP="$SIDEKICK_DIR/sidekick-update.zip"
+TEMP_DIR="$SIDEKICK_DIR/sidekick-update-temp"
 
-# Sichere Benutzer-Dateien (Projekte, Videos) vor dem Löschen
+# Download
+if ! curl -sSL "$DOWNLOAD_URL" -o "$TEMP_ZIP"; then
+    echo "   FEHLER: Download fehlgeschlagen!"
+    echo "   URL: $DOWNLOAD_URL"
+    exit 1
+fi
+
+echo "   ✓ Download abgeschlossen"
+
+# -----------------------------------------------------------------------------
+# 3. Backup und Installation
+# -----------------------------------------------------------------------------
+echo "[3/4] Installiere Update..."
+
+# Sichere Benutzer-Dateien (Projekte, Videos)
 BACKUP_DIR="$SIDEKICK_DIR/.backup_temp"
-if [ -d "$SCRATCH_DIR/projects" ] || [ -d "$SCRATCH_DIR/videos" ]; then
+if [ -d "$WEBAPP_DIR/projects" ] || [ -d "$WEBAPP_DIR/videos" ]; then
     echo "   Sichere Projekte und Videos..."
     mkdir -p "$BACKUP_DIR"
-    [ -d "$SCRATCH_DIR/projects" ] && cp -r "$SCRATCH_DIR/projects" "$BACKUP_DIR/"
-    [ -d "$SCRATCH_DIR/videos" ] && cp -r "$SCRATCH_DIR/videos" "$BACKUP_DIR/"
+    [ -d "$WEBAPP_DIR/projects" ] && cp -r "$WEBAPP_DIR/projects" "$BACKUP_DIR/"
+    [ -d "$WEBAPP_DIR/videos" ] && cp -r "$WEBAPP_DIR/videos" "$BACKUP_DIR/"
 fi
 
-# Falls der Ordner existiert, entfernen
-if [ -d "$WEBAPP_DIR" ]; then
-    rm -rf "$WEBAPP_DIR"
+# Entpacken
+rm -rf "$TEMP_DIR"
+mkdir -p "$TEMP_DIR"
+unzip -q "$TEMP_ZIP" -d "$TEMP_DIR"
+rm -f "$TEMP_ZIP"
+
+# Alte Dateien entfernen und neue kopieren
+rm -rf "$WEBAPP_DIR"
+rm -rf "$PYTHON_DIR"
+rm -rf "$SCRIPTS_DIR"
+
+# Neue Dateien installieren
+mv "$TEMP_DIR/sidekick" "$WEBAPP_DIR"
+mv "$TEMP_DIR/python" "$PYTHON_DIR"
+mv "$TEMP_DIR/scripts" "$SCRIPTS_DIR" 2>/dev/null || true
+
+# VERSION-Datei speichern
+cp "$TEMP_DIR/VERSION" "$SIDEKICK_DIR/VERSION" 2>/dev/null || echo "$LATEST_VERSION" > "$SIDEKICK_DIR/VERSION"
+
+# Update-Script aktualisieren (sich selbst)
+if [ -f "$SCRIPTS_DIR/update-sidekick.sh" ]; then
+    cp "$SCRIPTS_DIR/update-sidekick.sh" "$SIDEKICK_DIR/update-sidekick.sh"
+    chmod +x "$SIDEKICK_DIR/update-sidekick.sh"
 fi
 
-# gh-pages Branch als ZIP herunterladen und entpacken
-cd "$SIDEKICK_DIR"
-curl -sSL "https://github.com/Mixality/sidekick-scratch-extension-development/archive/refs/heads/gh-pages.zip" -o gh-pages.zip
-unzip -q gh-pages.zip
-mv sidekick-scratch-extension-development-gh-pages "$WEBAPP_DIR" 2>/dev/null || true
-rm -f gh-pages.zip
+# Aufräumen
+rm -rf "$TEMP_DIR"
 
 # Stelle Benutzer-Dateien wieder her
 if [ -d "$BACKUP_DIR" ]; then
     echo "   Stelle Projekte und Videos wieder her..."
-    [ -d "$BACKUP_DIR/projects" ] && cp -r "$BACKUP_DIR/projects" "$SCRATCH_DIR/"
-    [ -d "$BACKUP_DIR/videos" ] && cp -r "$BACKUP_DIR/videos" "$SCRATCH_DIR/"
+    [ -d "$BACKUP_DIR/projects" ] && cp -r "$BACKUP_DIR/projects" "$WEBAPP_DIR/"
+    [ -d "$BACKUP_DIR/videos" ] && cp -r "$BACKUP_DIR/videos" "$WEBAPP_DIR/"
     rm -rf "$BACKUP_DIR"
 fi
 
 # Stelle sicher dass die Ordner existieren
-mkdir -p "$SCRATCH_DIR/projects"
-mkdir -p "$SCRATCH_DIR/videos"
+mkdir -p "$WEBAPP_DIR/projects"
+mkdir -p "$WEBAPP_DIR/videos"
 
-echo "   Abgeschlossen: Webapp aktualisiert"
+# Skripte ausführbar machen
+chmod +x "$SIDEKICK_DIR"/*.sh 2>/dev/null || true
+chmod +x "$SCRIPTS_DIR"/*.sh 2>/dev/null || true
+
+echo "   ✓ Installation abgeschlossen"
 
 # -----------------------------------------------------------------------------
-# Services neu starten (falls vorhanden)
+# 4. Services neu starten
 # -----------------------------------------------------------------------------
-echo ""
-echo "Starte Services neu..."
+echo "[4/4] Starte Services neu..."
 
-# Restart services if they are enabled (even if currently crashed/inactive)
+# Restart services if they are enabled
 if systemctl is-enabled --quiet sidekick-webapp 2>/dev/null; then
     sudo systemctl restart sidekick-webapp
     echo "   ✓ sidekick-webapp neu gestartet"
@@ -117,8 +236,11 @@ if systemctl is-enabled --quiet sidekick-dashboard 2>/dev/null; then
     echo "   ✓ sidekick-dashboard neu gestartet"
 fi
 
+# -----------------------------------------------------------------------------
+# Fertig!
+# -----------------------------------------------------------------------------
 echo ""
 echo "=============================================="
-echo "  Update abgeschlossen!"
+echo "  ✅ Update auf $LATEST_VERSION abgeschlossen!"
 echo "=============================================="
 echo ""
