@@ -66,7 +66,8 @@ echo ""
 # -----------------------------------------------------------------------------
 # Seriennummer fuer eindeutigen Hotspot-Namen ermitteln
 # -----------------------------------------------------------------------------
-SERIAL=$(cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2 | tail -c 17)
+# Nur die letzten 8 Zeichen der Seriennummer (kürzer, aber immer noch eindeutig)
+SERIAL=$(cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2 | tail -c 9)
 if [ -z "$SERIAL" ]; then
     SERIAL="unknown"
 fi
@@ -257,11 +258,33 @@ ExecStartPre=/bin/sleep 3
 WantedBy=multi-user.target
 EOF
 
+# Dashboard Service (Port 8080)
+DASHBOARD_SCRIPT="$SIDEKICK_DIR/python/sidekick-dashboard.py"
+cat > /etc/systemd/system/sidekick-dashboard.service << EOF
+[Unit]
+Description=SIDEKICK Dashboard Web Interface
+After=network.target sidekick-webapp.service
+Wants=sidekick-webapp.service
+
+[Service]
+Type=simple
+User=$ACTUAL_USER
+WorkingDirectory=$SIDEKICK_DIR/python
+ExecStart=/usr/bin/python3 $DASHBOARD_SCRIPT
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 systemctl daemon-reload
 systemctl enable sidekick-webapp.service
 systemctl enable sidekick-sensors.service
+systemctl enable sidekick-dashboard.service
 systemctl start sidekick-webapp.service
 systemctl start sidekick-sensors.service
+systemctl start sidekick-dashboard.service
 
 echo -e "${GREEN}   Autostart-Services eingerichtet${NC}"
 
@@ -319,6 +342,43 @@ fi
 echo -e "${GREEN}   Desktop-Shortcuts installiert${NC}"
 
 # -----------------------------------------------------------------------------
+# 8. Kiosk-Modus einrichten (optional)
+# -----------------------------------------------------------------------------
+echo ""
+read -p "Kiosk-Modus einrichten (Fullscreen-Browser beim Start)? (j/N): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Jj]$ ]]; then
+    echo -e "${YELLOW}[8/8] Richte Kiosk-Modus ein...${NC}"
+    
+    # Kiosk-Service erstellen
+    cat > /etc/systemd/system/sidekick-kiosk.service << EOF
+[Unit]
+Description=SIDEKICK Kiosk Browser
+After=graphical.target sidekick-webapp.service
+Wants=sidekick-webapp.service
+
+[Service]
+Type=simple
+User=$ACTUAL_USER
+Environment=DISPLAY=:0
+ExecStartPre=/bin/sleep 5
+ExecStart=/usr/bin/chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run --disable-session-crashed-bubble --disable-component-update http://10.42.0.1:8000/kiosk.html
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical.target
+EOF
+
+    systemctl daemon-reload
+    systemctl enable sidekick-kiosk.service
+    
+    echo -e "${GREEN}   Kiosk-Modus eingerichtet${NC}"
+else
+    echo "   Kiosk-Modus übersprungen"
+fi
+
+# -----------------------------------------------------------------------------
 # Fertig!
 # -----------------------------------------------------------------------------
 echo ""
@@ -335,18 +395,27 @@ echo ""
 echo "Verbindung (vom Tablet/Laptop):"
 echo "  1. Mit WLAN '$HOTSPOT_SSID' verbinden"
 echo "  2. Browser: http://10.42.0.1:8000"
-echo "  3. In Scratch: Verbinde mit ws://10.42.0.1:9001"
+echo "  3. Dashboard: http://10.42.0.1:8080"
 echo ""
 echo "Dienste:"
-echo "  - sidekick-webapp  (HTTP-Server)"
-echo "  - sidekick-sensors (ScratchConnect)"
-echo "  - mosquitto        (MQTT-Broker)"
+echo "  - sidekick-webapp    (HTTP-Server, Port 8000)"
+echo "  - sidekick-dashboard (Dashboard, Port 8080)"
+echo "  - sidekick-sensors   (ScratchConnect)"
+echo "  - mosquitto          (MQTT-Broker)"
 echo ""
 echo "Desktop-Shortcuts wurden installiert fuer:"
 echo "  - Update"
 echo "  - Neustart"
 echo "  - Status"
 echo ""
-echo -e "${YELLOW}Empfehlung: Raspberry Pi jetzt neu starten!${NC}"
-echo "  sudo reboot"
-echo ""
+
+# Reboot-Abfrage
+read -p "Raspberry Pi jetzt neu starten? (J/n): " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+    echo "Starte neu..."
+    sleep 2
+    sudo reboot
+else
+    echo -e "${YELLOW}Bitte spaeter manuell neu starten: sudo reboot${NC}"
+fi

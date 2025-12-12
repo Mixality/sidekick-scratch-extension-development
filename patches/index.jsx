@@ -1,8 +1,11 @@
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 
-import sidekickExtensionInsetIconURL from './sidekickextension/sidekick-extension-icon.png';
-import sidekickExtensionIconURL from './sidekickextension/sidekick-extension-background.png';
+import sidekickMQTTIconURL from './sidekickmqtt/sidekick-mqtt.png';
+import sidekickMQTTInsetIconURL from './sidekickmqtt/sidekick-mqtt-small.png';
+
+import sidekickIconURL from './sidekick/sidekick.svg';
+import sidekickInsetIconURL from './sidekick/sidekick-small.svg';
 
 import musicIconURL from './music/music.png';
 import musicInsetIconURL from './music/music-small.svg';
@@ -53,18 +56,39 @@ export default [
     {
         name: (
             <FormattedMessage
+                defaultMessage="SIDEKICK MQTT Extension"
+                description="Name for the 'SIDEKICK MQTT' extension"
+                id="gui.extension.sidekickmqtt.name"
+            />
+        ),
+        extensionId: 'sidekickMQTT',
+        iconURL: sidekickMQTTIconURL,
+        insetIconURL: sidekickMQTTInsetIconURL,
+        description: (
+            <FormattedMessage
+                defaultMessage="Custom Scratch MQTT extension."
+                description="Description for the 'SIDEKICK MQTT' extension"
+                id="gui.extension.sidekickmqtt.description"
+            />
+        ),
+        featured: true,
+        disabled: false
+    },
+    {
+        name: (
+            <FormattedMessage
                 defaultMessage="SIDEKICK Extension"
-                description="Name for the 'SIDEKICK Extension' extension"
+                description="Name for the 'SIDEKICK' extension"
                 id="gui.extension.sidekick.name"
             />
         ),
-        extensionId: 'sidekickScratchExtension',
-        iconURL: sidekickExtensionIconURL,
-        insetIconURL: sidekickExtensionInsetIconURL,
+        extensionId: 'sidekick',
+        iconURL: sidekickIconURL,
+        insetIconURL: sidekickInsetIconURL,
         description: (
             <FormattedMessage
-                defaultMessage="Custom Scratch extension."
-                description="Description for the 'SIDEKICK Extension' extension"
+                defaultMessage="SIDEKICK Scratch extension."
+                description="Description for the 'SIDEKICK' extension"
                 id="gui.extension.sidekick.description"
             />
         ),

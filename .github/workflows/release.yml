@@ -67,11 +67,32 @@ jobs:
           # Skip docs generation (jsdoc has issues), only run webpack
           ./node_modules/.bin/webpack --progress
       
-      # 6. Player.jsx patchen
-      - name: Patch player.jsx
-        run: cp patches/player.jsx scratch-gui/src/playground/player.jsx
+      # 6. Patches anwenden (Extension Manager + Player + Icons)
+      - name: Apply patches
+        run: |
+          # Extension Manager patchen (registriert die SIDEKICK Extensions)
+          cp patches/extension-manager.js scratch-vm/src/extension-support/extension-manager.js
+          
+          # Extension Icons kopieren
+          cp -r patches/extensions/sidekick scratch-gui/src/lib/libraries/extensions/
+          cp -r patches/extensions/sidekickmqtt scratch-gui/src/lib/libraries/extensions/
+          
+          # index.jsx patchen (Extension-Bibliothek UI)
+          cp patches/index.jsx scratch-gui/src/lib/libraries/extensions/index.jsx
+          
+          # Player.jsx patchen (für Kiosk/Fullscreen)
+          cp patches/player.jsx scratch-gui/src/playground/player.jsx
       
-      # 7. Scratch-GUI Setup und Build
+      # 7. Scratch-VM neu bauen (nach Patches)
+      - name: Rebuild Scratch-VM after patches
+        working-directory: scratch-vm
+        env:
+          NODE_OPTIONS: '--openssl-legacy-provider'
+          HUSKY: '0'
+        run: |
+          ./node_modules/.bin/webpack --progress
+      
+      # 8. Scratch-GUI Setup und Build
       - name: Setup and Build Scratch-GUI
         working-directory: scratch-gui
         env:
@@ -82,7 +103,7 @@ jobs:
           npm link ../scratch-vm
           npm run build
       
-      # 8. Release-Paket zusammenstellen
+      # 9. Release-Paket zusammenstellen
       - name: Prepare release package
         run: |
           mkdir -p release/sidekick
