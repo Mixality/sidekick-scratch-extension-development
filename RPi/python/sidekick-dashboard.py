@@ -622,8 +622,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     <button class="btn btn-start" onclick="startProject()">▶️ Start (Grüne Flagge)</button>
                     <button class="btn btn-stop" onclick="stopProject()">⏹️ Stop</button>
                     <button class="btn btn-secondary" onclick="toggleFullscreen()" title="Stage-Vollbild umschalten">⛶ Vollbild</button>
-                    # <a href="http://10.42.0.1:{KIOSK_PORT}/kiosk.html" target="_blank" class="btn btn-secondary">🔗 Kiosk-Display öffnen</a>
-                    <a href="http://10.42.0.1:8000/custom-player.html" target="_blank" class="btn btn-secondary">🔗 Custom Player öffnen</a>
+                    <a href="http://10.42.0.1:{KIOSK_PORT}/kiosk.html" target="_blank" class="btn btn-secondary">🔗 Kiosk-Display öffnen</a>
                 </div>
                 
                 <div id="displayStatus" style="color: #888; font-size: 0.9em;">

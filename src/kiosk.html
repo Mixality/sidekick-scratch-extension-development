@@ -168,8 +168,10 @@
             align-items: center;
         }
         
-        .qr-container canvas {
+        .qr-container img {
             display: block;
+            width: 180px;
+            height: 180px;
         }
         
         .qr-label {
@@ -187,8 +189,7 @@
         }
     </style>
     
-    <!-- QR Code Library -->
-    <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- QR Code wird dynamisch als img generiert -->
 </head>
 <body>
     <!-- Welcome Screen (wird beim Laden eines Projekts ausgeblendet) -->
@@ -200,7 +201,7 @@
             Scanne den QR-Code um das Dashboard zu öffnen
         </p>
         <div class="qr-container">
-            <canvas id="qrcode"></canvas>
+            <img id="qrcode" alt="QR Code">
             <div class="qr-label">📱 Dashboard</div>
         </div>
         <p class="dashboard-url" id="dashboardUrl"></p>
@@ -474,25 +475,21 @@
         // ============================================
         
         function generateQRCode() {
-            const dashboardUrl = `http://${CONFIG.mqttBroker}:${CONFIG.dashboardPort}/`;
-            const canvas = document.getElementById('qrcode');
+            // Auf dem Pi immer die Hotspot-IP verwenden
+            const dashboardUrl = `http://10.42.0.1:${CONFIG.dashboardPort}/`;
+            const qrImage = document.getElementById('qrcode');
             const urlDisplay = document.getElementById('dashboardUrl');
             
-            if (canvas && typeof QRCode !== 'undefined') {
-                QRCode.toCanvas(canvas, dashboardUrl, {
-                    width: 180,
-                    margin: 2,
-                    color: {
-                        dark: '#1a1a2e',
-                        light: '#ffffff'
-                    }
-                }, function(error) {
-                    if (error) {
-                        console.error('QR Code Error:', error);
-                    } else {
-                        console.log('QR Code generiert für:', dashboardUrl);
-                    }
-                });
+            if (qrImage) {
+                // Verwende Google Charts API für QR-Code (funktioniert offline nicht, aber zuverlässig)
+                // Alternative: QR-Code als Data-URL generieren
+                const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(dashboardUrl)}`;
+                qrImage.src = qrApiUrl;
+                qrImage.onerror = function() {
+                    // Fallback: Zeige nur die URL
+                    qrImage.style.display = 'none';
+                    console.log('QR Code API nicht erreichbar');
+                };
             }
             
             if (urlDisplay) {
