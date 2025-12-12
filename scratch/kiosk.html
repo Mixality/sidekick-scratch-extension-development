@@ -156,7 +156,39 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        /* QR Code Container */
+        .qr-container {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .qr-container canvas {
+            display: block;
+        }
+        
+        .qr-label {
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .dashboard-url {
+            margin-top: 1rem;
+            font-size: 1rem;
+            color: #0E9D59;
+            font-family: monospace;
+        }
     </style>
+    
+    <!-- QR Code Library -->
+    <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body>
     <!-- Welcome Screen (wird beim Laden eines Projekts ausgeblendet) -->
@@ -165,8 +197,13 @@
         <p>Warte auf Projekt...</p>
         <div class="loading-spinner"></div>
         <p style="margin-top: 2rem; font-size: 1rem; color: #666;">
-            Öffne das Dashboard um ein Projekt zu starten
+            Scanne den QR-Code um das Dashboard zu öffnen
         </p>
+        <div class="qr-container">
+            <canvas id="qrcode"></canvas>
+            <div class="qr-label">📱 Dashboard</div>
+        </div>
+        <p class="dashboard-url" id="dashboardUrl"></p>
     </div>
     
     <!-- Scratch Container -->
@@ -293,6 +330,9 @@
                     case 'sidekick/display/stop':
                         stopProject();
                         break;
+                    case 'sidekick/display/fullscreen':
+                        toggleFullscreen();
+                        break;
                     case 'sidekick/display/status':
                         publishStatus();
                         break;
@@ -382,6 +422,34 @@
             publishStatus();
         }
         
+        function toggleFullscreen() {
+            console.log('Toggle Fullscreen...');
+            
+            // Der Player verwendet URL-Parameter für Fullscreen
+            // Wir müssen das aktuelle Projekt neu laden mit/ohne fullscreen Parameter
+            if (!currentProject) {
+                showStatus('⚠️', 'Kein Projekt geladen');
+                return;
+            }
+            
+            // Prüfe ob aktuell fullscreen aktiv ist
+            const currentUrl = scratchFrame.src;
+            const isCurrentlyFullscreen = currentUrl.includes('fullscreen=1');
+            
+            // Baue neue URL
+            const projectUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/projects/${encodeURIComponent(currentProject)}`;
+            let newUrl = `http://${CONFIG.mqttBroker}:${CONFIG.scratchPort}/player.html?project=${encodeURIComponent(projectUrl)}`;
+            
+            if (!isCurrentlyFullscreen) {
+                newUrl += '&fullscreen=1';
+                showStatus('⛶', 'Vollbild aktiviert');
+            } else {
+                showStatus('⛶', 'Vollbild deaktiviert');
+            }
+            
+            scratchFrame.src = newUrl;
+        }
+        
         // ============================================
         // Cursor Auto-Hide
         // ============================================
@@ -402,11 +470,45 @@
         document.addEventListener('mousedown', showCursor);
         
         // ============================================
+        // QR Code Generation
+        // ============================================
+        
+        function generateQRCode() {
+            const dashboardUrl = `http://${CONFIG.mqttBroker}:${CONFIG.dashboardPort}/`;
+            const canvas = document.getElementById('qrcode');
+            const urlDisplay = document.getElementById('dashboardUrl');
+            
+            if (canvas && typeof QRCode !== 'undefined') {
+                QRCode.toCanvas(canvas, dashboardUrl, {
+                    width: 180,
+                    margin: 2,
+                    color: {
+                        dark: '#1a1a2e',
+                        light: '#ffffff'
+                    }
+                }, function(error) {
+                    if (error) {
+                        console.error('QR Code Error:', error);
+                    } else {
+                        console.log('QR Code generiert für:', dashboardUrl);
+                    }
+                });
+            }
+            
+            if (urlDisplay) {
+                urlDisplay.textContent = dashboardUrl;
+            }
+        }
+        
+        // ============================================
         // Initialize
         // ============================================
         
         document.addEventListener('DOMContentLoaded', () => {
             console.log('SIDEKICK Kiosk gestartet');
+            
+            // QR Code generieren
+            generateQRCode();
             
             // Cursor nach 3 Sekunden ausblenden
             cursorTimeout = setTimeout(hideCursor, 3000);
