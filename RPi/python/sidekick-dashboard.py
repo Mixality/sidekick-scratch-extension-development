@@ -257,6 +257,35 @@ HTML_HEADER = """<!DOCTYPE html>
             cursor: pointer;
         }
         .project-select option { background: #1a1a2e; }
+        /* Rename input styling */
+        .rename-row {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(14, 157, 89, 0.15);
+            border-radius: 8px;
+        }
+        .rename-row.visible { display: flex; }
+        .rename-row label { color: #0E9D59; font-weight: bold; white-space: nowrap; }
+        .rename-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #0E9D59;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #eee;
+            font-size: 1em;
+        }
+        .rename-input:focus { outline: none; box-shadow: 0 0 10px rgba(14, 157, 89, 0.5); }
+        .extension-label { color: #888; font-weight: bold; }
+        .btn-rename {
+            background: #f39c12;
+            padding: 8px 12px !important;
+            font-size: 0.9em;
+        }
+        .btn-rename:hover { background: #d68910; }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -320,6 +349,20 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self.delete_project(filename)
             else:
                 self.send_redirect('/?status=error_no_file')
+        elif path == '/rename-video':
+            old_name = query.get('old', [None])[0]
+            new_name = query.get('new', [None])[0]
+            if old_name and new_name:
+                self.rename_file(VIDEOS_DIR, old_name, new_name, 'video', VIDEO_EXTENSIONS)
+            else:
+                self.send_redirect('/?status=error_no_file')
+        elif path == '/rename-project':
+            old_name = query.get('old', [None])[0]
+            new_name = query.get('new', [None])[0]
+            if old_name and new_name:
+                self.rename_file(PROJECTS_DIR, old_name, new_name, 'project', PROJECT_EXTENSIONS)
+            else:
+                self.send_redirect('/?status=error_no_file')
         else:
             self.send_error(404, 'Not Found')
     
@@ -353,7 +396,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             body = self.rfile.read(content_length)
             
             # Parse multipart data manually
-            filename, file_data = self.parse_multipart(body, boundary)
+            filename, file_data, custom_name = self.parse_multipart(body, boundary)
             
             if not filename or not file_data:
                 self.send_redirect(f'/?status=error_no_file')
@@ -365,6 +408,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
             if ext not in allowed_extensions:
                 self.send_redirect(f'/?status=error_invalid_type')
                 return
+            
+            # Use custom name if provided
+            if custom_name:
+                # Sanitize custom name (remove path separators and dangerous chars)
+                custom_name = re.sub(r'[<>:"/\\|?*]', '', custom_name)
+                custom_name = custom_name.strip()
+                if custom_name:
+                    filename = custom_name + ext
             
             # Save file
             filepath = target_dir / filename
@@ -386,12 +437,34 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_redirect(f'/?status=error_upload')
     
     def parse_multipart(self, body, boundary):
-        """Parse multipart form data and extract file"""
+        """Parse multipart form data and extract file and custom name"""
         # Split by boundary
         parts = body.split(b'--' + boundary)
         
+        filename = None
+        file_data = None
+        custom_name = None
+        
         for part in parts:
             if b'Content-Disposition' not in part:
+                continue
+            
+            # Check if this is the customName field
+            if b'name="customName"' in part and b'filename=' not in part:
+                header_end = part.find(b'\r\n\r\n')
+                if header_end == -1:
+                    header_end = part.find(b'\n\n')
+                    if header_end == -1:
+                        continue
+                    content_start = header_end + 2
+                else:
+                    content_start = header_end + 4
+                
+                value = part[content_start:].strip()
+                if value.endswith(b'\r\n'):
+                    value = value[:-2]
+                if value:
+                    custom_name = value.decode('utf-8').strip()
                 continue
             
             # Check if this part has a filename (it's a file upload)
@@ -429,10 +502,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 file_data = file_data[:-2]
                 if file_data.endswith(b'\r\n'):
                     file_data = file_data[:-2]
-            
-            return filename, file_data
         
-        return None, None
+        return filename, file_data, custom_name
     
     def delete_video(self, filename):
         """Löscht ein Video"""
@@ -462,6 +533,40 @@ class DashboardHandler(BaseHTTPRequestHandler):
             print(f"Delete error: {e}")
             self.send_redirect('/?status=error_delete')
     
+    def rename_file(self, target_dir, old_name, new_name, file_type, allowed_extensions):
+        """Benennt eine Datei um"""
+        try:
+            old_path = target_dir / old_name
+            new_path = target_dir / new_name
+            
+            # Validierung
+            if not old_path.exists():
+                self.send_redirect('/?status=error_not_found')
+                return
+            if old_path.suffix.lower() not in allowed_extensions:
+                self.send_redirect('/?status=error_invalid_type')
+                return
+            if new_path.suffix.lower() not in allowed_extensions:
+                self.send_redirect('/?status=error_invalid_type')
+                return
+            if new_path.exists() and new_path != old_path:
+                self.send_redirect('/?status=error_exists')
+                return
+            
+            # Umbenennen
+            old_path.rename(new_path)
+            
+            # Listen aktualisieren
+            if file_type == 'video':
+                update_video_list()
+            else:
+                update_project_list()
+            
+            self.send_redirect(f'/?status=renamed_{file_type}')
+        except Exception as e:
+            print(f"Rename error: {e}")
+            self.send_redirect('/?status=error_rename')
+    
     def serve_dashboard(self, status_msg=None):
         """Rendert die Dashboard-Seite"""
         html = HTML_HEADER
@@ -483,7 +588,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 'error_invalid_type': '❌ Ungültiger Dateityp!',
                 'error_upload': '❌ Fehler beim Hochladen!',
                 'error_delete': '❌ Fehler beim Löschen!',
-                'error_not_found': '❌ Datei nicht gefunden!'
+                'error_not_found': '❌ Datei nicht gefunden!',
+                'renamed_video': '✅ Video umbenannt!',
+                'renamed_project': '✅ Projekt umbenannt!',
+                'error_rename': '❌ Fehler beim Umbenennen!',
+                'error_exists': '❌ Eine Datei mit diesem Namen existiert bereits!'
             }
             msg = messages.get(status_msg, status_msg)
             html += f'<div class="status {status_class}">{msg}</div>'
@@ -512,6 +621,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 <div class="control-buttons">
                     <button class="btn btn-start" onclick="startProject()">▶️ Start (Grüne Flagge)</button>
                     <button class="btn btn-stop" onclick="stopProject()">⏹️ Stop</button>
+                    <button class="btn btn-secondary" onclick="toggleFullscreen()" title="Stage-Vollbild umschalten">⛶ Vollbild</button>
                     # <a href="http://10.42.0.1:{KIOSK_PORT}/kiosk.html" target="_blank" class="btn btn-secondary">🔗 Kiosk-Display öffnen</a>
                     <a href="http://10.42.0.1:8000/custom-player.html" target="_blank" class="btn btn-secondary">🔗 Custom Player öffnen</a>
                 </div>
@@ -606,8 +716,54 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 }}
             }}
             
+            function toggleFullscreen() {{
+                if (mqttClient && mqttClient.connected) {{
+                    mqttClient.publish('sidekick/display/fullscreen', 'toggle');
+                    console.log('Fullscreen-Toggle gesendet');
+                }} else {{
+                    alert('Nicht mit MQTT verbunden!');
+                }}
+            }}
+            
             // MQTT beim Laden verbinden
             document.addEventListener('DOMContentLoaded', connectMQTT);
+            
+            // Rename field functions
+            function showRenameField(type) {
+                const fileInput = document.getElementById(type + 'FileInput');
+                const renameRow = document.getElementById(type + 'RenameRow');
+                const nameInput = document.getElementById(type + 'NameInput');
+                
+                if (fileInput.files.length > 0) {
+                    const fullName = fileInput.files[0].name;
+                    const lastDot = fullName.lastIndexOf('.');
+                    const baseName = lastDot > 0 ? fullName.substring(0, lastDot) : fullName;
+                    const ext = lastDot > 0 ? fullName.substring(lastDot) : '';
+                    
+                    nameInput.value = baseName;
+                    renameRow.classList.add('visible');
+                    
+                    // Update extension label for videos
+                    if (type === 'video') {
+                        document.getElementById('videoExtLabel').textContent = ext;
+                    }
+                } else {
+                    renameRow.classList.remove('visible');
+                }
+            }
+            
+            // Rename existing file
+            function renameFile(type, oldName) {
+                const lastDot = oldName.lastIndexOf('.');
+                const baseName = lastDot > 0 ? oldName.substring(0, lastDot) : oldName;
+                const ext = lastDot > 0 ? oldName.substring(lastDot) : '';
+                
+                const newBaseName = prompt('Neuer Name für "' + oldName + '":', baseName);
+                if (newBaseName && newBaseName !== baseName) {
+                    const newName = newBaseName + ext;
+                    window.location.href = '/rename-' + type + '?old=' + encodeURIComponent(oldName) + '&new=' + encodeURIComponent(newName);
+                }
+            }
         </script>
         '''
         
@@ -617,8 +773,13 @@ class DashboardHandler(BaseHTTPRequestHandler):
         html += '''
         <div class="card">
             <h2>📹 Video hochladen</h2>
-            <form class="upload-form" action="/upload-video" method="post" enctype="multipart/form-data">
-                <input type="file" name="file" accept=".mp4,.webm,.ogg,.ogv,.mov,.avi,.mkv" required>
+            <form class="upload-form" action="/upload-video" method="post" enctype="multipart/form-data" id="videoUploadForm">
+                <input type="file" name="file" accept=".mp4,.webm,.ogg,.ogv,.mov,.avi,.mkv" required id="videoFileInput" onchange="showRenameField('video')">
+                <div class="rename-row" id="videoRenameRow">
+                    <label>Speichern als:</label>
+                    <input type="text" class="rename-input" name="customName" id="videoNameInput" placeholder="Dateiname">
+                    <span class="extension-label" id="videoExtLabel">.mp4</span>
+                </div>
                 <button type="submit">Video hochladen</button>
             </form>
             <p style="color: #888; font-size: 0.9em; margin-top: 10px;">
@@ -631,8 +792,13 @@ class DashboardHandler(BaseHTTPRequestHandler):
         html += '''
         <div class="card">
             <h2>📁 Projekt hochladen</h2>
-            <form class="upload-form" action="/upload-project" method="post" enctype="multipart/form-data">
-                <input type="file" name="file" accept=".sb3" required>
+            <form class="upload-form" action="/upload-project" method="post" enctype="multipart/form-data" id="projectUploadForm">
+                <input type="file" name="file" accept=".sb3" required id="projectFileInput" onchange="showRenameField('project')">
+                <div class="rename-row" id="projectRenameRow">
+                    <label>Speichern als:</label>
+                    <input type="text" class="rename-input" name="customName" id="projectNameInput" placeholder="Dateiname">
+                    <span class="extension-label">.sb3</span>
+                </div>
                 <button type="submit">Projekt hochladen</button>
             </form>
             <p style="color: #888; font-size: 0.9em; margin-top: 10px;">
@@ -659,6 +825,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     <td>{escaped_name}</td>
                     <td>{size}</td>
                     <td class="actions">
+                        <button class="btn btn-rename" onclick="renameFile('video', '{escaped_name}')" title="Umbenennen">✏️</button>
                         <a href="http://10.42.0.1:{SCRATCH_PORT}/videos/{url_name}" target="_blank" class="btn btn-secondary" style="padding: 8px 15px;">▶️ Abspielen</a>
                         <a href="/delete-video?file={url_name}" class="btn btn-danger" style="padding: 8px 15px;" onclick="return confirm('Wirklich löschen?')">🗑️ Löschen</a>
                     </td>
@@ -685,6 +852,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     <td>{escaped_name}</td>
                     <td>{size}</td>
                     <td class="actions">
+                        <button class="btn btn-rename" onclick="renameFile('project', '{escaped_name}')" title="Umbenennen">✏️</button>
                         <a href="http://10.42.0.1:{SCRATCH_PORT}/projects/{url_name}" download class="btn btn-secondary" style="padding: 8px 15px;">💾 Download</a>
                         <a href="/delete-project?file={url_name}" class="btn btn-danger" style="padding: 8px 15px;" onclick="return confirm('Wirklich löschen?')">🗑️ Löschen</a>
                     </td>
