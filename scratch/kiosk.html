@@ -334,6 +334,16 @@
                 welcomeScreen.classList.add('hidden');
                 showStatus('✓', `${projectName} geladen!`);
                 publishStatus();
+                
+                // Aktiviere Fullscreen im Player nach kurzer Verzögerung
+                setTimeout(() => {
+                    try {
+                        scratchFrame.contentWindow.postMessage({ type: 'fullscreen' }, '*');
+                        console.log('Fullscreen-Request gesendet');
+                    } catch (e) {
+                        console.log('Konnte Fullscreen nicht aktivieren:', e);
+                    }
+                }, 1500);
             };
             
             // Listen for project load confirmation from iframe
