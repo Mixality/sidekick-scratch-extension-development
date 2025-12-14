@@ -204,7 +204,7 @@ echo ""
 # -----------------------------------------------------------------------------
 # 1. Neueste Version ermitteln
 # -----------------------------------------------------------------------------
-print_step "1/8" "Prüfe verfügbare Versionen..."
+print_step "1/9" "Prüfe verfügbare Versionen..."
 
 LATEST_VERSION=$(get_latest_release)
 if [ -z "$LATEST_VERSION" ]; then
@@ -242,14 +242,63 @@ if [ "$IS_UPDATE" = false ]; then
 fi
 
 # =============================================================================
+# CLEANUP: Alte Services und Prozesse stoppen
+# =============================================================================
+print_step "2/9" "Räume alte Installation auf..."
+
+# Liste aller bekannten SIDEKICK-Services (alte und neue Namen)
+KNOWN_SERVICES=(
+    "sidekick-webapp"
+    "sidekick-sensors"
+    "sidekick-dashboard"
+    "sidekick-kiosk"
+    "sidekick-http"
+    "sidekick-scratch"
+)
+
+# Services stoppen und deaktivieren
+for service in "${KNOWN_SERVICES[@]}"; do
+    if systemctl is-active --quiet "$service" 2>/dev/null; then
+        systemctl stop "$service" 2>/dev/null || true
+        print_info "Gestoppt: $service"
+    fi
+    if systemctl is-enabled --quiet "$service" 2>/dev/null; then
+        systemctl disable "$service" 2>/dev/null || true
+    fi
+done
+
+# Alte Ports freigeben (8000, 8080 - die alten Ports)
+OLD_PORTS=(8000 8080)
+for port in "${OLD_PORTS[@]}"; do
+    # Finde Prozesse die auf alten Ports lauschen und beende sie
+    OLD_PIDS=$(lsof -t -i:$port 2>/dev/null || true)
+    if [ -n "$OLD_PIDS" ]; then
+        for pid in $OLD_PIDS; do
+            # Nur beenden wenn es ein Python http.server oder ähnliches ist
+            PROC_NAME=$(ps -p $pid -o comm= 2>/dev/null || true)
+            if [[ "$PROC_NAME" == *"python"* ]]; then
+                kill $pid 2>/dev/null || true
+                print_info "Prozess auf Port $port beendet (PID: $pid)"
+            fi
+        done
+    fi
+done
+
+# Alte Service-Dateien die nicht mehr gebraucht werden können entfernt werden
+# (aber wir überschreiben sie sowieso gleich, also nur zur Sicherheit)
+systemctl daemon-reload
+
+print_success "Cleanup abgeschlossen"
+
+# =============================================================================
 # NUR BEI ERSTINSTALLATION: System-Setup
 # =============================================================================
 if [ "$IS_UPDATE" = false ]; then
 
     # -------------------------------------------------------------------------
-    # 2. Pakete installieren
+    # 3. Pakete installieren
     # -------------------------------------------------------------------------
-    print_step "2/8" "Installiere benötigte Pakete..."
+    print_step "3/9" "Installiere benötigte Pakete..."
 
     apt-get update -qq
     apt-get install -y -qq mosquitto mosquitto-clients python3-pip curl unzip avahi-daemon qrencode
@@ -264,7 +313,7 @@ if [ "$IS_UPDATE" = false ]; then
     # -------------------------------------------------------------------------
     # 3. Mosquitto konfigurieren
     # -------------------------------------------------------------------------
-    print_step "3/8" "Konfiguriere MQTT-Broker..."
+    print_step "4/9" "Konfiguriere MQTT-Broker..."
 
     # Backup
     [ -f /etc/mosquitto/mosquitto.conf ] && cp /etc/mosquitto/mosquitto.conf /etc/mosquitto/mosquitto.conf.backup
@@ -286,7 +335,7 @@ EOF
     # -------------------------------------------------------------------------
     # 4. Hostname einrichten
     # -------------------------------------------------------------------------
-    print_step "4/8" "Richte Hostname ein..."
+    print_step "5/9" "Richte Hostname ein..."
 
     # Prüfe ob bereits ein SIDEKICK-Hostname existiert
     CURRENT_HOSTNAME=$(hostname)
@@ -317,7 +366,7 @@ EOF
     # -------------------------------------------------------------------------
     # 5. WLAN-Hotspot einrichten
     # -------------------------------------------------------------------------
-    print_step "5/8" "Richte WLAN-Hotspot ein..."
+    print_step "6/9" "Richte WLAN-Hotspot ein..."
 
     HOTSPOT_SSID="SIDEKICK-${SIDEKICK_HOSTNAME#sidekick-}"
     HOTSPOT_SSID=$(echo "$HOTSPOT_SSID" | tr '[:lower:]' '[:upper:]')
@@ -339,10 +388,10 @@ EOF
 
 else
     # UPDATE-Modus: Nur Schritte überspringen
-    print_step "2/8" "Pakete... (übersprungen - bereits installiert)"
-    print_step "3/8" "MQTT... (übersprungen - bereits konfiguriert)"
-    print_step "4/8" "Hostname... (übersprungen - bereits gesetzt)"
-    print_step "5/8" "Hotspot... (übersprungen - bereits konfiguriert)"
+    print_step "3/9" "Pakete... (übersprungen - bereits installiert)"
+    print_step "4/9" "MQTT... (übersprungen - bereits konfiguriert)"
+    print_step "5/9" "Hostname... (übersprungen - bereits gesetzt)"
+    print_step "6/9" "Hotspot... (übersprungen - bereits konfiguriert)"
     
     # Hostname für später ermitteln
     SIDEKICK_HOSTNAME=$(hostname)
@@ -358,7 +407,7 @@ fi
 # -----------------------------------------------------------------------------
 # 6. Verzeichnisse und Backup
 # -----------------------------------------------------------------------------
-print_step "6/8" "Bereite Installation vor..."
+print_step "7/9" "Bereite Installation vor..."
 
 mkdir -p "$SIDEKICK_DIR"
 
@@ -376,7 +425,7 @@ print_success "Vorbereitung abgeschlossen"
 # -----------------------------------------------------------------------------
 # 7. Download und Installation
 # -----------------------------------------------------------------------------
-print_step "7/8" "Lade SIDEKICK $LATEST_VERSION herunter..."
+print_step "8/9" "Lade SIDEKICK $LATEST_VERSION herunter..."
 
 cd "$SIDEKICK_DIR"
 
@@ -445,7 +494,7 @@ print_success "Installation abgeschlossen"
 # -----------------------------------------------------------------------------
 # 8. Services einrichten / neustarten
 # -----------------------------------------------------------------------------
-print_step "8/8" "Konfiguriere Services..."
+print_step "9/9" "Konfiguriere Services..."
 
 # Service-Pfade
 PYTHON_SCRIPT="$PYTHON_DIR/ScratchConnect.py"
