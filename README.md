@@ -93,3 +93,33 @@ Der Ablauf wäre:
 - 'update-sidekick.sh':
   - Stable: Standard
   - Pre-Release: --pre
+
+
+## Referenz
+
+- `-s`: bash liest von stdin (pipe)
+- `--`: "hier folgen Argumente für das Script (nicht für bash ...)"
+
+"Normale" Installation / Update:
+
+```shell
+curl ... | sudo bash
+```
+
+Mit Pre-Releases:
+
+```shell
+curl ... | sudo bash -s -- --pre
+```
+
+Force (Neuinstallation):
+
+```shell
+curl ... | sudo bash -s -- --force
+```
+
+Kombiniert:
+
+```shell
+curl ... | sudo bash -s -- --pre --force
+```
