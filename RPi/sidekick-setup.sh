@@ -579,22 +579,22 @@ EOF
     print_success "Services erstellt und gestartet"
 
 else
-    # UPDATE: Services starten (wurden im Cleanup gestoppt)
-    # Nutzt is-enabled um nur konfigurierte Services zu starten
+    # UPDATE: Services aktivieren und starten
+    # Prüft ob Service-Datei existiert (nicht is-enabled, da Service disabled sein könnte)
     systemctl daemon-reload
     
-    if systemctl is-enabled --quiet sidekick-webapp 2>/dev/null; then
-        systemctl start sidekick-webapp
+    if [ -f /etc/systemd/system/sidekick-webapp.service ]; then
+        systemctl enable --now sidekick-webapp
         print_success "sidekick-webapp gestartet"
     fi
 
-    if systemctl is-enabled --quiet sidekick-sensors 2>/dev/null; then
-        systemctl start sidekick-sensors
+    if [ -f /etc/systemd/system/sidekick-sensors.service ]; then
+        systemctl enable --now sidekick-sensors
         print_success "sidekick-sensors gestartet"
     fi
 
-    if systemctl is-enabled --quiet sidekick-dashboard 2>/dev/null; then
-        systemctl start sidekick-dashboard
+    if [ -f /etc/systemd/system/sidekick-dashboard.service ]; then
+        systemctl enable --now sidekick-dashboard
         print_success "sidekick-dashboard gestartet"
     fi
 fi
