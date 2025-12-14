@@ -128,9 +128,9 @@ jobs:
           mkdir -p release/python
           cp RPi/python/*.py release/python/
           
-          # Setup-Skripte
+          # Setup-Skript (unified install/update)
           mkdir -p release/scripts
-          cp RPi/*.sh release/scripts/
+          cp RPi/sidekick-setup.sh release/scripts/
           chmod +x release/scripts/*.sh
           
           # Version info
