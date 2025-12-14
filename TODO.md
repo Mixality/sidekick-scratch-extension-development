@@ -1,6 +1,6 @@
 # SIDEKICK TODO Liste
 
-## ✅ Erledigt (v1.0.1-test4)
+## ✅ Erledigt (v1.0.1-test6)
 
 - [x] GitHub Actions CI/CD eingerichtet
 - [x] Pre-Release System (Tags mit `test`, `dev`, `beta`, `alpha`)
@@ -18,10 +18,28 @@
 - [x] **Kiosk: Keyring-Dialog deaktiviert** (`--password-store=basic`)
 - [x] **Kiosk: Translate-Dialog deaktiviert** (`--disable-translate`)
 - [x] **curl stderr unterdrückt** (`2>/dev/null`)
+- [x] **Port-Standardisierung**: 8601 (Scratch), 5000 (Dashboard)
+- [x] **Cleanup-Step** im Setup: Stoppt alte Services, gibt alte Ports frei
+- [x] **Chromium-Pfad Auto-Erkennung** (`chromium` vs `chromium-browser`)
 
 ---
 
 ## 🔧 Offen
+
+### Priorität 1 (Wichtig für Benutzerfreundlichkeit)
+
+- [ ] **Video-Upload Warnung im Dashboard**
+  - Beim Upload prüfen: Codec, Auflösung, Dateigröße
+  - Warnung wenn HEVC/H.265 (nicht unterstützt auf Pi!)
+  - Warnung wenn >1080p oder >50MB
+  - Tipp anzeigen mit ffmpeg-Befehl zur Konvertierung
+  - Chromium auf Pi unterstützt nur: H.264, VP8, VP9
+
+- [ ] **Video Auto-Konvertierung (Optional)**
+  - Checkbox "Automatisch konvertieren" beim Upload
+  - Hintergrund-Job mit ffmpeg
+  - Fortschrittsanzeige
+  - Konvertiert zu H.264, 1080p, optimierte Größe
 
 ### Phase 2: USB-Stick Auto-Setup
 
@@ -50,9 +68,10 @@
 
 ## 🚀 Meilensteine
 
-- [ ] **v1.0.1-test4**: Unified Setup-Script testen
-- [ ] **v1.0.1**: Stabiles Release (nach erfolgreichem Test)
+- [x] **v1.0.1-test6**: Unified Setup, Cleanup, Chromium-Fix ✅
+- [ ] **v1.0.1**: Stabiles Release (nach Video-Warnung)
 - [ ] **v1.1.0**: Mit USB-Auto-Setup und Dashboard-Einstellungen
+- [ ] **v1.2.0**: Mit Auto-Video-Konvertierung
 
 ---
 
@@ -65,6 +84,11 @@
 - Videos auf dem Pi → erscheinen sofort im Scratch-Dropdown
 - Kein Export/Import nötig!
 
+**Video-Anforderungen:**
+- Codec: H.264 (AVC), VP8, VP9 ✅ | HEVC (H.265) ❌
+- Auflösung: max. 1920x1080 empfohlen
+- Dateigröße: max. 50MB empfohlen
+
 ---
 
-*Zuletzt aktualisiert: 14. Dezember 2024*
+*Zuletzt aktualisiert: 14. Dezember 2025*

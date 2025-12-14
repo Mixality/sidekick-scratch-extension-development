@@ -258,11 +258,10 @@ KNOWN_SERVICES=(
 
 # Services stoppen und deaktivieren
 for service in "${KNOWN_SERVICES[@]}"; do
-    if systemctl is-active --quiet "$service" 2>/dev/null; then
-        systemctl stop "$service" 2>/dev/null || true
-        print_info "Gestoppt: $service"
-    fi
-    if systemctl is-enabled --quiet "$service" 2>/dev/null; then
+    # Prüfe ob Service existiert (loaded)
+    if systemctl list-unit-files "$service.service" &>/dev/null; then
+        # Stoppe unabhängig vom Status (active, activating, failed, etc.)
+        systemctl stop "$service" 2>/dev/null && print_info "Gestoppt: $service" || true
         systemctl disable "$service" 2>/dev/null || true
     fi
 done
@@ -271,21 +270,29 @@ done
 OLD_PORTS=(8000 8080)
 for port in "${OLD_PORTS[@]}"; do
     # Finde Prozesse die auf alten Ports lauschen und beende sie
-    OLD_PIDS=$(lsof -t -i:$port 2>/dev/null || true)
+    OLD_PIDS=$(lsof -t -i:$port 2>/dev/null || ss -tlnp | grep ":$port " | grep -oP 'pid=\K\d+' || true)
     if [ -n "$OLD_PIDS" ]; then
         for pid in $OLD_PIDS; do
-            # Nur beenden wenn es ein Python http.server oder ähnliches ist
-            PROC_NAME=$(ps -p $pid -o comm= 2>/dev/null || true)
-            if [[ "$PROC_NAME" == *"python"* ]]; then
-                kill $pid 2>/dev/null || true
-                print_info "Prozess auf Port $port beendet (PID: $pid)"
+            if [ -n "$pid" ] && [ "$pid" -gt 0 ] 2>/dev/null; then
+                kill $pid 2>/dev/null && print_info "Prozess auf Port $port beendet (PID: $pid)" || true
             fi
         done
     fi
 done
 
-# Alte Service-Dateien die nicht mehr gebraucht werden können entfernt werden
-# (aber wir überschreiben sie sowieso gleich, also nur zur Sicherheit)
+# Auch neue Ports freigeben falls ein alter Prozess sie blockiert
+NEW_PORTS=(8601 5000)
+for port in "${NEW_PORTS[@]}"; do
+    OLD_PIDS=$(lsof -t -i:$port 2>/dev/null || ss -tlnp | grep ":$port " | grep -oP 'pid=\K\d+' || true)
+    if [ -n "$OLD_PIDS" ]; then
+        for pid in $OLD_PIDS; do
+            if [ -n "$pid" ] && [ "$pid" -gt 0 ] 2>/dev/null; then
+                kill $pid 2>/dev/null && print_info "Prozess auf Port $port beendet (PID: $pid)" || true
+            fi
+        done
+    fi
+done
+
 systemctl daemon-reload
 
 print_success "Cleanup abgeschlossen"

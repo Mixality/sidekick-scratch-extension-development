@@ -573,8 +573,20 @@ class DashboardHandler(BaseHTTPRequestHandler):
         
         html += '<h1>🤖 SIDEKICK Dashboard</h1>'
         
-        # Scratch Link
-        html += f'<a href="http://10.42.0.1:{SCRATCH_PORT}/" class="scratch-link" target="_blank">🎮 Scratch Editor öffnen</a>'
+        # Scratch Link - dynamisch basierend auf aktuellem Host
+        html += f'''
+        <script>
+            // Scratch-Link dynamisch setzen beim Laden
+            document.addEventListener('DOMContentLoaded', function() {{
+                const host = window.location.hostname;
+                const scratchLink = document.getElementById('scratchLink');
+                if (scratchLink) {{
+                    scratchLink.href = 'http://' + host + ':{SCRATCH_PORT}/';
+                }}
+            }});
+        </script>
+        <a href="http://10.42.0.1:{SCRATCH_PORT}/" id="scratchLink" class="scratch-link" target="_blank">🎮 Scratch Editor öffnen</a>
+        '''
         
         # Status Message
         if status_msg:
@@ -622,7 +634,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     <button class="btn btn-start" onclick="startProject()">▶️ Start (Grüne Flagge)</button>
                     <button class="btn btn-stop" onclick="stopProject()">⏹️ Stop</button>
                     <button class="btn btn-secondary" onclick="toggleFullscreen()" title="Stage-Vollbild umschalten">⛶ Vollbild</button>
-                    <a href="http://10.42.0.1:{KIOSK_PORT}/kiosk.html" target="_blank" class="btn btn-secondary">🔗 Kiosk-Display öffnen</a>
+                    <a id="kioskLink" href="#" target="_blank" class="btn btn-secondary">🔗 Kiosk-Display öffnen</a>
                 </div>
                 
                 <div id="displayStatus" style="color: #888; font-size: 0.9em;">
@@ -634,13 +646,28 @@ class DashboardHandler(BaseHTTPRequestHandler):
         
         <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
         <script>
+            // Dynamische Host-Erkennung - funktioniert mit LAN und Hotspot!
+            const SIDEKICK_HOST = window.location.hostname;
+            const SCRATCH_PORT = {SCRATCH_PORT};
+            const KIOSK_PORT = {KIOSK_PORT};
+            const MQTT_PORT = 9001;
+            
             let mqttClient = null;
+            
+            // Kiosk-Link dynamisch setzen
+            document.addEventListener('DOMContentLoaded', function() {{
+                document.getElementById('kioskLink').href = 'http://' + SIDEKICK_HOST + ':' + KIOSK_PORT + '/kiosk.html';
+            }});
             
             function connectMQTT() {{
                 const statusDot = document.getElementById('mqttStatusDot');
                 const statusText = document.getElementById('mqttStatusText');
                 
-                mqttClient = mqtt.connect('ws://10.42.0.1:9001', {{
+                // Dynamische MQTT-URL basierend auf aktuellem Host
+                const mqttUrl = 'ws://' + SIDEKICK_HOST + ':' + MQTT_PORT;
+                console.log('MQTT verbinden zu:', mqttUrl);
+                
+                mqttClient = mqtt.connect(mqttUrl, {{
                     clientId: 'dashboard-' + Math.random().toString(16).substr(2, 8),
                     clean: true,
                     reconnectPeriod: 5000
@@ -661,12 +688,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 mqttClient.on('error', function(err) {{
                     console.error('MQTT Fehler:', err);
                     statusDot.className = 'status-dot disconnected';
-                    statusText.textContent = 'Fehler: ' + err.message;
+                    statusText.textContent = 'Kein Kiosk-Display (MQTT nicht erreichbar)';
                 }});
                 
                 mqttClient.on('close', function() {{
                     statusDot.className = 'status-dot disconnected';
-                    statusText.textContent = 'Nicht verbunden';
+                    statusText.textContent = 'Kein Kiosk-Display verbunden';
                 }});
                 
                 mqttClient.on('message', function(topic, message) {{
@@ -768,23 +795,166 @@ class DashboardHandler(BaseHTTPRequestHandler):
         
         html += '<div class="grid">'
         
-        # Video Upload Card
+        # Video Upload Card mit Codec-Warnung
         html += '''
         <div class="card">
             <h2>📹 Video hochladen</h2>
             <form class="upload-form" action="/upload-video" method="post" enctype="multipart/form-data" id="videoUploadForm">
-                <input type="file" name="file" accept=".mp4,.webm,.ogg,.ogv,.mov,.avi,.mkv" required id="videoFileInput" onchange="showRenameField('video')">
+                <input type="file" name="file" accept=".mp4,.webm,.ogg,.ogv,.mov,.avi,.mkv" required id="videoFileInput" onchange="checkVideoFile()">
+                
+                <!-- Video-Warnung (standardmäßig versteckt) -->
+                <div id="videoWarning" class="video-warning" style="display: none;">
+                    <div class="warning-icon">⚠️</div>
+                    <div class="warning-text">
+                        <strong>Video-Warnung</strong><br>
+                        <span id="warningMessage"></span>
+                    </div>
+                </div>
+                
+                <!-- Video-Info (standardmäßig versteckt) -->
+                <div id="videoInfo" class="video-info" style="display: none;">
+                    <strong>Video-Details:</strong><br>
+                    <span id="videoDetails"></span>
+                </div>
+                
                 <div class="rename-row" id="videoRenameRow">
                     <label>Speichern als:</label>
                     <input type="text" class="rename-input" name="customName" id="videoNameInput" placeholder="Dateiname">
                     <span class="extension-label" id="videoExtLabel">.mp4</span>
                 </div>
-                <button type="submit">Video hochladen</button>
+                <button type="submit" id="videoSubmitBtn">Video hochladen</button>
             </form>
             <p style="color: #888; font-size: 0.9em; margin-top: 10px;">
-                Unterstützte Formate: MP4, WebM, OGG, MOV, AVI, MKV
+                <strong>Empfohlen:</strong> H.264 Codec, max. 1080p, max. 50MB<br>
+                <span style="color: #e74c3c;">❌ HEVC/H.265 wird auf dem Pi nicht unterstützt!</span>
             </p>
         </div>
+        
+        <style>
+            .video-warning {
+                display: flex;
+                gap: 15px;
+                padding: 15px;
+                background: rgba(231, 76, 60, 0.2);
+                border: 2px solid #e74c3c;
+                border-radius: 10px;
+                color: #ff6b6b;
+            }
+            .video-warning .warning-icon { font-size: 2em; }
+            .video-warning .warning-text { flex: 1; }
+            .video-info {
+                padding: 15px;
+                background: rgba(52, 152, 219, 0.2);
+                border: 1px solid #3498db;
+                border-radius: 10px;
+                color: #5dade2;
+                font-size: 0.9em;
+            }
+            .video-ok {
+                background: rgba(14, 157, 89, 0.2) !important;
+                border-color: #0E9D59 !important;
+                color: #0E9D59 !important;
+            }
+        </style>
+        
+        <script>
+            async function checkVideoFile() {
+                const fileInput = document.getElementById('videoFileInput');
+                const warningDiv = document.getElementById('videoWarning');
+                const warningMsg = document.getElementById('warningMessage');
+                const infoDiv = document.getElementById('videoInfo');
+                const detailsSpan = document.getElementById('videoDetails');
+                const submitBtn = document.getElementById('videoSubmitBtn');
+                
+                // Reset
+                warningDiv.style.display = 'none';
+                infoDiv.style.display = 'none';
+                submitBtn.textContent = 'Video hochladen';
+                
+                if (!fileInput.files.length) return;
+                
+                const file = fileInput.files[0];
+                showRenameField('video');
+                
+                // Dateigroesse pruefen
+                const sizeMB = file.size / (1024 * 1024);
+                const warnings = [];
+                const infos = [];
+                
+                infos.push('Datei: ' + file.name);
+                infos.push('Größe: ' + sizeMB.toFixed(1) + ' MB');
+                
+                if (sizeMB > 100) {
+                    warnings.push('⚠️ Datei ist sehr groß (' + sizeMB.toFixed(0) + ' MB). Empfohlen: max. 50MB');
+                } else if (sizeMB > 50) {
+                    warnings.push('⚠️ Datei ist relativ groß (' + sizeMB.toFixed(0) + ' MB). Empfohlen: max. 50MB');
+                }
+                
+                // Video in temporaeres Element laden um Metadaten zu pruefen
+                try {
+                    const videoUrl = URL.createObjectURL(file);
+                    const video = document.createElement('video');
+                    video.preload = 'metadata';
+                    
+                    await new Promise((resolve, reject) => {
+                        video.onloadedmetadata = resolve;
+                        video.onerror = () => reject(new Error('Video konnte nicht geladen werden'));
+                        setTimeout(() => reject(new Error('Timeout')), 10000);
+                        video.src = videoUrl;
+                    });
+                    
+                    const width = video.videoWidth;
+                    const height = video.videoHeight;
+                    const duration = video.duration;
+                    
+                    infos.push('Auflösung: ' + width + 'x' + height);
+                    infos.push('Länge: ' + Math.floor(duration/60) + ':' + String(Math.floor(duration%60)).padStart(2,'0'));
+                    
+                    // Aufloesung pruefen
+                    if (width > 1920 || height > 1080) {
+                        warnings.push('⚠️ Auflösung (' + width + 'x' + height + ') ist höher als 1080p. Kann ruckeln!');
+                    }
+                    
+                    // Codec-Erkennung (leider eingeschränkt in JavaScript)
+                    // Wir können nur pruefen ob der Browser es abspielen kann
+                    const canPlay = video.canPlayType(file.type);
+                    
+                    // HEVC-Warnung basierend auf Dateiendung und typischen Merkmalen
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    if (ext === 'mkv' || ext === 'mov') {
+                        warnings.push('⚠️ ' + ext.toUpperCase() + '-Dateien können HEVC-kodiert sein. Falls das Video nicht abspielt, bitte zu H.264 konvertieren.');
+                    }
+                    
+                    URL.revokeObjectURL(videoUrl);
+                    
+                } catch (e) {
+                    warnings.push('⚠️ Video-Metadaten konnten nicht gelesen werden. Möglicherweise inkompatibles Format!');
+                    console.error('Video check error:', e);
+                }
+                
+                // Info anzeigen
+                if (infos.length > 0) {
+                    detailsSpan.innerHTML = infos.join('<br>');
+                    infoDiv.style.display = 'block';
+                    if (warnings.length === 0) {
+                        infoDiv.classList.add('video-ok');
+                        detailsSpan.innerHTML += '<br>✅ Video sieht kompatibel aus!';
+                    } else {
+                        infoDiv.classList.remove('video-ok');
+                    }
+                }
+                
+                // Warnungen anzeigen
+                if (warnings.length > 0) {
+                    warningMsg.innerHTML = warnings.join('<br><br>');
+                    warningDiv.style.display = 'flex';
+                    submitBtn.textContent = '⚠️ Trotzdem hochladen';
+                    
+                    // HEVC-Konvertierungstipp hinzufuegen
+                    warningMsg.innerHTML += '<br><br><small style="color: #aaa;">💡 Tipp: Mit ffmpeg konvertieren:<br><code style="background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; font-size: 0.8em;">ffmpeg -i video.mp4 -c:v libx264 -crf 23 -vf "scale=1920:1080" video_h264.mp4</code></small>';
+                }
+            }
+        </script>
         '''
         
         # Project Upload Card
@@ -820,16 +990,25 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 size = get_file_size_str(filepath.stat().st_size) if filepath.exists() else '?'
                 escaped_name = html_module.escape(video)
                 url_name = urllib.parse.quote(video)
+                # Verwende data-path für dynamische URL-Generierung
                 html += f'''<tr>
                     <td>{escaped_name}</td>
                     <td>{size}</td>
                     <td class="actions">
                         <button class="btn btn-rename" onclick="renameFile('video', '{escaped_name}')" title="Umbenennen">✏️</button>
-                        <a href="http://10.42.0.1:{SCRATCH_PORT}/videos/{url_name}" target="_blank" class="btn btn-secondary" style="padding: 8px 15px;">▶️ Abspielen</a>
+                        <a href="#" onclick="openVideoLink('{url_name}'); return false;" class="btn btn-secondary" style="padding: 8px 15px;">▶️ Abspielen</a>
                         <a href="/delete-video?file={url_name}" class="btn btn-danger" style="padding: 8px 15px;" onclick="return confirm('Wirklich löschen?')">🗑️ Löschen</a>
                     </td>
                 </tr>'''
             html += '</table>'
+            html += f'''
+            <script>
+                function openVideoLink(filename) {{
+                    const url = 'http://' + window.location.hostname + ':{SCRATCH_PORT}/videos/' + filename;
+                    window.open(url, '_blank');
+                }}
+            </script>
+            '''
         else:
             html += '<div class="empty-state">Keine Videos vorhanden.<br>Lade ein Video hoch um zu beginnen!</div>'
         
@@ -847,34 +1026,66 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 size = get_file_size_str(filepath.stat().st_size) if filepath.exists() else '?'
                 escaped_name = html_module.escape(project)
                 url_name = urllib.parse.quote(project)
+                # Verwende onclick für dynamische URL
                 html += f'''<tr>
                     <td>{escaped_name}</td>
                     <td>{size}</td>
                     <td class="actions">
                         <button class="btn btn-rename" onclick="renameFile('project', '{escaped_name}')" title="Umbenennen">✏️</button>
-                        <a href="http://10.42.0.1:{SCRATCH_PORT}/projects/{url_name}" download class="btn btn-secondary" style="padding: 8px 15px;">💾 Download</a>
+                        <a href="#" onclick="downloadProject('{url_name}'); return false;" class="btn btn-secondary" style="padding: 8px 15px;">💾 Download</a>
                         <a href="/delete-project?file={url_name}" class="btn btn-danger" style="padding: 8px 15px;" onclick="return confirm('Wirklich löschen?')">🗑️ Löschen</a>
                     </td>
                 </tr>'''
             html += '</table>'
+            html += f'''
+            <script>
+                function downloadProject(filename) {{
+                    const url = 'http://' + window.location.hostname + ':{SCRATCH_PORT}/projects/' + filename;
+                    window.location.href = url;
+                }}
+            </script>
+            '''
         else:
             html += '<div class="empty-state">Keine Projekte vorhanden.<br>Lade ein Scratch-Projekt (.sb3) hoch!</div>'
         
         html += '</div>'
         
-        # Info Card
+        # Info Card - dynamisch
         html += f'''
         <div class="card">
             <h2>ℹ️ Verbindung</h2>
+            <p style="color: #0E9D59; margin-bottom: 15px;">
+                💡 Alle Links passen sich automatisch an deine Verbindung an (LAN oder Hotspot)!
+            </p>
             <table>
-                <tr><td><strong>Scratch Editor:</strong></td><td><a href="http://10.42.0.1:{SCRATCH_PORT}/" target="_blank">http://10.42.0.1:{SCRATCH_PORT}/</a></td></tr>
-                <tr><td><strong>Kiosk Display:</strong></td><td><a href="http://10.42.0.1:{KIOSK_PORT}/kiosk.html" target="_blank">http://10.42.0.1:{KIOSK_PORT}/kiosk.html</a></td></tr>
-                <tr><td><strong>Dashboard:</strong></td><td>http://10.42.0.1:{DASHBOARD_PORT}/</td></tr>
-                <tr><td><strong>MQTT Broker:</strong></td><td>ws://10.42.0.1:9001</td></tr>
+                <tr><td><strong>Aktueller Host:</strong></td><td><span id="currentHost">...</span></td></tr>
+                <tr><td><strong>Scratch Editor:</strong></td><td><a href="#" id="infoScratchLink" target="_blank">...</a></td></tr>
+                <tr><td><strong>Kiosk Display:</strong></td><td><a href="#" id="infoKioskLink" target="_blank">...</a></td></tr>
+                <tr><td><strong>Dashboard:</strong></td><td><span id="infoDashboardLink">...</span></td></tr>
+                <tr><td><strong>MQTT Broker:</strong></td><td><span id="infoMqttLink">...</span></td></tr>
                 <tr><td><strong>Videos Ordner:</strong></td><td>{VIDEOS_DIR}</td></tr>
                 <tr><td><strong>Projekte Ordner:</strong></td><td>{PROJECTS_DIR}</td></tr>
             </table>
         </div>
+        
+        <script>
+            // Info-Card Links dynamisch setzen
+            document.addEventListener('DOMContentLoaded', function() {{
+                const host = window.location.hostname;
+                document.getElementById('currentHost').textContent = host;
+                
+                const scratchUrl = 'http://' + host + ':{SCRATCH_PORT}/';
+                document.getElementById('infoScratchLink').href = scratchUrl;
+                document.getElementById('infoScratchLink').textContent = scratchUrl;
+                
+                const kioskUrl = 'http://' + host + ':{KIOSK_PORT}/kiosk.html';
+                document.getElementById('infoKioskLink').href = kioskUrl;
+                document.getElementById('infoKioskLink').textContent = kioskUrl;
+                
+                document.getElementById('infoDashboardLink').textContent = 'http://' + host + ':{DASHBOARD_PORT}/';
+                document.getElementById('infoMqttLink').textContent = 'ws://' + host + ':9001';
+            }});
+        </script>
         '''
         
         html += HTML_FOOTER
