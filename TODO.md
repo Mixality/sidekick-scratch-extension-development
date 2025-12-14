@@ -1,6 +1,6 @@
 # SIDEKICK TODO Liste
 
-## ✅ Erledigt (v1.0.1-test6)
+## ✅ Erledigt (v1.0.1)
 
 - [x] GitHub Actions CI/CD eingerichtet
 - [x] Pre-Release System (Tags mit `test`, `dev`, `beta`, `alpha`)
@@ -21,19 +21,17 @@
 - [x] **Port-Standardisierung**: 8601 (Scratch), 5000 (Dashboard)
 - [x] **Cleanup-Step** im Setup: Stoppt alte Services, gibt alte Ports frei
 - [x] **Chromium-Pfad Auto-Erkennung** (`chromium` vs `chromium-browser`)
+- [x] **Dynamische URLs im Dashboard** - funktioniert mit LAN und Hotspot
+- [x] **Video-Upload Warnung** - prüft Größe, Auflösung, zeigt ffmpeg-Tipp
+- [x] **MQTT über LAN** - Kiosk-Fernsteuerung vom Büro-PC
+- [x] **Service-Start Fix** - Services starten nach Update korrekt
+- [x] **Alte Scripts entfernt** - nur noch `sidekick-setup.sh`
 
 ---
 
 ## 🔧 Offen
 
-### Priorität 1 (Wichtig für Benutzerfreundlichkeit)
-
-- [ ] **Video-Upload Warnung im Dashboard**
-  - Beim Upload prüfen: Codec, Auflösung, Dateigröße
-  - Warnung wenn HEVC/H.265 (nicht unterstützt auf Pi!)
-  - Warnung wenn >1080p oder >50MB
-  - Tipp anzeigen mit ffmpeg-Befehl zur Konvertierung
-  - Chromium auf Pi unterstützt nur: H.264, VP8, VP9
+### Priorität 1 (Nice-to-have)
 
 - [ ] **Video Auto-Konvertierung (Optional)**
   - Checkbox "Automatisch konvertieren" beim Upload
