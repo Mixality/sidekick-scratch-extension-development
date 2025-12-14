@@ -229,8 +229,8 @@
         const CONFIG = {
             mqttBroker: window.location.hostname || '10.42.0.1',
             mqttPort: 9001,
-            scratchPort: 8000,
-            dashboardPort: 8080
+            scratchPort: 8601,
+            dashboardPort: 5000
         };
         
         // DOM Elements
@@ -475,7 +475,7 @@
         // ============================================
         
         function generateQRCode() {
-            // Statischer QR-Code für die Dashboard-URL (10.42.0.1:8080)
+            // Statischer QR-Code für die Dashboard-URL (10.42.0.1:5000)
             const dashboardUrl = `http://10.42.0.1:${CONFIG.dashboardPort}/`;
             const qrImage = document.getElementById('qrcode');
             const urlDisplay = document.getElementById('dashboardUrl');

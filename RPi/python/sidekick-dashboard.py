@@ -9,7 +9,7 @@ Ein einfacher Webserver für:
 - Automatische video-list.json Generierung
 - Display/Kiosk-Steuerung via MQTT
 
-Startet auf Port 8080 (Scratch läuft auf 8000)
+Startet auf Port 5000 (Scratch läuft auf 8601)
 
 Verwendung:
     python3 sidekick-dashboard.py
@@ -27,9 +27,9 @@ import shutil
 import io
 
 # Konfiguration
-DASHBOARD_PORT = 8080
-SCRATCH_PORT = 8000
-KIOSK_PORT = 8000  # Kiosk läuft auf dem gleichen Port wie Scratch
+DASHBOARD_PORT = 5000
+SCRATCH_PORT = 8601
+KIOSK_PORT = 8601  # Kiosk läuft auf dem gleichen Port wie Scratch
 
 # Pfade (werden beim Start gesetzt)
 SIDEKICK_DIR = None

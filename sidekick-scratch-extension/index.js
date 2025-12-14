@@ -468,8 +468,8 @@ class Scratch3SidekickBlocks {
         this._serverProjectsLoaded = false;
         
         // Basis-URL für Videos/Projekte (wird automatisch erkannt oder kann gesetzt werden)
-        // Im Hotspot-Modus: http://10.42.0.1:8000/videos/
-        // Lokal: http://localhost:8000/videos/
+        // Im Hotspot-Modus: http://10.42.0.1:8601/videos/
+        // Lokal: http://localhost:8601/videos/
         this._videoServerBaseUrl = null;
         this._projectServerBaseUrl = null;
         this._detectServerUrls();
@@ -516,8 +516,8 @@ class Scratch3SidekickBlocks {
             console.log('[sidekick] Server URLs detected:', this._videoServerBaseUrl, this._projectServerBaseUrl);
         } else {
             // Fallback für Hotspot-Modus
-            this._videoServerBaseUrl = 'http://10.42.0.1:8000/videos';
-            this._projectServerBaseUrl = 'http://10.42.0.1:8000/projects';
+            this._videoServerBaseUrl = 'http://10.42.0.1:8601/videos';
+            this._projectServerBaseUrl = 'http://10.42.0.1:8601/projects';
             console.log('[sidekick] Server URLs fallback:', this._videoServerBaseUrl, this._projectServerBaseUrl);
         }
     }
