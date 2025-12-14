@@ -579,25 +579,23 @@ EOF
     print_success "Services erstellt und gestartet"
 
 else
-    # UPDATE: Services nur neustarten (falls sie gerade laufen)
-    # Nutzt is-active statt is-enabled, damit:
-    # - Laufende Services neugestartet werden (neue Dateien laden)
-    # - Absichtlich gestoppte Services gestoppt bleiben
+    # UPDATE: Services starten (wurden im Cleanup gestoppt)
+    # Nutzt is-enabled um nur konfigurierte Services zu starten
     systemctl daemon-reload
     
-    if systemctl is-active --quiet sidekick-webapp 2>/dev/null; then
-        systemctl restart sidekick-webapp
-        print_success "sidekick-webapp neu gestartet"
+    if systemctl is-enabled --quiet sidekick-webapp 2>/dev/null; then
+        systemctl start sidekick-webapp
+        print_success "sidekick-webapp gestartet"
     fi
 
-    if systemctl is-active --quiet sidekick-sensors 2>/dev/null; then
-        systemctl restart sidekick-sensors
-        print_success "sidekick-sensors neu gestartet"
+    if systemctl is-enabled --quiet sidekick-sensors 2>/dev/null; then
+        systemctl start sidekick-sensors
+        print_success "sidekick-sensors gestartet"
     fi
 
-    if systemctl is-active --quiet sidekick-dashboard 2>/dev/null; then
-        systemctl restart sidekick-dashboard
-        print_success "sidekick-dashboard neu gestartet"
+    if systemctl is-enabled --quiet sidekick-dashboard 2>/dev/null; then
+        systemctl start sidekick-dashboard
+        print_success "sidekick-dashboard gestartet"
     fi
 fi
 
