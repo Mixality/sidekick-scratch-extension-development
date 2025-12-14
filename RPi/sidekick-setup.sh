@@ -641,6 +641,17 @@ EOF
     echo
     if [[ $REPLY =~ ^[Jj]$ ]]; then
         
+        # Chromium-Pfad ermitteln (unterschiedlich je nach RPi OS Version)
+        CHROMIUM_PATH=""
+        if command -v chromium-browser &> /dev/null; then
+            CHROMIUM_PATH="/usr/bin/chromium-browser"
+        elif command -v chromium &> /dev/null; then
+            CHROMIUM_PATH="/usr/bin/chromium"
+        else
+            print_error "Chromium nicht gefunden! Installiere mit: sudo apt install chromium"
+            CHROMIUM_PATH="/usr/bin/chromium"  # Fallback
+        fi
+        
         cat > /etc/systemd/system/sidekick-kiosk.service << EOF
 [Unit]
 Description=SIDEKICK Kiosk Browser
@@ -652,7 +663,7 @@ Type=simple
 User=$ACTUAL_USER
 Environment=DISPLAY=:0
 ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run --disable-session-crashed-bubble --disable-component-update --password-store=basic --disable-translate http://localhost:8601/kiosk.html
+ExecStart=$CHROMIUM_PATH --kiosk --noerrdialogs --disable-infobars --no-first-run --disable-session-crashed-bubble --disable-component-update --password-store=basic --disable-translate http://localhost:8601/kiosk.html
 Restart=on-failure
 RestartSec=5
 
@@ -663,7 +674,7 @@ EOF
         systemctl daemon-reload
         systemctl enable sidekick-kiosk.service
         
-        print_success "Kiosk-Modus eingerichtet"
+        print_success "Kiosk-Modus eingerichtet (Chromium: $CHROMIUM_PATH)"
     else
         print_info "Kiosk-Modus übersprungen"
     fi
