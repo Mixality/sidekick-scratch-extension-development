@@ -393,7 +393,6 @@ EOF
         
         print_success "Hostname gesetzt: $SIDEKICK_HOSTNAME"
     fi
-    fi
 
     # Avahi für .local Auflösung
     systemctl enable avahi-daemon
