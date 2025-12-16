@@ -151,8 +151,8 @@ jobs:
             RPi/sidekick-setup.sh
           generate_release_notes: true
           draft: false
-          # Pre-Release wenn 'test', 'beta', 'alpha' oder 'dev' im Tag-Namen
-          prerelease: ${{ contains(github.ref_name, 'test') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'dev') }}
+          # Pre-Release wenn 'test', 'beta', 'alpha', 'dev' oder 'pre' im Tag-Namen
+          prerelease: ${{ contains(github.ref_name, 'test') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'dev') || contains(github.ref_name, 'pre') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
