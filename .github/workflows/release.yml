@@ -114,9 +114,10 @@ jobs:
           # Third-party libraries
           cp -r sidekick-thirdparty-libraries release/sidekick/
           
-          # Kiosk-Dateien
+          # Kiosk-Dateien und Logo
           cp src/kiosk.html release/sidekick/
           cp src/dashboard-qr.png release/sidekick/
+          cp src/sidekick-logo.svg release/sidekick/
           
           # Videos und Projects Ordner anlegen
           mkdir -p release/sidekick/videos

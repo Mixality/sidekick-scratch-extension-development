@@ -3,8 +3,38 @@
 Das Sidekick Assisstenzsystem unterstützt Menschen mit Einschränkungen bei prozeduralen Arbeitsabläufen, indem es für einzelnen Arbeitsschritte Anweisungen anzeigt.
 Arbeitsabläufe können über die Programmieroberfläche Scratch erstellt werden. 
 
+## 🚀 Schnell-Installation
 
-## Erstinstallations-Skript
+Auf einem frischen Raspberry Pi OS (32-bit, mit Desktop):
+
+```bash
+# Standard-Installation (generiert automatisch Namen aus Seriennummer)
+curl -fsSL https://github.com/Mixality/sidekick-scratch-extension-development/releases/latest/download/sidekick-setup.sh | sudo bash
+
+# Mit Kiosk-Modus (Vollbild-Browser beim Start)
+curl -fsSL https://github.com/Mixality/sidekick-scratch-extension-development/releases/latest/download/sidekick-setup.sh | sudo bash -s -- --kiosk
+
+# Mit eigenem Namen (z.B. für Schule/Raum)
+curl -fsSL https://github.com/Mixality/sidekick-scratch-extension-development/releases/latest/download/sidekick-setup.sh | sudo bash -s -- --hostname=schule1 --kiosk
+# → Hostname: sidekick-schule1, WLAN: SIDEKICK-SCHULE1
+
+# Neuinstallation erzwingen
+curl -fsSL https://github.com/Mixality/sidekick-scratch-extension-development/releases/latest/download/sidekick-setup.sh | sudo bash -s -- --force --kiosk
+```
+
+**Optionen:**
+| Option | Beschreibung |
+|--------|--------------|
+| `--kiosk` | Aktiviert Kiosk-Modus (Fullscreen-Browser beim Booten) |
+| `--hostname=NAME` | Eigener Hostname (z.B. `--hostname=schule1` → `sidekick-schule1`) |
+| `--force` | Erzwingt Neuinstallation auch wenn bereits aktuell |
+| `--pre` | Installiert auch Test-Versionen (Pre-Releases) |
+
+Nach der Installation: `sudo reboot`
+
+---
+
+## Erstinstallations-Skript (alt)
 
 Aktuell muss man Mosquitto und den Hotspot einmalig manuell einrichten (siehe Readme).
 Nachfolgende automatisiert:

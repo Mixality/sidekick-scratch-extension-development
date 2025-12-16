@@ -571,7 +571,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         """Rendert die Dashboard-Seite"""
         html = HTML_HEADER
         
-        html += '<h1>🤖 SIDEKICK Dashboard</h1>'
+        html += '<h1><img src="/sidekick-logo.svg" alt="SIDEKICK" style="height: 1.2em; vertical-align: middle; margin-right: 10px;">SIDEKICK Dashboard</h1>'
         
         # Scratch Link - dynamisch basierend auf aktuellem Host
         html += f'''

@@ -46,6 +46,12 @@ for arg in "$@"; do
         --force|-f)
             FORCE_INSTALL=true
             ;;
+        --kiosk)
+            ENABLE_KIOSK=true
+            ;;
+        --hostname=*)
+            CUSTOM_HOSTNAME="${arg#*=}"
+            ;;
         --help|-h)
             SHOW_HELP=true
             ;;
@@ -71,12 +77,17 @@ if [ "$SHOW_HELP" = true ]; then
     echo "Optionen:"
     echo "  --pre, --dev, --test    Installiert auch Pre-Releases (Test-Versionen)"
     echo "  --force, -f             Erzwingt Neuinstallation auch wenn aktuell"
+    echo "  --kiosk                 Aktiviert automatisch den Kiosk-Modus"
+    echo "  --hostname=NAME         Setzt eigenen Hostnamen (z.B. --hostname=schule1)"
     echo "  --help, -h              Zeigt diese Hilfe"
     echo ""
     echo "Beispiele:"
     echo "  sudo bash sidekick-setup.sh              Neuestes stabiles Release"
     echo "  sudo bash sidekick-setup.sh --pre        Neuestes Release (inkl. Test)"
     echo "  sudo bash sidekick-setup.sh --force      Erzwingt komplette Neuinstallation"
+    echo "  sudo bash sidekick-setup.sh --kiosk      Mit Kiosk-Modus (Vollbild-Browser)"
+    echo "  sudo bash sidekick-setup.sh --hostname=schule1 --kiosk"
+    echo "                                           Mit eigenem Namen 'sidekick-schule1'"
     echo ""
     echo "Pre-Release Tags: v1.0.1-test1, v1.0.1-dev, v1.0.1-beta, v1.0.1-alpha"
     echo ""
@@ -346,13 +357,32 @@ EOF
 
     # Prüfe ob bereits ein SIDEKICK-Hostname existiert
     CURRENT_HOSTNAME=$(hostname)
-    if [[ "$CURRENT_HOSTNAME" == sidekick-* ]]; then
+    
+    if [ -n "$CUSTOM_HOSTNAME" ]; then
+        # Eigener Hostname per Parameter
+        # Entferne 'sidekick-' Prefix falls der User es mitgegeben hat
+        CUSTOM_HOSTNAME="${CUSTOM_HOSTNAME#sidekick-}"
+        
+        # Validierung: Nur erlaubte Zeichen (a-z, 0-9, -)
+        CUSTOM_HOSTNAME=$(echo "$CUSTOM_HOSTNAME" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9-')
+        
+        # Max Länge prüfen (SSID max 32 Zeichen, "SIDEKICK-" = 9 Zeichen, also max 23 für Namen)
+        if [ ${#CUSTOM_HOSTNAME} -gt 23 ]; then
+            CUSTOM_HOSTNAME="${CUSTOM_HOSTNAME:0:23}"
+            print_warning "Hostname auf 23 Zeichen gekürzt (SSID-Limit)"
+        fi
+        
+        SIDEKICK_HOSTNAME="sidekick-${CUSTOM_HOSTNAME}"
+        print_info "Verwende benutzerdefinierten Hostname: $SIDEKICK_HOSTNAME"
+    elif [[ "$CURRENT_HOSTNAME" == sidekick-* ]]; then
         SIDEKICK_HOSTNAME="$CURRENT_HOSTNAME"
         print_info "Behalte bestehenden Hostname: $SIDEKICK_HOSTNAME"
     else
         SIDEKICK_HOSTNAME=$(generate_hostname)
-        
-        # Hostname setzen
+    fi
+    
+    # Hostname setzen falls geändert
+    if [ "$CURRENT_HOSTNAME" != "$SIDEKICK_HOSTNAME" ]; then
         hostnamectl set-hostname "$SIDEKICK_HOSTNAME"
         
         # /etc/hosts aktualisieren
@@ -362,6 +392,7 @@ EOF
         fi
         
         print_success "Hostname gesetzt: $SIDEKICK_HOSTNAME"
+    fi
     fi
 
     # Avahi für .local Auflösung
@@ -645,9 +676,24 @@ EOF
     # Kiosk-Modus Abfrage
     # -------------------------------------------------------------------------
     echo ""
-    read -p "Kiosk-Modus einrichten (Fullscreen-Browser beim Start)? (j/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Jj]$ ]]; then
+    
+    # Prüfe ob --kiosk Flag gesetzt oder interaktiv fragen
+    SETUP_KIOSK=false
+    if [ "$ENABLE_KIOSK" = true ]; then
+        SETUP_KIOSK=true
+        print_info "Kiosk-Modus wird eingerichtet (--kiosk Flag)"
+    elif [ -t 0 ]; then
+        # Nur interaktiv fragen wenn stdin ein Terminal ist
+        read -p "Kiosk-Modus einrichten (Fullscreen-Browser beim Start)? (j/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Jj]$ ]]; then
+            SETUP_KIOSK=true
+        fi
+    else
+        print_info "Kiosk-Modus übersprungen (nicht-interaktiv, nutze --kiosk zum Aktivieren)"
+    fi
+    
+    if [ "$SETUP_KIOSK" = true ]; then
         
         # Chromium-Pfad ermitteln (unterschiedlich je nach RPi OS Version)
         CHROMIUM_PATH=""

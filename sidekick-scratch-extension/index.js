@@ -3,64 +3,33 @@ const ArgumentType = require('../../extension-support/argument-type');
 // const TargetType = require('../../extension-support/target-type');
 const Cast = require('../../util/cast');
 
-const MQTT_BROKERS = {
-    hotspot: {
-        id: 'hotspot',
-        peripheralId: 'hotspot',
-        key: 'hotspot',
-        name: 'SIDEKICK RPi Hotspot',
-        rssi: 1,
-
-        brokerAddress: 'ws://10.42.0.1:9001'
-    },
-    devHome: {
-        id: 'devHome',
-        peripheralId: 'devHome',
-        key: 'devHome',
-        name: 'Home Network (Development)',
-        rssi: 2,
-
-        brokerAddress: 'ws://192.168.178.117:9001'
+/**
+ * Erkennt automatisch die MQTT Broker URL basierend auf der aktuellen Seite
+ * Wenn Scratch von sidekick-rpi-2.local:8601 geladen wird,
+ * verbindet MQTT zu ws://sidekick-rpi-2.local:9001
+ */
+function detectMqttBrokerUrl() {
+    if (typeof window !== 'undefined' && window.location) {
+        const hostname = window.location.hostname;
+        // WebSocket MQTT Port ist 9001
+        const brokerUrl = `ws://${hostname}:9001`;
+        console.log('[sidekick] Auto-detected MQTT broker:', brokerUrl);
+        return brokerUrl;
     }
-    // ,
-    // mosquitto: {
-    //     id: 'mosquitto',
-    //     peripheralId: 'mosquitto',
-    //     key: 'mosquitto',
-    //     name: 'Mosquitto',
-    //     rssi: 2,
+    // Fallback für Hotspot
+    return 'ws://10.42.0.1:9001';
+}
 
-    //     brokerAddress: 'wss://test.mosquitto.org:8081'
-    // }
-    // ,
-    // eclipse: {
-    //     id: 'eclipse',
-    //     peripheralId: 'eclipse',
-    //     key: 'eclipse',
-    //     name: 'Eclipse Projects',
-    //     rssi: 3,
-
-    //     brokerAddress: 'wss://mqtt.eclipseprojects.io:443/mqtt'
-    // }
-    // ,
-    // hivemq: {
-    //     id: 'hivemq',
-    //     peripheralId: 'hivemq',
-    //     key: 'hivemq',
-    //     name: 'HiveMQ',
-    //     rssi: 4,
-
-    //     brokerAddress: 'wss://broker.hivemq.com:8884/mqtt'
-    // },
-    // emqx: {
-    //     id: 'emqx',
-    //     peripheralId: 'emqx',
-    //     key: 'emqx',
-    //     name: 'EMQX',
-    //     rssi: 5,
-
-    //     brokerAddress: 'wss://broker.emqx.io:8084/mqtt'
-    // }
+const MQTT_BROKERS = {
+    sidekick: {
+        id: 'sidekick',
+        peripheralId: 'sidekick',
+        key: 'sidekick',
+        name: 'SIDEKICK (automatisch)',
+        rssi: 1,
+        brokerAddress: detectMqttBrokerUrl()  // Automatisch erkennen!
+    }
+    // Weitere Broker können für Entwicklung hinzugefügt werden
 };
 
 class MqttConnection {
@@ -642,16 +611,9 @@ class Scratch3SidekickBlocks {
             blocks: [
                 {
                     opcode: 'connection',
-                    text: 'connect to [BROKER]',
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        BROKER: {
-                            type: ArgumentType.STRING,
-                            // defaultValue: 'wss://test.mosquitto.org:8081'
-                            // defaultValue: 'ws://192.168.178.116:9001'
-                            defaultValue: 'ws://10.42.0.1:9001'
-                        }
-                    }
+                    text: 'Verbinde mit SIDEKICK',
+                    blockType: BlockType.COMMAND
+                    // Keine Argumente mehr - URL wird automatisch erkannt!
                 },
                 '---',
                 // ========== Hand-Erkennung (SmartBox) ==========
@@ -734,9 +696,8 @@ class Scratch3SidekickBlocks {
                     blockType: BlockType.HAT,
                     arguments: {
                         BUTTON: {
-                            type: ArgumentType.STRING,
-                            menu: 'buttonNumber',
-                            defaultValue: '1'
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
                         },
                         ACTION: {
                             type: ArgumentType.STRING,
@@ -751,9 +712,8 @@ class Scratch3SidekickBlocks {
                     blockType: BlockType.BOOLEAN,
                     arguments: {
                         BUTTON: {
-                            type: ArgumentType.STRING,
-                            menu: 'buttonNumber',
-                            defaultValue: '1'
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
                         },
                         ACTION: {
                             type: ArgumentType.STRING,
@@ -1050,10 +1010,6 @@ class Scratch3SidekickBlocks {
                         { text: 'alle', value: 'all' }
                     ]
                 },
-                buttonNumber: {
-                    acceptReporters: false,
-                    items: ['1', '2', '3', '4']
-                },
                 buttonAction: {
                     acceptReporters: false,
                     items: [
@@ -1195,16 +1151,16 @@ class Scratch3SidekickBlocks {
     //     // example implementation to return a string
     //     return MY_STRING + ' : doubled would be ' + (MY_NUMBER * 2);
     // }
-    connection({ BROKER }) {
-        // if (!this._mqttConnection) {
-        //     this._mqttConnection.connectToBroker(BROKER);
-        // } else if (this._mqttConnection) {
-        //     this._mqttConnection.disconnect();
-        // }
+    connection() {
+        // URL wird automatisch erkannt - keine Parameter mehr nötig!
+        const brokerUrl = detectMqttBrokerUrl();
+        
         if (this._mqttConnection) {
             if (!this._mqttConnection.isConnected()) {
-                this._mqttConnection.connectToBroker(BROKER);
-            } else if (this._mqttConnection.isConnected()) {
+                console.log('[sidekick] Manual connect to:', brokerUrl);
+                this._mqttConnection.connectToBroker(brokerUrl);
+            } else {
+                console.log('[sidekick] Already connected, disconnecting');
                 this._mqttConnection.disconnect();
             }
         }
@@ -1266,7 +1222,6 @@ class Scratch3SidekickBlocks {
     whenButtonAction({ BUTTON, ACTION }) {
         if (this._mqttConnection) {
             const topic = `sidekick/button/${BUTTON}/state`;
-            // Prüfe ob neue Nachricht UND ob der Inhalt zur gewählten Aktion passt
             return this._mqttConnection.mqttSubscribeForValue(topic, ACTION);
         }
         return false;
@@ -1275,7 +1230,6 @@ class Scratch3SidekickBlocks {
     isButtonState({ BUTTON, ACTION }) {
         if (this._mqttConnection) {
             const topic = `sidekick/button/${BUTTON}/state`;
-            // Prüfe ob der aktuelle Zustand zur gewählten Aktion passt
             return this._mqttConnection.mqttGetLastMessage(topic) === ACTION;
         }
         return false;
@@ -1687,6 +1641,11 @@ class Scratch3SidekickBlocks {
         this._libraryReady = true;
         console.log('[sidekick] MQTT library loaded, creating connection');
         this._mqttConnection = new MqttConnection(this._runtime, 'sidekick');
+        
+        // Auto-Connect zum erkannten Broker
+        const brokerUrl = detectMqttBrokerUrl();
+        console.log('[sidekick] Auto-connecting to:', brokerUrl);
+        this._mqttConnection.connectToBroker(brokerUrl);
     }
 }
 
