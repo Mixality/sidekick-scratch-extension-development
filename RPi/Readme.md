@@ -57,7 +57,7 @@ curl -fsSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/sidekick-setup.sh | sudo bash -s -- --kiosk --hostname=meinname
 ```
-→ Erstellt Hostname `sidekick-meinname` und WLAN `SIDEKICK-MEINNAME`
+--> Erstellt Hostname `sidekick-meinname` und WLAN `SIDEKICK-MEINNAME`
 
 #### Variante C: Update einer bestehenden Installation
 ```bash
@@ -87,10 +87,10 @@ sudo reboot
 **Beispiele:**
 ```bash
 # Für Schule Raum 1:
---hostname=schule-raum1    → WLAN: SIDEKICK-SCHULE-RAUM1
+--hostname=schule-raum1    --> WLAN: SIDEKICK-SCHULE-RAUM1
 
 # Für Werkstatt:
---hostname=werkstatt       → WLAN: SIDEKICK-WERKSTATT
+--hostname=werkstatt       --> WLAN: SIDEKICK-WERKSTATT
 ```
 
 ---

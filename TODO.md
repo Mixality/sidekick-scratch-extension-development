@@ -44,8 +44,8 @@
 - [x] **USB-Import Service (udev)**
   - Erkennt USB-Stick beim Einstecken
   - Sucht Ordner mit eigenem Hostname (z.B. `rpi-ws1/`)
-  - Kopiert `videos/*` → `~/Sidekick/sidekick/videos/`
-  - Kopiert `projects/*` → `~/Sidekick/sidekick/projects/`
+  - Kopiert `videos/*` --> `~/Sidekick/sidekick/videos/`
+  - Kopiert `projects/*` --> `~/Sidekick/sidekick/projects/`
   - Aktualisiert JSON-Listen (wiederverwendet Dashboard-Funktionen)
   - Schreibt IMPORT-ERGEBNIS.txt auf USB
 
@@ -69,8 +69,8 @@
 ### Priorität 3 (Später)
 
 - [ ] **Extensions in Unterordner verschieben (Refactoring)**
-  - `sidekick-scratch-extension/` → `extensions/sidekick/`
-  - `sidekick-scratch-mqtt-extension/` → `extensions/sidekickmqtt/`
+  - `sidekick-scratch-extension/` --> `extensions/sidekick/`
+  - `sidekick-scratch-mqtt-extension/` --> `extensions/sidekickmqtt/`
 
 ---
 
@@ -85,11 +85,11 @@
 
 ## 💡 Architektur-Entscheidung
 
-**Netzwerk-Ansatz für Büro → Werkstatt Workflow:**
+**Netzwerk-Ansatz für Büro --> Werkstatt Workflow:**
 - Pi läuft im Firmennetzwerk
 - Vom Büro-PC: `http://sidekick-XXXXXX.local:8601` für Scratch
 - Vom Büro-PC: `http://sidekick-XXXXXX.local:5000` für Dashboard
-- Videos auf dem Pi → erscheinen sofort im Scratch-Dropdown
+- Videos auf dem Pi --> erscheinen sofort im Scratch-Dropdown
 - Kein Export/Import nötig!
 
 **Video-Anforderungen:**

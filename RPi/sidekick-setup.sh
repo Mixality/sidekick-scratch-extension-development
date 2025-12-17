@@ -7,10 +7,10 @@
 #   - Falls JA:   Update auf neueste Version
 #
 # Verwendung:
-#   sudo bash sidekick-setup.sh              → Stabiles Release
-#   sudo bash sidekick-setup.sh --pre        → Inklusive Pre-Releases
-#   sudo bash sidekick-setup.sh --force      → Erzwingt Neuinstallation
-#   sudo bash sidekick-setup.sh --help       → Zeigt Hilfe
+#   sudo bash sidekick-setup.sh              --> Stabiles Release
+#   sudo bash sidekick-setup.sh --pre        --> Inklusive Pre-Releases
+#   sudo bash sidekick-setup.sh --force      --> Erzwingt Neuinstallation
+#   sudo bash sidekick-setup.sh --help       --> Zeigt Hilfe
 #
 # =============================================================================
 
