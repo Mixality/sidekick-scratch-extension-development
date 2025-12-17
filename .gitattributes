@@ -1,0 +1,10 @@
+# Shell scripts must have LF line endings (Unix)
+*.sh text eol=lf
+
+# Python scripts should also use LF
+*.py text eol=lf
+
+# Windows batch/PowerShell can use CRLF
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf

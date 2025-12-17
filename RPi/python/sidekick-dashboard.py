@@ -589,9 +589,15 @@ class DashboardHandler(BaseHTTPRequestHandler):
         """Rendert die Dashboard-Seite"""
         html = HTML_HEADER
         
-        html += '<h1><img src="/sidekick-logo.svg" alt="SIDEKICK" style="height: 1.2em; vertical-align: middle; margin-right: 10px;">SIDEKICK Dashboard</h1>'
+        # SIDEKICK Logo als inline SVG (grüner Blitz)
+        sidekick_logo_svg = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" style="height: 1.5em; vertical-align: middle; margin-right: 10px;"><g transform="matrix(1.163134, 0, 0, 1.163081, -9.026044, -35.353489)"><g transform="matrix(0.832517, 0, 0, 0.832517, 75.024178, 82.846268)"><path d="M 0 348.179 L 337.63 761.13 L 382.994 761.13 L 403.081 786.592 L 460.382 786.592 L 484.09 761.13 L 535.023 761.13 L 896 348.179 L 895.567 320.246 L -0.1 319.935 L 0 348.179 Z" style="stroke-linecap: round; stroke-linejoin: round; stroke-width: 30px; stroke: rgb(146, 170, 121); fill: rgb(182, 213, 151);"></path><path d="M 1.148 319.517 L 337.913 731.409 L 383.161 731.409 L 403.196 756.806 L 460.35 756.806 L 483.997 731.409 L 534.8 731.409 L 894.852 319.517 L 729.435 144.945 L 169.763 144.945 L 1.148 319.517 Z" style="stroke-linecap: round; stroke-linejoin: round; stroke-width: 30px; fill: rgb(182, 213, 151); stroke: rgb(197, 221, 172);"></path></g><g transform="matrix(0.931649, 0, 0, 0.931649, 246.421875, 139.795685)"><path d="M 213.06900024414062 205.85000610351562 L 165.85699462890625 323.68701171875 L 242.62399291992188 274.6409912109375 L 225.3730010986328 366.1409912109375 L 137.7790069580078 452.10400390625 L 129 504.6759948730469 L 142.96299743652344 456.16400146484375 L 240.5070037841797 385.26300048828125 L 297.4649963378906 208.58200073242188 L 208.36099243164062 273.3800048828125 L 231.46200561523438 216.98800659179688 L 318.29998779296875 133.9759979248047 Z" style="fill-rule: nonzero; paint-order: stroke; stroke: rgb(197, 221, 172); stroke-width: 150.381px; stroke-linejoin: round; fill: rgb(197, 221, 172);"></path><path d="M 213.06900024414062 205.85000610351562 L 165.85699462890625 323.68701171875 L 242.62399291992188 274.6409912109375 L 225.3730010986328 366.1409912109375 L 137.7790069580078 452.10400390625 L 129 504.6759948730469 L 142.96299743652344 456.16400146484375 L 240.5070037841797 385.26300048828125 L 297.4649963378906 208.58200073242188 L 208.36099243164062 273.3800048828125 L 231.46200561523438 216.98800659179688 L 318.29998779296875 133.9759979248047 Z" style="fill-rule: nonzero; paint-order: stroke; stroke: rgb(255, 255, 255); stroke-width: 75.1906px; stroke-linejoin: round; fill: rgb(255, 255, 255);"></path><polygon style="fill-rule: nonzero; paint-order: stroke; fill: rgb(182, 213, 151); stroke-width: 75.1906px; stroke-linejoin: round;" points="213.069 205.85 165.857 323.687 242.624 274.641 225.373 366.141 137.779 452.104 129 504.676 142.963 456.164 240.507 385.263 297.465 208.582 208.361 273.38 231.462 216.988 318.3 133.976"></polygon></g></g></svg>'''
+        
+        html += f'<h1>{sidekick_logo_svg}SIDEKICK Dashboard</h1>'
         
         # Scratch Link - dynamisch basierend auf aktuellem Host
+        # Scratch Cat als inline SVG (funktioniert ohne externe Dateien)
+        scratch_cat_svg = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" style="height: 1.4em; vertical-align: middle; margin-right: 8px;"><path fill="#fff" d="M29.6 16.2c-.8-6.5-3.2-6.5-5.4-6.6 0 0-2-1.2-4.2-1.2s-4.2 1.2-4.2 1.2c-2.2.1-4.6.1-5.4 6.6-.9 6.6 2.6 15.3 9.6 15.3s10.5-8.7 9.6-15.3z"/><circle cx="15" cy="18" r="2" fill="#282828"/><circle cx="25" cy="18" r="2" fill="#282828"/><ellipse cx="20" cy="23" rx="3" ry="2" fill="#282828"/><path fill="#fff" stroke="#282828" stroke-width=".5" d="M10.2 9.8c-.4-.2-3.3-1.3-4.5.5-1.2 1.7-.3 3.8.4 4.5.7.7 1.5 1 2.2 1 .3-.4.6-.8 1-1.1l.9-4.9zM29.8 9.8c.4-.2 3.3-1.3 4.5.5 1.2 1.7.3 3.8-.4 4.5-.7.7-1.5 1-2.2 1-.3-.4-.6-.8-1-1.1l-.9-4.9z"/></svg>'''
+        
         html += f'''
         <script>
             // Scratch-Link und Kiosk-Link dynamisch setzen beim Laden
@@ -608,11 +614,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
             }});
         </script>
         <a href="http://10.42.0.1:{SCRATCH_PORT}/" id="scratchLink" class="scratch-link" target="_blank">
-            <img src="/static/assets/cat_logo.82072226e8cf71628916.svg" alt="Scratch" style="height: 1.2em; vertical-align: middle; margin-right: 8px; filter: brightness(0) invert(1);">Scratch Editor öffnen
+            {scratch_cat_svg}Scratch Editor öffnen
         </a>
         <div style="text-align: center; margin-bottom: 20px;">
             <a href="#" id="kioskLinkTop" target="_blank" style="color: #888; text-decoration: none; font-size: 0.9em;">
-                🖥️ Kiosk-Display öffnen <span style="color: #666; font-size: 0.85em;">(für 2. Monitor/TV)</span>
+                🖥️ Kiosk-Display öffnen <span style="color: #666; font-size: 0.85em;">(bspw. für 2. Monitor)</span>
             </a>
         </div>
         '''
@@ -823,7 +829,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         # Video Upload Card mit Codec-Warnung
         html += '''
         <div class="card">
-            <h2>📹 Video hochladen</h2>
+            <h2>🎞️ Video hochladen</h2>
             <form class="upload-form" action="/upload-video" method="post" enctype="multipart/form-data" id="videoUploadForm">
                 <input type="file" name="file" accept=".mp4,.webm,.ogg,.ogv,.mov,.avi,.mkv" required id="videoFileInput" onchange="checkVideoFile()">
                 
@@ -1005,7 +1011,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         
         # Videos List
         html += '<div class="card">'
-        html += '<h2>📹 Verfügbare Videos</h2>'
+        html += '<h2>🎞️ Video-Liste</h2>'
         
         videos = update_video_list()
         if videos:
@@ -1041,7 +1047,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         
         # Projects List
         html += '<div class="card">'
-        html += '<h2>📁 Gespeicherte Projekte</h2>'
+        html += '<h2>📁 Projekt-Liste</h2>'
         
         projects = sorted([f.name for f in PROJECTS_DIR.iterdir() if f.suffix.lower() in PROJECT_EXTENSIONS])
         if projects:
@@ -1080,16 +1086,16 @@ class DashboardHandler(BaseHTTPRequestHandler):
         <div class="card">
             <h2>ℹ️ Verbindung</h2>
             <p style="color: #0E9D59; margin-bottom: 15px;">
-                💡 Alle Links passen sich automatisch an deine Verbindung an (LAN oder Hotspot)!
+                💡 Die nachfolgenden Links werden automatisch, je nach Verbindung(smethode) angepasst (LAN / Hotspot).
             </p>
             <table>
                 <tr><td><strong>Aktueller Host:</strong></td><td><span id="currentHost">...</span></td></tr>
-                <tr><td><strong>Scratch Editor:</strong></td><td><a href="#" id="infoScratchLink" target="_blank">...</a></td></tr>
-                <tr><td><strong>Kiosk Display:</strong></td><td><a href="#" id="infoKioskLink" target="_blank">...</a></td></tr>
-                <tr><td><strong>Dashboard:</strong></td><td><span id="infoDashboardLink">...</span></td></tr>
-                <tr><td><strong>MQTT Broker:</strong></td><td><span id="infoMqttLink">...</span></td></tr>
-                <tr><td><strong>Videos Ordner:</strong></td><td>{VIDEOS_DIR}</td></tr>
-                <tr><td><strong>Projekte Ordner:</strong></td><td>{PROJECTS_DIR}</td></tr>
+                <tr><td><strong>Scratch-Editor:</strong></td><td><a href="#" id="infoScratchLink" target="_blank">...</a></td></tr>
+                <tr><td><strong>Kiosk-Display:</strong></td><td><a href="#" id="infoKioskLink" target="_blank">...</a></td></tr>
+                <tr><td><strong>SIDEKICK-Dashboard:</strong></td><td><span id="infoDashboardLink">...</span></td></tr>
+                <tr><td><strong>MQTT-Broker:</strong></td><td><span id="infoMqttLink">...</span></td></tr>
+                <tr><td><strong>Videos-Ordner:</strong></td><td>{VIDEOS_DIR}</td></tr>
+                <tr><td><strong>Projekte-Ordner:</strong></td><td>{PROJECTS_DIR}</td></tr>
             </table>
         </div>
         
