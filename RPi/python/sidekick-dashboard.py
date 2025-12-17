@@ -26,6 +26,21 @@ from pathlib import Path
 import shutil
 import io
 
+# Importiere gemeinsame Funktionen
+try:
+    from sidekick_files import (
+        setup_paths as _setup_paths, 
+        update_video_list, 
+        update_project_list,
+        VIDEO_EXTENSIONS,
+        PROJECT_EXTENSIONS
+    )
+except ImportError:
+    # Fallback falls Import fehlschlägt
+    VIDEO_EXTENSIONS = {'.mp4', '.webm', '.ogg', '.ogv', '.mov', '.avi', '.mkv'}
+    PROJECT_EXTENSIONS = {'.sb3'}
+    _setup_paths = None
+
 # Konfiguration
 DASHBOARD_PORT = 5000
 SCRATCH_PORT = 8601
@@ -37,56 +52,59 @@ VIDEOS_DIR = None
 PROJECTS_DIR = None
 SCRATCH_DIR = None
 
-# Unterstützte Dateitypen
-VIDEO_EXTENSIONS = {'.mp4', '.webm', '.ogg', '.ogv', '.mov', '.avi', '.mkv'}
-PROJECT_EXTENSIONS = {'.sb3'}
-
 
 def setup_paths():
     """Initialisiert die Pfade basierend auf dem Home-Verzeichnis"""
     global SIDEKICK_DIR, VIDEOS_DIR, PROJECTS_DIR, SCRATCH_DIR
     
-    home = Path.home()
-    SIDEKICK_DIR = home / "Sidekick"
-    SCRATCH_DIR = SIDEKICK_DIR / "sidekick"
-    VIDEOS_DIR = SCRATCH_DIR / "videos"
-    PROJECTS_DIR = SCRATCH_DIR / "projects"  # Auch unter scratch/ für HTTP-Zugriff
-    
-    # Erstelle Ordner falls nicht vorhanden
-    VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
-    PROJECTS_DIR.mkdir(parents=True, exist_ok=True)
+    # Nutze gemeinsame Funktion falls verfügbar
+    if _setup_paths is not None:
+        SIDEKICK_DIR, VIDEOS_DIR, PROJECTS_DIR, SCRATCH_DIR = _setup_paths()
+    else:
+        # Fallback
+        home = Path.home()
+        SIDEKICK_DIR = home / "Sidekick"
+        SCRATCH_DIR = SIDEKICK_DIR / "sidekick"
+        VIDEOS_DIR = SCRATCH_DIR / "videos"
+        PROJECTS_DIR = SCRATCH_DIR / "projects"
+        
+        VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
+        PROJECTS_DIR.mkdir(parents=True, exist_ok=True)
     
     print(f"SIDEKICK Directory: {SIDEKICK_DIR}")
     print(f"Videos Directory: {VIDEOS_DIR}")
     print(f"Projects Directory: {PROJECTS_DIR}")
 
 
-def update_video_list():
-    """Aktualisiert video-list.json basierend auf den Dateien im Videos-Ordner"""
-    video_files = []
-    for f in sorted(VIDEOS_DIR.iterdir()):
-        if f.suffix.lower() in VIDEO_EXTENSIONS:
-            video_files.append(f.name)
-    
-    list_file = VIDEOS_DIR / "video-list.json"
-    with open(list_file, 'w', encoding='utf-8') as f:
-        json.dump(video_files, f, indent=2, ensure_ascii=False)
-    
-    return video_files
+# Hinweis: update_video_list() und update_project_list() werden aus sidekick_files importiert
+# Falls der Import fehlschlägt, sind hier Fallback-Implementierungen:
+if _setup_paths is None:
+    def update_video_list():
+        """Fallback: Aktualisiert video-list.json"""
+        video_files = []
+        for f in sorted(VIDEOS_DIR.iterdir()):
+            if f.suffix.lower() in VIDEO_EXTENSIONS:
+                video_files.append(f.name)
+        
+        list_file = VIDEOS_DIR / "video-list.json"
+        with open(list_file, 'w', encoding='utf-8') as f:
+            json.dump(video_files, f, indent=2, ensure_ascii=False)
+        
+        return video_files
 
 
-def update_project_list():
-    """Aktualisiert project-list.json basierend auf den Dateien im Projects-Ordner"""
-    project_files = []
-    for f in sorted(PROJECTS_DIR.iterdir()):
-        if f.suffix.lower() in PROJECT_EXTENSIONS:
-            project_files.append(f.name)
-    
-    list_file = PROJECTS_DIR / "project-list.json"
-    with open(list_file, 'w', encoding='utf-8') as f:
-        json.dump(project_files, f, indent=2, ensure_ascii=False)
-    
-    return project_files
+    def update_project_list():
+        """Fallback: Aktualisiert project-list.json"""
+        project_files = []
+        for f in sorted(PROJECTS_DIR.iterdir()):
+            if f.suffix.lower() in PROJECT_EXTENSIONS:
+                project_files.append(f.name)
+        
+        list_file = PROJECTS_DIR / "project-list.json"
+        with open(list_file, 'w', encoding='utf-8') as f:
+            json.dump(project_files, f, indent=2, ensure_ascii=False)
+        
+        return project_files
 
 
 def get_file_size_str(size_bytes):

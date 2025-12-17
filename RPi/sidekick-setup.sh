@@ -599,6 +599,15 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
+    # USB-Import udev-Rule (triggert bei USB-Einstecken)
+    cat > /etc/udev/rules.d/99-sidekick-usb-import.rules << EOF
+# SIDEKICK USB-Import: Startet Import wenn USB-Stick eingesteckt wird
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_USAGE}=="filesystem", RUN+="/bin/bash $PYTHON_DIR/sidekick-usb-import.sh"
+EOF
+
+    # udev-Regeln neu laden
+    udevadm control --reload-rules 2>/dev/null || true
+
     systemctl daemon-reload
     systemctl enable sidekick-webapp.service
     systemctl enable sidekick-sensors.service
@@ -607,7 +616,7 @@ EOF
     systemctl start sidekick-sensors.service
     systemctl start sidekick-dashboard.service
 
-    print_success "Services erstellt und gestartet"
+    print_success "Services erstellt und gestartet (inkl. USB-Import)"
 
 else
     # UPDATE: Services aktivieren und starten
@@ -628,6 +637,14 @@ else
         systemctl enable --now sidekick-dashboard
         print_success "sidekick-dashboard gestartet"
     fi
+    
+    # USB-Import udev-Rule auch bei Update installieren/aktualisieren
+    cat > /etc/udev/rules.d/99-sidekick-usb-import.rules << EOF
+# SIDEKICK USB-Import: Startet Import wenn USB-Stick eingesteckt wird
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_USAGE}=="filesystem", RUN+="/bin/bash $PYTHON_DIR/sidekick-usb-import.sh"
+EOF
+    udevadm control --reload-rules 2>/dev/null || true
+    print_success "USB-Import aktualisiert"
 fi
 
 # =============================================================================

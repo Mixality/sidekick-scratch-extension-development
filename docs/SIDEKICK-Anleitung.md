@@ -303,6 +303,36 @@ Videos können in den Ordner über das SIDEKICK-Dashboard (hoch)geladen oder dir
 
 ---
 
+## USB-Import
+
+Videos und Projekte können auch per **USB-Stick** auf mehrere RPis verteilt werden.
+
+### USB-Stick vorbereiten
+
+```
+USB-Stick/
+├── rpi-ws1/              # Ordnername ≙ Hostname des entsprechenden Ziel-RPis.
+│   ├── videos/
+│   │   └── anleitung.mp4
+│   └── projects/
+│       └── projekt.sb3
+├── rpi-ws2/              # Ordner für einen anderen RPi.
+│   ├── videos/
+│   └── projects/
+└── ...
+```
+
+### Verwendung
+
+1. USB-Stick in den RPi einstecken.
+2. Der Import startet automatisch.
+3. Dateien werden automatisch in die entsprechenden Ordner des entsprechenden RPis kopiert.
+4. Ergebnis wird als `IMPORT-ERGEBNIS.txt` im Ordner gespeichert
+
+> **Hinweis:** Dateien, die neuer sind als vorhandene, werden überschrieben.
+
+---
+
 ## Netzwerk
 
 ### Automatischer WLAN-Name

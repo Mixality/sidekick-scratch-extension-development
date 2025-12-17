@@ -39,15 +39,25 @@
   - Fortschrittsanzeige
   - Konvertiert zu H.264, 1080p, optimierte Größe
 
-### Phase 2: USB-Stick Auto-Setup
+### Phase 2: USB-Stick Datei-Import ✅
 
-- [ ] **Service für USB-Erkennung**
-  - udev-Regel die auf USB-Stick mit `sidekick-setup.sh` wartet
-  - Führt Setup automatisch aus
-  - Schreibt ERGEBNIS.txt auf den Stick
+- [x] **USB-Import Service (udev)**
+  - Erkennt USB-Stick beim Einstecken
+  - Sucht Ordner mit eigenem Hostname (z.B. `rpi-ws1/`)
+  - Kopiert `videos/*` → `~/Sidekick/sidekick/videos/`
+  - Kopiert `projects/*` → `~/Sidekick/sidekick/projects/`
+  - Aktualisiert JSON-Listen (wiederverwendet Dashboard-Funktionen)
+  - Schreibt IMPORT-ERGEBNIS.txt auf USB
 
-- [ ] **QR-Code als PNG auf Stick speichern**
-  - Für Sticker-Druck
+- [x] **USB-Stick Struktur**
+  ```
+  USB-Stick/
+  ├── rpi-ws1/
+  │   ├── videos/
+  │   └── projects/
+  ├── rpi-ws2/
+  │   └── ...
+  ```
 
 ### Phase 3: Dashboard Einstellungen
 
@@ -68,7 +78,7 @@
 
 - [x] **v1.0.1-test6**: Unified Setup, Cleanup, Chromium-Fix ✅
 - [ ] **v1.0.1**: Stabiles Release (nach Video-Warnung)
-- [ ] **v1.1.0**: Mit USB-Auto-Setup und Dashboard-Einstellungen
+- [ ] **v1.1.0**: Mit USB-Datei-Import und Dashboard-Einstellungen
 - [ ] **v1.2.0**: Mit Auto-Video-Konvertierung
 
 ---
@@ -89,4 +99,4 @@
 
 ---
 
-*Zuletzt aktualisiert: 14. Dezember 2025*
+*Zuletzt aktualisiert: 17. Dezember 2025*
