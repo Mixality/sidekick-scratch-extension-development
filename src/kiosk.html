@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SIDEKICK Kiosk Display</title>
+    <title>SIDEKICK-Kiosk-Display</title>
     
     <!-- MQTT.js für WebSocket-Kommunikation -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -157,7 +157,7 @@
             to { transform: rotate(360deg); }
         }
         
-        /* QR Code Container */
+        /* QR-Code-Container */
         .qr-container {
             margin-top: 2rem;
             padding: 1.5rem;
@@ -189,20 +189,20 @@
         }
     </style>
     
-    <!-- QR Code wird dynamisch als img generiert -->
+    <!-- QR-Code wird dynamisch als img generiert -->
 </head>
 <body>
     <!-- Welcome Screen (wird beim Laden eines Projekts ausgeblendet) -->
     <div id="welcome-screen">
-        <h1><img src="/sidekick-logo.svg" alt="SIDEKICK" style="height: 1.2em; vertical-align: middle; margin-right: 15px;">SIDEKICK Kiosk</h1>
-        <p>Warte auf Projekt...</p>
+        <h1><img src="/sidekick-logo.svg" alt="SIDEKICK" style="height: 1.2em; vertical-align: middle; margin-right: 15px;">SIDEKICK-Kiosk</h1>
+        <p>Warte auf Projekt …</p>
         <div class="loading-spinner"></div>
         <p style="margin-top: 2rem; font-size: 1rem; color: #666;">
-            Scanne den QR-Code um das Dashboard zu öffnen
+            Scanne den QR-Code um das SIDEKICK-Dashboard zu öffnen:
         </p>
         <div class="qr-container">
-            <img id="qrcode" alt="QR Code">
-            <div class="qr-label">📱 Dashboard</div>
+            <img id="qrcode" alt="QR-Code">
+            <div class="qr-label">SIDEKICK-Dashboard</div>
         </div>
         <p class="dashboard-url" id="dashboardUrl"></p>
     </div>
@@ -215,7 +215,7 @@
     <!-- Status Overlay -->
     <div id="status-overlay" class="disconnected">
         <div class="status-icon">⏳</div>
-        <div class="status-message">Verbinde...</div>
+        <div class="status-message">Verbinde …</div>
     </div>
     
     <!-- Connection Indicator -->
@@ -223,7 +223,7 @@
     
     <script>
         // ============================================
-        // SIDEKICK Kiosk Controller
+        // SIDEKICK-Kiosk-Controller
         // ============================================
         
         const CONFIG = {
@@ -285,7 +285,7 @@
             const brokerUrl = `ws://${CONFIG.mqttBroker}:${CONFIG.mqttPort}`;
             console.log(`Verbinde zu MQTT: ${brokerUrl}`);
             
-            showStatus('⏳', 'Verbinde zu MQTT...', false);
+            showStatus('⏳', 'Verbinde zu MQTT …', false);
             
             mqttClient = mqtt.connect(brokerUrl, {
                 clientId: 'sidekick-kiosk-' + Math.random().toString(16).substr(2, 8),
@@ -296,7 +296,7 @@
             mqttClient.on('connect', () => {
                 console.log('MQTT verbunden!');
                 updateConnectionStatus(true);
-                showStatus('✓', 'Verbunden - Warte auf Projekt...');
+                showStatus('✓', 'Verbunden: Warte auf Projekt …');
                 
                 // Topics abonnieren
                 mqttClient.subscribe('sidekick/display/#');
@@ -314,7 +314,7 @@
             mqttClient.on('close', () => {
                 console.log('MQTT Verbindung geschlossen');
                 updateConnectionStatus(false);
-                showStatus('⚠️', 'Verbindung verloren - Reconnecting...', false);
+                showStatus('⚠️', 'Verbindung verloren: Reconnecting …', false);
             });
             
             mqttClient.on('message', (topic, message) => {
@@ -360,7 +360,7 @@
             console.log(`Lade Projekt: ${projectName}`);
             currentProject = projectName;
             
-            showStatus('⏳', `Lade ${projectName}...`, false);
+            showStatus('⏳', `Lade ${projectName} …`, false);
             
             // Scratch Player mit Projekt-URL als Parameter laden
             // Der player.html lädt das Projekt automatisch via ?project= Parameter
@@ -374,7 +374,7 @@
             // Welcome Screen ausblenden sobald iframe geladen
             scratchFrame.onload = () => {
                 welcomeScreen.classList.add('hidden');
-                showStatus('⏳', `${projectName} wird vorbereitet...`);
+                showStatus('⏳', `${projectName} wird vorbereitet …`);
             };
             
             // Listen for project load confirmation from iframe
@@ -395,7 +395,7 @@
         }
         
         function startProject() {
-            console.log('Starte Projekt (Grüne Flagge)...');
+            console.log('Starte Projekt (Grüne Flagge) …');
             showStatus('▶️', 'Projekt gestartet!');
             
             // Sende Klick-Event an iframe
@@ -411,7 +411,7 @@
         }
         
         function stopProject() {
-            console.log('Stoppe Projekt...');
+            console.log('Stoppe Projekt …');
             showStatus('⏹️', 'Projekt gestoppt');
             
             try {
@@ -424,7 +424,7 @@
         }
         
         function toggleFullscreen() {
-            console.log('Toggle Fullscreen...');
+            console.log('Toggle Fullscreen …');
             
             // Der Player verwendet URL-Parameter für Fullscreen
             // Wir müssen das aktuelle Projekt neu laden mit/ohne fullscreen Parameter
@@ -471,7 +471,7 @@
         document.addEventListener('mousedown', showCursor);
         
         // ============================================
-        // QR Code Generation
+        // QR-Code-Generation
         // ============================================
         
         function generateQRCode() {
@@ -495,9 +495,9 @@
         // ============================================
         
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('SIDEKICK Kiosk gestartet');
+            console.log('SIDEKICK-Kiosk gestartet');
             
-            // QR Code generieren
+            // QR-Code generieren
             generateQRCode();
             
             // Cursor nach 3 Sekunden ausblenden

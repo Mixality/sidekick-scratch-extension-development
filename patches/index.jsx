@@ -63,7 +63,7 @@ export default [
         insetIconURL: sidekickInsetIconURL,
         description: (
             <FormattedMessage
-                defaultMessage="Blöcke für interaktive SIDEKICK-Projekte."
+                defaultMessage="Scratch-Erweiterung: SIDEKICK-Blöcke."
                 description="Description for the 'SIDEKICK' extension"
                 id="gui.extension.sidekick.description"
             />

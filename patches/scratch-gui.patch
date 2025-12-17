@@ -29,7 +29,7 @@ index ba18b91..e316f38 100644
 +        insetIconURL: sidekickInsetIconURL,
 +        description: (
 +            <FormattedMessage
-+                defaultMessage="Blöcke für interaktive SIDEKICK-Projekte."
++                defaultMessage="Scratch-Erweiterung: SIDEKICK-Blöcke."
 +                description="Description for the 'SIDEKICK' extension"
 +                id="gui.extension.sidekick.description"
 +            />
