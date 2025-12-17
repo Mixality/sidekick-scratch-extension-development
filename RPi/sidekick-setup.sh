@@ -144,18 +144,19 @@ get_current_version() {
 }
 
 generate_hostname() {
-    # Generiert einen eindeutigen Hostnamen basierend auf MAC-Adresse
-    # Format: sidekick-XXXXXX (6 Zeichen, lowercase)
-    local mac_hash=$(cat /sys/class/net/*/address 2>/dev/null | head -1 | md5sum | cut -c1-6)
-    if [ -z "$mac_hash" ]; then
-        # Fallback: Seriennummer
-        mac_hash=$(cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2 | tail -c 7 | tr '[:upper:]' '[:lower:]')
+    # Generiert einen eindeutigen Hostnamen basierend auf Pi-Seriennummer
+    # Format: sidekick-XXXXXX (letzte 6 Zeichen der Seriennummer, lowercase)
+    # Die Seriennummer ist auf dem Pi-Aufkleber ablesbar!
+    local serial=$(cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2 | tail -c 7 | tr '[:upper:]' '[:lower:]')
+    if [ -z "$serial" ]; then
+        # Fallback: MAC-Adresse Hash
+        serial=$(cat /sys/class/net/*/address 2>/dev/null | head -1 | md5sum | cut -c1-6)
     fi
-    if [ -z "$mac_hash" ]; then
+    if [ -z "$serial" ]; then
         # Fallback: Random
-        mac_hash=$(head /dev/urandom | tr -dc 'a-z0-9' | head -c 6)
+        serial=$(head /dev/urandom | tr -dc 'a-z0-9' | head -c 6)
     fi
-    echo "sidekick-$mac_hash"
+    echo "sidekick-$serial"
 }
 
 # -----------------------------------------------------------------------------

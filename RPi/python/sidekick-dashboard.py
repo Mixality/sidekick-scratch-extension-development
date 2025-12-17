@@ -576,16 +576,27 @@ class DashboardHandler(BaseHTTPRequestHandler):
         # Scratch Link - dynamisch basierend auf aktuellem Host
         html += f'''
         <script>
-            // Scratch-Link dynamisch setzen beim Laden
+            // Scratch-Link und Kiosk-Link dynamisch setzen beim Laden
             document.addEventListener('DOMContentLoaded', function() {{
                 const host = window.location.hostname;
                 const scratchLink = document.getElementById('scratchLink');
                 if (scratchLink) {{
                     scratchLink.href = 'http://' + host + ':{SCRATCH_PORT}/';
                 }}
+                const kioskLinkTop = document.getElementById('kioskLinkTop');
+                if (kioskLinkTop) {{
+                    kioskLinkTop.href = 'http://' + host + ':{KIOSK_PORT}/kiosk.html';
+                }}
             }});
         </script>
-        <a href="http://10.42.0.1:{SCRATCH_PORT}/" id="scratchLink" class="scratch-link" target="_blank">🎮 Scratch Editor öffnen</a>
+        <a href="http://10.42.0.1:{SCRATCH_PORT}/" id="scratchLink" class="scratch-link" target="_blank">
+            <img src="/static/assets/cat_logo.82072226e8cf71628916.svg" alt="Scratch" style="height: 1.2em; vertical-align: middle; margin-right: 8px; filter: brightness(0) invert(1);">Scratch Editor öffnen
+        </a>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="#" id="kioskLinkTop" target="_blank" style="color: #888; text-decoration: none; font-size: 0.9em;">
+                🖥️ Kiosk-Display öffnen <span style="color: #666; font-size: 0.85em;">(für 2. Monitor/TV)</span>
+            </a>
+        </div>
         '''
         
         # Status Message
@@ -634,7 +645,6 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     <button class="btn btn-start" onclick="startProject()">▶️ Start (Grüne Flagge)</button>
                     <button class="btn btn-stop" onclick="stopProject()">⏹️ Stop</button>
                     <button class="btn btn-secondary" onclick="toggleFullscreen()" title="Stage-Vollbild umschalten">⛶ Vollbild</button>
-                    <a id="kioskLink" href="#" target="_blank" class="btn btn-secondary">🔗 Kiosk-Display öffnen</a>
                 </div>
                 
                 <div id="displayStatus" style="color: #888; font-size: 0.9em;">
@@ -654,10 +664,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             
             let mqttClient = null;
             
-            // Kiosk-Link dynamisch setzen
-            document.addEventListener('DOMContentLoaded', function() {{
-                document.getElementById('kioskLink').href = 'http://' + SIDEKICK_HOST + ':' + KIOSK_PORT + '/kiosk.html';
-            }});
+            // Kiosk-Link wird oben beim Scratch-Link gesetzt
             
             function connectMQTT() {{
                 const statusDot = document.getElementById('mqttStatusDot');
