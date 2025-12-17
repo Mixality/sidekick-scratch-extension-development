@@ -595,8 +595,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
         html += f'<h1>{sidekick_logo_svg}SIDEKICK Dashboard</h1>'
         
         # Scratch Link - dynamisch basierend auf aktuellem Host
-        # Scratch Cat als inline SVG (funktioniert ohne externe Dateien)
-        scratch_cat_svg = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" style="height: 1.4em; vertical-align: middle; margin-right: 8px;"><path fill="#fff" d="M29.6 16.2c-.8-6.5-3.2-6.5-5.4-6.6 0 0-2-1.2-4.2-1.2s-4.2 1.2-4.2 1.2c-2.2.1-4.6.1-5.4 6.6-.9 6.6 2.6 15.3 9.6 15.3s10.5-8.7 9.6-15.3z"/><circle cx="15" cy="18" r="2" fill="#282828"/><circle cx="25" cy="18" r="2" fill="#282828"/><ellipse cx="20" cy="23" rx="3" ry="2" fill="#282828"/><path fill="#fff" stroke="#282828" stroke-width=".5" d="M10.2 9.8c-.4-.2-3.3-1.3-4.5.5-1.2 1.7-.3 3.8.4 4.5.7.7 1.5 1 2.2 1 .3-.4.6-.8 1-1.1l.9-4.9zM29.8 9.8c.4-.2 3.3-1.3 4.5.5 1.2 1.7.3 3.8-.4 4.5-.7.7-1.5 1-2.2 1-.3-.4-.6-.8-1-1.1l-.9-4.9z"/></svg>'''
+        # Scratch Cat Emoji (einfach und funktioniert überall)
+        scratch_icon = '🐱'
         
         html += f'''
         <script>
@@ -614,7 +614,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             }});
         </script>
         <a href="http://10.42.0.1:{SCRATCH_PORT}/" id="scratchLink" class="scratch-link" target="_blank">
-            {scratch_cat_svg}Scratch-Editor öffnen
+            {scratch_icon} Scratch-Editor öffnen
         </a>
         <div style="text-align: center; margin-bottom: 20px;">
             <a href="#" id="kioskLinkTop" target="_blank" style="color: #888; text-decoration: none; font-size: 0.9em;">

@@ -217,7 +217,7 @@ class MqttConnection {
             });
         }
         // Nur wenn neue Nachricht UND der Wert passt, konsumieren wir die Flag
-        if (this._subscriptions[topic].hasNewMessage && 
+        if (this._subscriptions[topic].hasNewMessage &&
             this._subscriptions[topic].lastMessage === expectedValue) {
             this._subscriptions[topic].hasNewMessage = false;
             return true;
@@ -235,16 +235,16 @@ let _frameCounter = 0;
 
 function getOrCreateVideoSkinClass(renderer) {
     if (VideoSkinClass) return VideoSkinClass;
-    
+
     // Versuche BitmapSkin auf verschiedene Arten zu bekommen
     let BitmapSkin = null;
-    
+
     // Methode 1: renderer.exports (alte Versionen)
     if (renderer.exports && renderer.exports.BitmapSkin) {
         BitmapSkin = renderer.exports.BitmapSkin;
         console.log('[sidekick] Found BitmapSkin via renderer.exports');
     }
-    
+
     // Methode 2: Finde BitmapSkin durch eine existierende Skin im Renderer
     if (!BitmapSkin && renderer._allSkins) {
         for (const skin of renderer._allSkins) {
@@ -255,7 +255,7 @@ function getOrCreateVideoSkinClass(renderer) {
             }
         }
     }
-    
+
     // Methode 3: Erstelle eine temporäre Skin um die Klasse zu bekommen
     if (!BitmapSkin) {
         try {
@@ -272,18 +272,18 @@ function getOrCreateVideoSkinClass(renderer) {
             console.error('[sidekick] Failed to create temp skin:', e);
         }
     }
-    
+
     if (!BitmapSkin) {
         console.error('[sidekick] Could not find BitmapSkin class');
         return null;
     }
-    
+
     console.log('[sidekick] BitmapSkin prototype methods:', Object.getOwnPropertyNames(BitmapSkin.prototype));
-    
+
     VideoSkinClass = class VideoSkin extends BitmapSkin {
         constructor(id, renderer, videoName, videoSrc, runtime) {
             super(id, renderer);
-            
+
             this._renderer = renderer;
             this._runtime = runtime;
             this._skinId = id;
@@ -293,21 +293,21 @@ function getOrCreateVideoSkinClass(renderer) {
             this._videoPlaying = false;
             this._lastTime = -1;
             this._frameCount = 0;
-            
+
             // Canvas für Video-Frame-Capture
             this._canvas = document.createElement('canvas');
             this._ctx = this._canvas.getContext('2d', { willReadFrequently: true });
-            
+
             this.readyPromise = new Promise((resolve) => {
                 this.readyCallback = resolve;
             });
-            
+
             this.videoElement = document.createElement('video');
             this.videoElement.crossOrigin = 'anonymous';
             this.videoElement.playsInline = true;
             this.videoElement.preload = 'auto';
             this.videoElement.muted = false;
-            
+
             this.videoElement.onloadeddata = () => {
                 console.log('[sidekick] Video loaded, dimensions:', this.videoElement.videoWidth, 'x', this.videoElement.videoHeight);
                 // Canvas-Größe setzen
@@ -316,37 +316,37 @@ function getOrCreateVideoSkinClass(renderer) {
                 this.readyCallback();
                 this._captureFrame();
             };
-            
+
             this.videoElement.onerror = (e) => {
                 console.error('[sidekick] Video error:', videoName, e);
                 this.videoError = true;
                 this.readyCallback();
             };
-            
+
             this.videoElement.src = videoSrc;
             this.videoElement.load();
         }
-        
+
         _captureFrame() {
             if (this.videoError || !this.videoElement.videoWidth) {
                 return;
             }
-            
+
             // Video-Frame auf Canvas zeichnen
             this._ctx.drawImage(this.videoElement, 0, 0);
-            
+
             // ImageData extrahieren - das ist was BitmapSkin am besten verarbeitet
             const imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
-            
+
             // setBitmap mit ImageData aufrufen
             this.setBitmap(imageData, 1);
-            
+
             this._frameCount++;
             if (this._frameCount % 60 === 0) {
                 console.log('[sidekick] Frame captured:', this._frameCount, 'time:', this.videoElement.currentTime.toFixed(2));
             }
         }
-        
+
         updateFrame() {
             // Wird vom internen Animation-Loop aufgerufen
             if (this._videoPlaying && !this.videoElement.paused && !this.videoElement.ended) {
@@ -358,12 +358,12 @@ function getOrCreateVideoSkinClass(renderer) {
                 }
             }
         }
-        
+
         _startAnimationLoop() {
             if (this._animationRunning) return;
             this._animationRunning = true;
             console.log('[sidekick] Starting animation loop');
-            
+
             const loop = () => {
                 if (!this._animationRunning) return;
                 this.updateFrame();
@@ -371,12 +371,12 @@ function getOrCreateVideoSkinClass(renderer) {
             };
             requestAnimationFrame(loop);
         }
-        
+
         _stopAnimationLoop() {
             this._animationRunning = false;
             console.log('[sidekick] Stopping animation loop');
         }
-        
+
         setPlaying(playing) {
             this._videoPlaying = playing;
             console.log('[sidekick] VideoSkin setPlaying:', playing);
@@ -386,19 +386,19 @@ function getOrCreateVideoSkinClass(renderer) {
                 this._stopAnimationLoop();
             }
         }
-        
+
         // Manueller Frame-Update (für setVideoTime etc.)
         forceUpdate() {
             this._captureFrame();
         }
-        
+
         get size() {
             if (this.videoElement && this.videoElement.videoWidth) {
                 return [this.videoElement.videoWidth, this.videoElement.videoHeight];
             }
             return super.size;
         }
-        
+
         dispose() {
             this._stopAnimationLoop();
             this.videoElement.pause();
@@ -408,7 +408,7 @@ function getOrCreateVideoSkinClass(renderer) {
             super.dispose();
         }
     };
-    
+
     console.log('[sidekick] VideoSkin class created');
     return VideoSkinClass;
 }
@@ -420,43 +420,43 @@ class Scratch3SidekickBlocks {
 
         this._libraryReady = false;
         this._loadMQTT();
-        
+
         // Video-System: Videos werden auf Sprites angewendet
         /** @type {Object.<string, object>} VideoSkin instances */
         this._videos = {};
         this._debugCounter = 0;
-        
+
         // Server-Video-System: Liste der verfügbaren Videos vom Server
         /** @type {Array<{text: string, value: string}>} */
         this._serverVideos = [{ text: '(wird geladen...)', value: '' }];
         this._serverVideosLoaded = false;
-        
+
         // Server-Projekt-System: Liste der verfügbaren Projekte vom Server
         /** @type {Array<{text: string, value: string}>} */
         this._serverProjects = [{ text: '(wird geladen...)', value: '' }];
         this._serverProjectsLoaded = false;
-        
+
         // Basis-URL für Videos/Projekte (wird automatisch erkannt oder kann gesetzt werden)
         // Im Hotspot-Modus: http://10.42.0.1:8601/videos/
         // Lokal: http://localhost:8601/videos/
         this._videoServerBaseUrl = null;
         this._projectServerBaseUrl = null;
         this._detectServerUrls();
-        
+
         // Lade Video- und Projekt-Liste beim Start
         this._loadServerVideoList();
         this._loadServerProjectList();
-        
+
         // Aktualisiere Listen auch bei Projektstart (grüne Flagge)
         runtime.on('PROJECT_START', () => {
             this._loadServerVideoList();
             this._loadServerProjectList();
             this._resetVideos();
         });
-        
+
         // Event-Handler für Video-Updates
         runtime.on('PROJECT_STOP_ALL', () => this._resetVideos());
-        
+
         // Video-Frame Update Loop - markiert alle spielenden Videos als dirty
         let frameCounter = 0;
         runtime.on('BEFORE_EXECUTE', () => {
@@ -473,7 +473,7 @@ class Scratch3SidekickBlocks {
             }
         });
     }
-    
+
     /**
      * Erkennt automatisch die Server URLs basierend auf der aktuellen Seite
      */
@@ -490,7 +490,7 @@ class Scratch3SidekickBlocks {
             console.log('[sidekick] Server URLs fallback:', this._videoServerBaseUrl, this._projectServerBaseUrl);
         }
     }
-    
+
     /**
      * Lädt die Liste verfügbarer Videos vom Server
      */
@@ -500,7 +500,7 @@ class Scratch3SidekickBlocks {
             // Der Server muss eine JSON-Datei mit der Video-Liste bereitstellen
             const listUrl = `${this._videoServerBaseUrl}/video-list.json`;
             console.log('[sidekick] Loading video list from:', listUrl);
-            
+
             const response = await fetch(listUrl);
             if (response.ok) {
                 const videoFiles = await response.json();
@@ -517,13 +517,13 @@ class Scratch3SidekickBlocks {
         } catch (e) {
             console.log('[sidekick] Could not load video list from server:', e.message);
         }
-        
+
         // Fallback: Zeige Hinweis dass keine Videos verfügbar sind
         this._serverVideos = [{ text: '(keine Videos auf Server)', value: '' }];
         this._serverVideosLoaded = true;
         console.log('[sidekick] No videos available on server');
     }
-    
+
     /**
      * Aktualisiert die Video-Liste vom Server (kann manuell aufgerufen werden)
      */
@@ -532,7 +532,7 @@ class Scratch3SidekickBlocks {
         this._serverVideos = [{ text: '(wird geladen...)', value: '' }];
         await this._loadServerVideoList();
     }
-    
+
     /**
      * Lädt die Liste verfügbarer Projekte vom Server
      */
@@ -540,7 +540,7 @@ class Scratch3SidekickBlocks {
         try {
             const listUrl = `${this._projectServerBaseUrl}/project-list.json`;
             console.log('[sidekick] Loading project list from:', listUrl);
-            
+
             const response = await fetch(listUrl);
             if (response.ok) {
                 const projectFiles = await response.json();
@@ -557,12 +557,12 @@ class Scratch3SidekickBlocks {
         } catch (e) {
             console.log('[sidekick] Could not load project list from server:', e.message);
         }
-        
+
         // Fallback
         this._serverProjects = [{ text: '(keine Projekte auf Server)', value: '' }];
         this._serverProjectsLoaded = true;
     }
-    
+
     /**
      * Gibt Liste der verfügbaren Server-Projekte für das Menu zurück
      * Triggert im Hintergrund einen Refresh - beim nächsten Öffnen ist die Liste aktuell
@@ -617,15 +617,11 @@ class Scratch3SidekickBlocks {
                     text: 'Verbinde mit SIDEKICK',
                     blockType: BlockType.COMMAND
                 },
-                
+
                 // ==========================================
-                // EINGABE (Buttons & Sensoren)
+                // Eingabe: Button
                 // ==========================================
                 '---',
-                {
-                    blockType: BlockType.LABEL,
-                    text: 'Eingabe: Botton'
-                },
                 {
                     opcode: 'whenButtonAction',
                     text: 'Wenn Button [BUTTON] [ACTION] wird',
@@ -659,13 +655,9 @@ class Scratch3SidekickBlocks {
                     }
                 },
                 // ==========================================
-                // EINGABE (Buttons & Sensoren)
+                // Eingabe: Ultraschallsensor
                 // ==========================================
                 '---',
-                {
-                    blockType: BlockType.LABEL,
-                    text: 'Eingabe: Ultraschallsensor'
-                },
                 {
                     opcode: 'whenHandDetected',
                     text: 'Wenn Hand erkannt an Box [BOX]',
@@ -690,15 +682,11 @@ class Scratch3SidekickBlocks {
                         }
                     }
                 },
-                
+
                 // ==========================================
-                // LEDs
+                // Ausgabe: LED
                 // ==========================================
                 '---',
-                {
-                    blockType: BlockType.LABEL,
-                    text: 'Ausgabe: LED'
-                },
                 {
                     opcode: 'setLedColor',
                     text: 'Setze LED von Box [BOX] auf Farbe [COLOR]',
@@ -744,15 +732,11 @@ class Scratch3SidekickBlocks {
                         }
                     }
                 },
-                
+
                 // ==========================================
-                // VIDEO
+                // Multimedia: Video
                 // ==========================================
                 '---',
-                {
-                    blockType: BlockType.LABEL,
-                    text: 'Multimedia: Video'
-                },
                 {
                     opcode: 'loadVideoFromServer',
                     text: 'Lade Video [FILENAME] als [NAME]',
@@ -773,7 +757,6 @@ class Scratch3SidekickBlocks {
                     text: 'Aktualisiere Video-Liste',
                     blockType: BlockType.COMMAND
                 },
-                '---',
                 {
                     opcode: 'loadVideoURL',
                     text: 'Lade Video [NAME] von [URL]',
@@ -789,6 +772,7 @@ class Scratch3SidekickBlocks {
                         }
                     }
                 },
+                '---',
                 {
                     opcode: 'videoOnTarget',
                     text: 'Video [NAME] auf [TARGET] [ACTION]',
@@ -838,6 +822,7 @@ class Scratch3SidekickBlocks {
                         }
                     }
                 },
+                '---',
                 {
                     opcode: 'setVideoTime',
                     text: 'Setze Spielzeit von Video [NAME] auf [TIME] Sekunden',
@@ -884,6 +869,7 @@ class Scratch3SidekickBlocks {
                         }
                     }
                 },
+                '---',
                 {
                     opcode: 'getVideoAttribute',
                     text: '[ATTRIBUTE] von Video [NAME]',
@@ -1068,16 +1054,16 @@ class Scratch3SidekickBlocks {
      */
     _getLoadedVideos() {
         const videoNames = Object.keys(this._videos);
-        
+
         if (videoNames.length === 0) {
             // Kein Video geladen - zeige Platzhalter (text und value gleich damit es konsistent aussieht)
             return [{ text: '…', value: '…' }];
         }
-        
+
         // Alle geladenen Videos als Dropdown-Items
         return videoNames.map(name => ({ text: name, value: name }));
     }
-    
+
     /**
      * Gibt Liste der verfügbaren Server-Videos für das Menu zurück
      * Triggert im Hintergrund einen Refresh - beim nächsten Öffnen ist die Liste aktuell
@@ -1093,7 +1079,7 @@ class Scratch3SidekickBlocks {
      */
     _getTargets() {
         const targets = [{ text: 'mir selbst', value: '_myself_' }];
-        
+
         if (this._runtime.targets) {
             for (const target of this._runtime.targets) {
                 if (!target.isStage && target.isOriginal) {
@@ -1101,10 +1087,10 @@ class Scratch3SidekickBlocks {
                 }
             }
         }
-        
+
         // Bühne als Option
         targets.push({ text: 'Bühne', value: '_stage_' });
-        
+
         return targets;
     }
 
@@ -1133,7 +1119,7 @@ class Scratch3SidekickBlocks {
     connection() {
         // URL wird automatisch erkannt - keine Parameter mehr nötig!
         const brokerUrl = detectMqttBrokerUrl();
-        
+
         if (this._mqttConnection) {
             if (!this._mqttConnection.isConnected()) {
                 console.log('[sidekick] Manual connect to:', brokerUrl);
@@ -1146,7 +1132,7 @@ class Scratch3SidekickBlocks {
     }
 
     // ========== Hand-Erkennung (SmartBox) ==========
-    
+
     whenHandDetected({ BOX }) {
         if (this._mqttConnection) {
             const topic = `sidekick/box/${BOX}/hand`;
@@ -1233,13 +1219,13 @@ class Scratch3SidekickBlocks {
     }
 
     // ========== Video Steuerung (Target-basiert) ==========
-    
+
     /**
      * Setzt alle Videos zurück (bei Projekt-Start/Stop)
      */
     _resetVideos() {
         const renderer = this._runtime.renderer;
-        
+
         // Pausiere alle Videos
         for (const name in this._videos) {
             const videoSkin = this._videos[name];
@@ -1248,7 +1234,7 @@ class Scratch3SidekickBlocks {
                 videoSkin.videoElement.currentTime = 0;
             }
         }
-        
+
         // Setze alle Targets zurück die ein Video zeigen
         if (renderer && this._runtime.targets && VideoSkinClass) {
             for (const target of this._runtime.targets) {
@@ -1259,27 +1245,27 @@ class Scratch3SidekickBlocks {
             }
         }
     }
-    
+
     /**
      * Lädt ein Video vom Server
      */
     async loadVideoFromServer(args) {
         const filename = Cast.toString(args.FILENAME);
         const videoName = Cast.toString(args.NAME);
-        
+
         if (!filename || filename === '' || filename === '(keine Videos auf Server)' || filename === '(wird geladen...)') {
             console.warn('[sidekick] No valid video file selected');
             return;
         }
-        
+
         // Baue die vollständige URL
         const videoUrl = `${this._videoServerBaseUrl}/${filename}`;
         console.log('[sidekick] Loading video from server:', videoUrl, 'as', videoName);
-        
+
         // Nutze die bestehende loadVideoURL Funktion
         return this.loadVideoURL({ NAME: videoName, URL: videoUrl });
     }
-    
+
     /**
      * Aktualisiert die Video-Liste vom Server
      */
@@ -1287,36 +1273,36 @@ class Scratch3SidekickBlocks {
         console.log('[sidekick] Refreshing video list from server...');
         await this.refreshServerVideos();
     }
-    
+
     /**
      * Lädt ein Projekt vom Server und öffnet es
      */
     async loadProjectFromServer(args) {
         const filename = Cast.toString(args.PROJECT);
-        
+
         if (!filename || filename === '' || filename === '(keine Projekte auf Server)' || filename === '(wird geladen...)') {
             console.warn('[sidekick] No valid project file selected');
             return;
         }
-        
+
         // Baue die vollständige URL
         const projectUrl = `${this._projectServerBaseUrl}/${filename}`;
         console.log('[sidekick] Loading project from server:', projectUrl);
-        
+
         try {
             // Lade die .sb3 Datei
             const response = await fetch(projectUrl);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
-            
+
             const projectData = await response.arrayBuffer();
-            
+
             // Lade das Projekt in Scratch
             // Die VM hat eine loadProject Funktion
             await this._runtime.vm.loadProject(projectData);
             console.log('[sidekick] Project loaded successfully:', filename);
-            
+
         } catch (e) {
             console.error('[sidekick] Failed to load project:', e);
         }
@@ -1327,7 +1313,7 @@ class Scratch3SidekickBlocks {
      */
     loadVideoFromFile(args) {
         const videoName = Cast.toString(args.NAME);
-        
+
         return new Promise((resolve) => {
             // Erstelle verstecktes File-Input Element
             const fileInput = document.createElement('input');
@@ -1335,29 +1321,29 @@ class Scratch3SidekickBlocks {
             fileInput.accept = 'video/*';  // Nur Video-Dateien
             fileInput.style.display = 'none';
             document.body.appendChild(fileInput);
-            
+
             fileInput.onchange = async (event) => {
                 const file = event.target.files[0];
                 if (file) {
                     // Erstelle Blob URL aus der Datei
                     const blobUrl = URL.createObjectURL(file);
                     console.log('[sidekick] Loading video from file:', file.name, 'as', videoName);
-                    
+
                     // Lade Video mit der bestehenden loadVideoURL Funktion
                     await this.loadVideoURL({ NAME: videoName, URL: blobUrl });
                 }
-                
+
                 // Räume auf
                 document.body.removeChild(fileInput);
                 resolve();
             };
-            
+
             fileInput.oncancel = () => {
                 // User hat abgebrochen
                 document.body.removeChild(fileInput);
                 resolve();
             };
-            
+
             // Öffne den Datei-Dialog
             fileInput.click();
         });
@@ -1369,31 +1355,31 @@ class Scratch3SidekickBlocks {
     async loadVideoURL(args) {
         const videoName = Cast.toString(args.NAME);
         const videoSrc = Cast.toString(args.URL);
-        
+
         // Lösche altes Video mit gleichem Namen wenn vorhanden
         this._deleteVideoInternal(videoName);
-        
+
         const renderer = this._runtime.renderer;
         if (!renderer) {
             console.warn('[sidekick] Renderer not available');
             return;
         }
-        
+
         // Hole oder erstelle VideoSkin-Klasse
         const VideoSkin = getOrCreateVideoSkinClass(renderer);
         if (!VideoSkin) {
             console.error('[sidekick] Could not create VideoSkin class');
             return;
         }
-        
+
         // Erstelle neue VideoSkin - registriere sie im Renderer
         const skinId = renderer._nextSkinId++;
         const videoSkin = new VideoSkin(skinId, renderer, videoName, videoSrc, this._runtime);
         renderer._allSkins[skinId] = videoSkin;
         this._videos[videoName] = videoSkin;
-        
+
         console.log('[sidekick] Loading video:', videoName, 'from', videoSrc);
-        
+
         // Warte bis Video geladen ist
         return videoSkin.readyPromise;
     }
@@ -1407,16 +1393,16 @@ class Scratch3SidekickBlocks {
         const action = Cast.toString(args.ACTION);
         const target = this._getTargetFromMenu(targetName, util);
         const videoSkin = this._videos[videoName];
-        
+
         if (!target || !videoSkin) {
             console.warn('[sidekick] videoOnTarget: target or video not found', targetName, videoName);
             return;
         }
-        
+
         const renderer = this._runtime.renderer;
         if (renderer) {
             renderer.updateDrawableSkinId(target.drawableID, videoSkin._id);
-            
+
             if (action === 'showAndPlay') {
                 videoSkin.setPlaying(true);
                 videoSkin.videoElement.play();
@@ -1433,9 +1419,9 @@ class Scratch3SidekickBlocks {
     stopShowingVideo(args, util) {
         const targetName = Cast.toString(args.TARGET);
         const target = this._getTargetFromMenu(targetName, util);
-        
+
         if (!target) return;
-        
+
         target.setCostume(target.currentCostume);
         console.log('[sidekick] Stopped showing video on', targetName);
     }
@@ -1447,15 +1433,15 @@ class Scratch3SidekickBlocks {
         const videoName = Cast.toString(args.NAME);
         const action = Cast.toString(args.ACTION);
         const videoSkin = this._videos[videoName];
-        
+
         // Löschen braucht keine videoSkin Prüfung
         if (action === 'delete') {
             this._deleteVideoInternal(videoName);
             return;
         }
-        
+
         if (!videoSkin) return;
-        
+
         switch (action) {
             case 'play':
                 videoSkin.setPlaying(true);
@@ -1484,9 +1470,9 @@ class Scratch3SidekickBlocks {
     _deleteVideoInternal(videoName) {
         const videoSkin = this._videos[videoName];
         if (!videoSkin) return;
-        
+
         const renderer = this._runtime.renderer;
-        
+
         // Setze alle Targets zurück die dieses Video zeigen
         if (this._runtime.targets) {
             for (const target of this._runtime.targets) {
@@ -1496,13 +1482,13 @@ class Scratch3SidekickBlocks {
                 }
             }
         }
-        
+
         // Stoppe und entferne Video
         videoSkin.setPlaying(false);
         videoSkin.videoElement.pause();
         videoSkin.dispose();
         delete this._videos[videoName];
-        
+
         console.log('[sidekick] Video deleted:', videoName);
     }
 
@@ -1513,9 +1499,9 @@ class Scratch3SidekickBlocks {
         const videoName = Cast.toString(args.NAME);
         const time = Cast.toNumber(args.TIME);
         const videoSkin = this._videos[videoName];
-        
+
         if (!videoSkin || !videoSkin.videoElement) return;
-        
+
         videoSkin.videoElement.currentTime = Math.max(0, time);
         setTimeout(() => videoSkin.forceUpdate(), 50);
         console.log('[sidekick] Video', videoName, 'time set to', time);
@@ -1528,9 +1514,9 @@ class Scratch3SidekickBlocks {
         const videoName = Cast.toString(args.NAME);
         const volume = Cast.toNumber(args.VOLUME);
         const videoSkin = this._videos[videoName];
-        
+
         if (!videoSkin || !videoSkin.videoElement) return;
-        
+
         videoSkin.videoElement.volume = Math.max(0, Math.min(100, volume)) / 100;
         console.log('[sidekick] Video', videoName, 'volume set to', volume);
     }
@@ -1542,9 +1528,9 @@ class Scratch3SidekickBlocks {
         const videoName = Cast.toString(args.NAME);
         const loop = Cast.toString(args.LOOP) === 'on';
         const videoSkin = this._videos[videoName];
-        
+
         if (!videoSkin || !videoSkin.videoElement) return;
-        
+
         videoSkin.videoElement.loop = loop;
         console.log('[sidekick] Video', videoName, 'loop', loop ? 'on' : 'off');
     }
@@ -1556,9 +1542,9 @@ class Scratch3SidekickBlocks {
         const videoName = Cast.toString(args.NAME);
         const attribute = Cast.toString(args.ATTRIBUTE);
         const videoSkin = this._videos[videoName];
-        
+
         if (!videoSkin || !videoSkin.videoElement) return 0;
-        
+
         switch (attribute) {
             case 'currentTime':
                 return Math.round(videoSkin.videoElement.currentTime * 10) / 10;
@@ -1581,9 +1567,9 @@ class Scratch3SidekickBlocks {
     isVideoPlaying(args) {
         const videoName = Cast.toString(args.NAME);
         const videoSkin = this._videos[videoName];
-        
+
         if (!videoSkin || !videoSkin.videoElement) return false;
-        
+
         return !videoSkin.videoElement.paused && !videoSkin.videoElement.ended;
     }
 
@@ -1620,7 +1606,7 @@ class Scratch3SidekickBlocks {
         this._libraryReady = true;
         console.log('[sidekick] MQTT library loaded, creating connection');
         this._mqttConnection = new MqttConnection(this._runtime, 'sidekick');
-        
+
         // Auto-Connect zum erkannten Broker
         const brokerUrl = detectMqttBrokerUrl();
         console.log('[sidekick] Auto-connecting to:', brokerUrl);
