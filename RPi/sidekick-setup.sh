@@ -117,6 +117,10 @@ print_error() {
     echo -e "${RED}   ✗ $1${NC}"
 }
 
+print_warning() {
+    echo -e "${YELLOW}   ⚠ $1${NC}"
+}
+
 print_info() {
     echo -e "${BLUE}   ℹ $1${NC}"
 }
@@ -198,13 +202,13 @@ fi
 # -----------------------------------------------------------------------------
 # Header
 # -----------------------------------------------------------------------------
-print_header "SIDEKICK Setup - $MODE_TEXT"
+print_header "SIDEKICK Setup: $MODE_TEXT"
 
-echo "Benutzer:        $ACTUAL_USER"
-echo "Home:            $USER_HOME"
-echo "SIDEKICK-Pfad:   $SIDEKICK_DIR"
+echo "Benutzer:                     $ACTUAL_USER"
+echo "Benutzer-Home:                $USER_HOME"
+echo "SIDEKICK-Verzeichnis-Pfad:    $SIDEKICK_DIR"
 if [ -n "$CURRENT_VERSION" ]; then
-    echo "Installiert:     $CURRENT_VERSION"
+    echo "Aktuell installiert:      $CURRENT_VERSION"
 fi
 if [ "$INCLUDE_PRERELEASE" = true ]; then
     echo -e "Release-Modus:   ${YELLOW}Inklusive Pre-Releases${NC}"
@@ -220,8 +224,8 @@ print_step "1/9" "Prüfe verfügbare Versionen..."
 
 LATEST_VERSION=$(get_latest_release)
 if [ -z "$LATEST_VERSION" ]; then
-    print_error "Konnte neueste Version nicht ermitteln!"
-    echo "      Prüfe deine Internetverbindung."
+    print_error "Neueste Version konnte nicht ermittelt werden!"
+    echo "      Bitte Internetverbindung prüfen."
     exit 1
 fi
 
@@ -230,9 +234,9 @@ print_success "Neueste Version: $LATEST_VERSION"
 # Bei Update: Prüfen ob nötig
 if [ "$IS_UPDATE" = true ] && [ "$CURRENT_VERSION" = "$LATEST_VERSION" ] && [ "$FORCE_INSTALL" = false ]; then
     echo ""
-    echo -e "${GREEN}   Du hast bereits die neueste Version!${NC}"
+    echo -e "${GREEN}   Die neueste Version ist bereits installiert!${NC}"
     echo ""
-    read -p "   Trotzdem neu installieren? (j/N): " -n 1 -r
+    read -p "   Dennoch neu installieren? (j/N): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Jj]$ ]]; then
         echo "   Abgebrochen."
@@ -245,7 +249,7 @@ fi
 # -----------------------------------------------------------------------------
 if [ "$IS_UPDATE" = false ]; then
     echo ""
-    read -p "Fortfahren mit Installation? (J/n) " -n 1 -r
+    read -p "Mit Installation fortfahren? (J/n): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Nn]$ ]]; then
         echo "Abgebrochen."
@@ -317,7 +321,7 @@ if [ "$IS_UPDATE" = false ]; then
     # -------------------------------------------------------------------------
     # 3. Pakete installieren
     # -------------------------------------------------------------------------
-    print_step "3/9" "Installiere benötigte Pakete..."
+    print_step "3/9" "Installiere notwendige Pakete..."
 
     apt-get update -qq
     apt-get install -y -qq mosquitto mosquitto-clients python3-pip curl unzip avahi-daemon qrencode
@@ -327,7 +331,7 @@ if [ "$IS_UPDATE" = false ]; then
     pip3 install rpi_ws281x --break-system-packages 2>/dev/null || pip3 install rpi_ws281x 2>/dev/null || true
     pip3 install flask qrcode[pil] --break-system-packages 2>/dev/null || true
 
-    print_success "Pakete installiert"
+    print_success "Pakete erfolgreich installiert"
 
     # -------------------------------------------------------------------------
     # 3. Mosquitto konfigurieren
@@ -349,7 +353,7 @@ EOF
     systemctl enable mosquitto
     systemctl restart mosquitto
 
-    print_success "Mosquitto konfiguriert (Port 1883 + WebSocket 9001)"
+    print_success "Mosquitto erfolgreich konfiguriert (Port: 1883 + WebSocket: 9001)"
 
     # -------------------------------------------------------------------------
     # 4. Hostname einrichten
@@ -406,8 +410,8 @@ EOF
     # -------------------------------------------------------------------------
     print_step "6/9" "Richte WLAN-Hotspot ein..."
 
-    HOTSPOT_SSID="SIDEKICK-${SIDEKICK_HOSTNAME#sidekick-}"
-    HOTSPOT_SSID=$(echo "$HOTSPOT_SSID" | tr '[:lower:]' '[:upper:]')
+    # Hotspot-Name = Hostname (alles lowercase)
+    HOTSPOT_SSID="$SIDEKICK_HOSTNAME"
     HOTSPOT_PASSWORD="sidekick"
 
     if ! nmcli device status | grep -q "wifi"; then
@@ -416,25 +420,27 @@ EOF
         # Bestehenden Hotspot löschen
         nmcli connection delete Hotspot 2>/dev/null || true
         
-        # Neuen Hotspot erstellen
+        # Neuen Hotspot erstellen (gleicher Name wie Hostname)
+        HOTSPOT_SSID="$SIDEKICK_HOSTNAME"
+        HOTSPOT_PASSWORD="sidekick"
+        
         nmcli device wifi hotspot ssid "$HOTSPOT_SSID" password "$HOTSPOT_PASSWORD"
         nmcli connection modify Hotspot autoconnect yes
         nmcli connection modify Hotspot connection.autoconnect-priority 100
         
-        print_success "Hotspot: $HOTSPOT_SSID (Passwort: $HOTSPOT_PASSWORD)"
+        print_success "Hotspot-Name: $HOTSPOT_SSID (Passwort: $HOTSPOT_PASSWORD)"
     fi
 
 else
     # UPDATE-Modus: Nur Schritte überspringen
-    print_step "3/9" "Pakete... (übersprungen - bereits installiert)"
-    print_step "4/9" "MQTT... (übersprungen - bereits konfiguriert)"
-    print_step "5/9" "Hostname... (übersprungen - bereits gesetzt)"
-    print_step "6/9" "Hotspot... (übersprungen - bereits konfiguriert)"
+    print_step "3/9" "Pakete... (übersprungen: bereits installiert)"
+    print_step "4/9" "MQTT... (übersprungen: bereits konfiguriert)"
+    print_step "5/9" "Hostname... (übersprungen: bereits gesetzt)"
+    print_step "6/9" "Hotspot... (übersprungen: bereits konfiguriert)"
     
     # Hostname für später ermitteln
     SIDEKICK_HOSTNAME=$(hostname)
-    HOTSPOT_SSID="SIDEKICK-${SIDEKICK_HOSTNAME#sidekick-}"
-    HOTSPOT_SSID=$(echo "$HOTSPOT_SSID" | tr '[:lower:]' '[:upper:]')
+    HOTSPOT_SSID="$SIDEKICK_HOSTNAME"
     HOTSPOT_PASSWORD="sidekick"
 fi
 
@@ -452,7 +458,7 @@ mkdir -p "$SIDEKICK_DIR"
 # Backup von Benutzer-Dateien (Projekte, Videos)
 BACKUP_DIR="$SIDEKICK_DIR/.backup_temp"
 if [ -d "$WEBAPP_DIR/projects" ] || [ -d "$WEBAPP_DIR/videos" ]; then
-    print_info "Sichere Projekte und Videos..."
+    print_info "Sichere Projekt- und Videodateien..."
     mkdir -p "$BACKUP_DIR"
     [ -d "$WEBAPP_DIR/projects" ] && cp -r "$WEBAPP_DIR/projects" "$BACKUP_DIR/"
     [ -d "$WEBAPP_DIR/videos" ] && cp -r "$WEBAPP_DIR/videos" "$BACKUP_DIR/"
@@ -512,7 +518,7 @@ rm -rf "$TEMP_DIR"
 
 # Benutzer-Dateien wiederherstellen
 if [ -d "$BACKUP_DIR" ]; then
-    print_info "Stelle Projekte und Videos wieder her..."
+    print_info "Stelle Projekt- und Videodateien wieder her..."
     [ -d "$BACKUP_DIR/projects" ] && cp -r "$BACKUP_DIR/projects" "$WEBAPP_DIR/"
     [ -d "$BACKUP_DIR/videos" ] && cp -r "$BACKUP_DIR/videos" "$WEBAPP_DIR/"
     rm -rf "$BACKUP_DIR"
@@ -761,25 +767,25 @@ echo -e "${GREEN}SIDEKICK $LATEST_VERSION ist einsatzbereit!${NC}"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo -e "${CYAN}Gerätename:${NC} $SIDEKICK_HOSTNAME"
+echo -e "${CYAN}Gerätename / Hostname:${NC} $SIDEKICK_HOSTNAME"
 echo ""
 echo -e "${CYAN}Zugriff im Netzwerk:${NC}"
-echo "  Scratch:    http://${SIDEKICK_HOSTNAME}.local:8601"
-echo "  Dashboard:  http://${SIDEKICK_HOSTNAME}.local:5000"
+echo "  Scratch-Editor:     http://${SIDEKICK_HOSTNAME}.local:8601"
+echo "  SIDEKICK-Dashboard: http://${SIDEKICK_HOSTNAME}.local:5000"
 echo ""
 echo -e "${CYAN}Zugriff via Hotspot:${NC}"
-echo "  WLAN:       $HOTSPOT_SSID"
-echo "  Passwort:   $HOTSPOT_PASSWORD"
-echo "  Scratch:    http://10.42.0.1:8601"
-echo "  Dashboard:  http://10.42.0.1:5000"
+echo "  WLAN:               $HOTSPOT_SSID"
+echo "  Passwort:           $HOTSPOT_PASSWORD"
+echo "  Scratch-Editor:     http://10.42.0.1:8601"
+echo "  SIDEKICK-Dashboard: http://10.42.0.1:5000"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # QR-Code generieren (falls qrencode installiert)
 if command -v qrencode &> /dev/null; then
     echo ""
-    echo -e "${CYAN}QR-Code für Scratch:${NC}"
-    qrencode -t ANSIUTF8 "http://${SIDEKICK_HOSTNAME}.local:8601" 2>/dev/null || true
+    echo -e "${CYAN}QR-Code für SIDEKICK-Dashboard:${NC}"
+    qrencode -t ANSIUTF8 "http://${SIDEKICK_HOSTNAME}.local:5000" 2>/dev/null || true
 fi
 
 echo ""
