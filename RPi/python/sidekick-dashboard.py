@@ -125,7 +125,7 @@ HTML_HEADER = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIDEKICK Dashboard</title>
+    <title>SIDEKICK-Dashboard</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -614,7 +614,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             }});
         </script>
         <a href="http://10.42.0.1:{SCRATCH_PORT}/" id="scratchLink" class="scratch-link" target="_blank">
-            {scratch_cat_svg}Scratch Editor öffnen
+            {scratch_cat_svg}Scratch-Editor öffnen
         </a>
         <div style="text-align: center; margin-bottom: 20px;">
             <a href="#" id="kioskLinkTop" target="_blank" style="color: #888; text-decoration: none; font-size: 0.9em;">
