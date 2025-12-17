@@ -51,9 +51,7 @@ jobs:
       # 4. Extensions in scratch-vm kopieren
       - name: Copy extensions to scratch-vm
         run: |
-          mkdir -p scratch-vm/src/extensions/scratch3_sidekickmqtt
           mkdir -p scratch-vm/src/extensions/scratch3_sidekick
-          cp -r sidekick-scratch-mqtt-extension/* scratch-vm/src/extensions/scratch3_sidekickmqtt/
           cp -r sidekick-scratch-extension/* scratch-vm/src/extensions/scratch3_sidekick/
       
       # 5. Scratch-VM Setup und Build
@@ -70,12 +68,11 @@ jobs:
       # 6. Patches anwenden (Extension Manager + Player + Icons)
       - name: Apply patches
         run: |
-          # Extension Manager patchen (registriert die SIDEKICK Extensions)
+          # Extension Manager patchen (registriert die SIDEKICK Extension)
           cp patches/extension-manager.js scratch-vm/src/extension-support/extension-manager.js
           
           # Extension Icons kopieren
           cp -r patches/extensions/sidekick scratch-gui/src/lib/libraries/extensions/
-          cp -r patches/extensions/sidekickmqtt scratch-gui/src/lib/libraries/extensions/
           
           # index.jsx patchen (Extension-Bibliothek UI)
           cp patches/index.jsx scratch-gui/src/lib/libraries/extensions/index.jsx

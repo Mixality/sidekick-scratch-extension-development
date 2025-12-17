@@ -582,7 +582,7 @@ class Scratch3SidekickBlocks {
             id: 'sidekick',
 
             // name that will be displayed in the Scratch UI
-            name: 'SIDEKICK Extension',
+            name: 'SIDEKICK',
 
             // colours to use for the extension blocks
             // colour for the blocks
@@ -609,14 +609,63 @@ class Scratch3SidekickBlocks {
 
             // Scratch blocks
             blocks: [
+                // ==========================================
+                // VERBINDUNG
+                // ==========================================
                 {
                     opcode: 'connection',
                     text: 'Verbinde mit SIDEKICK',
                     blockType: BlockType.COMMAND
-                    // Keine Argumente mehr - URL wird automatisch erkannt!
                 },
+                
+                // ==========================================
+                // EINGABE (Buttons & Sensoren)
+                // ==========================================
                 '---',
-                // ========== Hand-Erkennung (SmartBox) ==========
+                {
+                    blockType: BlockType.LABEL,
+                    text: 'Eingabe: Botton'
+                },
+                {
+                    opcode: 'whenButtonAction',
+                    text: 'Wenn Button [BUTTON] [ACTION] wird',
+                    blockType: BlockType.HAT,
+                    arguments: {
+                        BUTTON: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
+                        },
+                        ACTION: {
+                            type: ArgumentType.STRING,
+                            menu: 'buttonAction',
+                            defaultValue: 'pressed'
+                        }
+                    }
+                },
+                {
+                    opcode: 'isButtonState',
+                    text: 'Button [BUTTON] [ACTION]?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        BUTTON: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
+                        },
+                        ACTION: {
+                            type: ArgumentType.STRING,
+                            menu: 'buttonAction',
+                            defaultValue: 'pressed'
+                        }
+                    }
+                },
+                // ==========================================
+                // EINGABE (Buttons & Sensoren)
+                // ==========================================
+                '---',
+                {
+                    blockType: BlockType.LABEL,
+                    text: 'Eingabe: Ultraschallsensor'
+                },
                 {
                     opcode: 'whenHandDetected',
                     text: 'Wenn Hand erkannt an Box [BOX]',
@@ -641,8 +690,15 @@ class Scratch3SidekickBlocks {
                         }
                     }
                 },
+                
+                // ==========================================
+                // LEDs
+                // ==========================================
                 '---',
-                // ========== LED Steuerung ==========
+                {
+                    blockType: BlockType.LABEL,
+                    text: 'Ausgabe: LED'
+                },
                 {
                     opcode: 'setLedColor',
                     text: 'Setze LED von Box [BOX] auf Farbe [COLOR]',
@@ -688,45 +744,18 @@ class Scratch3SidekickBlocks {
                         }
                     }
                 },
+                
+                // ==========================================
+                // VIDEO
+                // ==========================================
                 '---',
-                // ========== Button Blöcke ==========
                 {
-                    opcode: 'whenButtonAction',
-                    text: 'Wenn Button [BUTTON] [ACTION] wird',
-                    blockType: BlockType.HAT,
-                    arguments: {
-                        BUTTON: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 1
-                        },
-                        ACTION: {
-                            type: ArgumentType.STRING,
-                            menu: 'buttonAction',
-                            defaultValue: 'pressed'
-                        }
-                    }
+                    blockType: BlockType.LABEL,
+                    text: 'Multimedia: Video'
                 },
-                {
-                    opcode: 'isButtonState',
-                    text: 'Button [BUTTON] [ACTION]?',
-                    blockType: BlockType.BOOLEAN,
-                    arguments: {
-                        BUTTON: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 1
-                        },
-                        ACTION: {
-                            type: ArgumentType.STRING,
-                            menu: 'buttonAction',
-                            defaultValue: 'pressed'
-                        }
-                    }
-                },
-                '---',
-                // ========== Video Blöcke ==========
                 {
                     opcode: 'loadVideoFromServer',
-                    text: 'Lade Video [FILENAME] vom Server als [NAME]',
+                    text: 'Lade Video [FILENAME] als [NAME]',
                     blockType: BlockType.COMMAND,
                     arguments: {
                         FILENAME: {
@@ -741,21 +770,10 @@ class Scratch3SidekickBlocks {
                 },
                 {
                     opcode: 'refreshVideoList',
-                    text: 'Aktualisiere Video-Liste vom Server',
+                    text: 'Aktualisiere Video-Liste',
                     blockType: BlockType.COMMAND
                 },
                 '---',
-                {
-                    opcode: 'loadVideoFromFile',
-                    text: '⚠️ Lade Video [NAME] von Datei (nur Test)',
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        NAME: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'meinVideo'
-                        }
-                    }
-                },
                 {
                     opcode: 'loadVideoURL',
                     text: 'Lade Video [NAME] von [URL]',
@@ -890,45 +908,6 @@ class Scratch3SidekickBlocks {
                         NAME: {
                             type: ArgumentType.STRING,
                             menu: 'loadedVideosMenu'
-                        }
-                    }
-                },
-                '---',
-                // ========== Allgemeine MQTT Blöcke ==========
-                {
-                    opcode: 'publish',
-                    text: 'publish [MESSAGE] to [TOPIC]',
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        TOPIC: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'scratch/mqtt'
-                        },
-                        MESSAGE: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'hello world'
-                        }
-                    }
-                },
-                {
-                    opcode: 'subscribe',
-                    text: 'new message from [TOPIC]',
-                    blockType: BlockType.HAT,
-                    arguments: {
-                        TOPIC: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'scratch/mqtt'
-                        }
-                    }
-                },
-                {
-                    opcode: 'message',
-                    text: 'message from [TOPIC]',
-                    blockType: BlockType.REPORTER,
-                    arguments: {
-                        TOPIC: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'scratch/mqtt'
                         }
                     }
                 }

@@ -24,7 +24,6 @@ const builtinExtensions = {
     makeymakey: () => require('../extensions/scratch3_makeymakey'),
     boost: () => require('../extensions/scratch3_boost'),
     gdxfor: () => require('../extensions/scratch3_gdx_for'),
-    sidekickMQTT: () => require('../extensions/scratch3_sidekickmqtt'),
     sidekick: () => require('../extensions/scratch3_sidekick')
 };
 

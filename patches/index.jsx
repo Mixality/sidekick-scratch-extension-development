@@ -1,9 +1,6 @@
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
 
-import sidekickMQTTIconURL from './sidekickmqtt/sidekick-mqtt.png';
-import sidekickMQTTInsetIconURL from './sidekickmqtt/sidekick-mqtt-small.png';
-
 import sidekickIconURL from './sidekick/sidekick.svg';
 import sidekickInsetIconURL from './sidekick/sidekick-small.svg';
 
@@ -56,28 +53,7 @@ export default [
     {
         name: (
             <FormattedMessage
-                defaultMessage="SIDEKICK MQTT Extension"
-                description="Name for the 'SIDEKICK MQTT' extension"
-                id="gui.extension.sidekickmqtt.name"
-            />
-        ),
-        extensionId: 'sidekickMQTT',
-        iconURL: sidekickMQTTIconURL,
-        insetIconURL: sidekickMQTTInsetIconURL,
-        description: (
-            <FormattedMessage
-                defaultMessage="Custom Scratch MQTT extension."
-                description="Description for the 'SIDEKICK MQTT' extension"
-                id="gui.extension.sidekickmqtt.description"
-            />
-        ),
-        featured: true,
-        disabled: false
-    },
-    {
-        name: (
-            <FormattedMessage
-                defaultMessage="SIDEKICK Extension"
+                defaultMessage="SIDEKICK"
                 description="Name for the 'SIDEKICK' extension"
                 id="gui.extension.sidekick.name"
             />
@@ -87,7 +63,7 @@ export default [
         insetIconURL: sidekickInsetIconURL,
         description: (
             <FormattedMessage
-                defaultMessage="SIDEKICK Scratch extension."
+                defaultMessage="Blöcke für interaktive SIDEKICK-Projekte."
                 description="Description for the 'SIDEKICK' extension"
                 id="gui.extension.sidekick.description"
             />
