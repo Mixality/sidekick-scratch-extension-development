@@ -1,122 +1,106 @@
 # SIDEKICK Assistenzsystem
 
-## Anleitung & Dokumentation
+## Anleitung, Dokumentation
 
 ---
 
-## 📖 Begriffe kurz erklärt
+## Begriffe-Übersicht
 
 | Begriff | Erklärung |
 |---------|-----------|
-| **Raspberry Pi (RPi)** | Ein kleiner, günstiger Computer in Kreditkartengröße. Darauf läuft SIDEKICK. |
-| **Hostname** | Der Name des Raspberry Pi im Netzwerk. Damit kann man ihn von anderen Geräten aus erreichen (z.B. `sidekick-rpi-ws1.local`). |
-| **Dashboard** | Eine Webseite zum Verwalten von Videos, Projekten und zum Steuern des Displays. |
-| **Scratch** | Eine visuelle Programmiersprache mit bunten Bausteinen - keine Programmierkenntnisse nötig! |
-| **Kiosk-Modus** | Der Pi zeigt ein Scratch-Projekt im Vollbild an - perfekt für Displays in der Werkstatt. |
-| **Hotspot** | Der Pi kann sein eigenes WLAN aufmachen, falls kein Firmennetzwerk verfügbar ist. |
+| **Raspberry Pi (RPi)** | Kosteneffektiver, handlicher Einplatinencomputer. Führt SIDEKICK aus. |
+| **Hostname** | Der Name des RPi im Netzwerk. Über diesen Namen ist der entprechende RPi von anderen Geräten aus erreichbar (Beispiel: `sidekick-rpi-ws1.local`). |
+| **Dashboard** | Eine Webseite-Oberfläche zum Verwalten von Videos, Projekten und zum Steuern des Displays / der Darstellung im Kiosk-Modus. |
+| **Scratch** | Die visuelle blockbasierte Programmiersprache und -umgebung |
+| **Kiosk-Modus** | Darstellung eines Scratch-Projekts auf dem RPi im Vollbild (bspw. auf Displays in der Werkstatt). |
+| **Hotspot** | Falls kein Firmennetzwerk verfügbar ist, kann der RPi somit ein eigenes WLAN aufmachen. |
 
 ---
 
-## 📌 Was ist SIDEKICK?
+## SIDEKICK?
 
-SIDEKICK ist ein **Raspberry Pi-basiertes Assistenzsystem** für die Werkstatt, das:
+Das SIDEKICK-Assisstenzsystem als Unterstützung für Menschen mit Einschränkungen bei prozeduralen Arbeitsabläufen, durch Anzeige von Anweisungen für einzelne Arbeitsschritte. Arbeitsabläufe sind über die Programmieroberfläche Scratch erstellbar.
 
-- **Interaktive Arbeitsanleitungen** auf einem Display anzeigt
-- Mit der visuellen Programmiersprache **Scratch** erstellt wird
-- **Ohne Programmierkenntnisse** bedienbar ist
-- **Videos, Bilder und Animationen** unterstützt
-- Mit **Hardware** (LEDs, Sensoren, Buttons) erweitert werden kann
+SIDEKICK ist ein **RPi-basiertes Assistenzsystem**, das:
+
+- **Interaktive Arbeitsanleitungen** auf einem Display anzeigt.
+- Mit der visuellen, blockbasierten Programmiersprache **Scratch** erstellt wird.
+  - Somit auch **ohne Programmierkenntnisse** bedienbar ist.
+- **Multimedia** (Videos, Bilder etc.) unterstützt.
+- Mit **Hardware** (Sensoren (Buttons, Ultraschall etc.), Aktuatoren (LED-Streifen etc.)) erweiterbar ist.
 
 ---
 
-## 🎯 Anwendungsfälle
+## Anwendungsfälle
 
 ### Arbeitsanleitungen
-- Schritt-für-Schritt Montageanleitungen
-- Qualitätsprüfungen mit Checklisten
-- Sicherheitsunterweisungen
+- Schritt-für-Schritt Montageanleitungen.
+- Qualitätsprüfungen mit Checklisten.
+- Sicherheitsunterweisungen.
 
 ### Assistenz am Arbeitsplatz
-- Visuelle Hilfestellung für Mitarbeiter
-- Barrierefreie Darstellung (große Schrift, klare Bilder)
-- Mehrsprachige Anleitungen möglich
+- Visuelle Hilfestellung für Mitarbeiter.
+- Barrierefreie Darstellung (große Schrift, klare Bilder etc.).
+- Mehrsprachige Anleitungen möglich.
 
 ### Interaktive Steuerung
-- Weiterschalten per Tastendruck oder Sensor
-- Automatische Abläufe mit Zeitsteuerung
-- Feedback durch LEDs oder Töne
+- Weiterschalten per Tastendruck oder Sensor.
+- Automatische Abläufe mit Zeitsteuerung.
+- Feedback durch LEDs oder Töne.
 
 ---
 
-## 🖥️ Systemübersicht
+## Systemübersicht
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     SIDEKICK System                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   ┌─────────────┐         ┌─────────────┐                  │
-│   │   Laptop    │◄───────►│ Raspberry   │──► Display/TV    │
-│   │  (Editor)   │  WLAN   │     Pi      │                  │
-│   └─────────────┘         └─────────────┘                  │
-│                                  │                          │
-│                                  ▼                          │
-│                           ┌─────────────┐                  │
-│                           │  Hardware   │                  │
-│                           │ (optional)  │                  │
-│                           │ LEDs, GPIO  │                  │
-│                           └─────────────┘                  │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│                    SIDEKICK-System                     │
+├────────────────────────────────────────────────────────┤
+│                                                        │
+│   ┌─────────────┐         ┌─────────────┐              │
+│   │     PC      │◄───────►│     RPi     │──► Display   │
+│   │ (Front-End) │  WLAN   │ (Back-End)  │              │
+│   └─────────────┘         └─────────────┘              │
+│                                  │                     │
+│                                  ▼                     │
+│                      ┌──────────────────────┐          │
+│                      │       Hardware       │          │
+│                      │      (optional)      │          │
+│                      │ Sensoren, Aktuatoren │          │
+│                      └──────────────────────┘          │
+│                                                        │
+└────────────────────────────────────────────────────────┘
 ```
 
 ### Komponenten
 
 | Komponente | Funktion |
 |------------|----------|
-| **Raspberry Pi** | Herzstück - führt Anleitungen aus |
-| **Display/TV** | Zeigt die Arbeitsanleitung an (Kiosk-Modus) |
-| **Laptop/PC** | Zum Erstellen und Bearbeiten der Anleitungen |
-| **WLAN** | Verbindung zwischen Laptop und Pi |
+| **Raspberry Pi** | Hauptkomponente: Stellt Anwendungen bereit, führt Anleitungen aus etc. |
+| **Display** | Zeigt die Arbeitsanleitung an (im „Kiosk-Modus“ des RPi). |
+| **PC** | Zum Erstellen, Bearbeiten und Steuern der Assistenzanleitungen (durch Aufrufen Oberflächen der auf dem RPi bereitgestellten Anwendungen). |
+| **WLAN** | Stellt Verbindung zwischen PC und RPi her. |
 
 ---
 
-## 🚀 Einrichtung
+## Einrichtung
 
-Es gibt mehrere Wege, SIDEKICK auf einem Raspberry Pi einzurichten:
+Es sind unterschiedliche Methoden zur Einrichtung von SIDEKICK bereitgestellt:
 
-| Methode | Schwierigkeit | Display/Tastatur am Pi nötig? |
+| Methode | Schwierigkeit | Display / Tastatur am Pi notwendig? |
 |---------|---------------|-------------------------------|
-| USB-Stick (automatisch) | ⭐ Einfach | ❌ Nein |
-| Setup-Datei | ⭐⭐ Mittel | ✅ Ja |
-| Terminal-Befehl | ⭐⭐ Mittel | ✅ Ja |
+| Setup-Datei | Einfach | Ja |
+| Terminal-Befehl | Einfach | Ja |
+
+> **Voraussetzung:** Display, Maus und Tastatur am RPi angeschlossen.
 
 ---
 
-### Methode 1: Automatisch per USB-Stick *(empfohlen)*
+### Methode 1: Per Setup-Datei *(empfohlen)*
 
-> **Vorteil:** Kein Display, keine Tastatur am Pi nötig!
-
-1. Die Setup-Datei auf einen USB-Stick kopieren
-   - Download: [sidekick-setup.sh](https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/sidekick-setup.sh)
-
-2. Optional: Hostname festlegen
-   - Datei `sidekick-hostname.txt` auf den Stick legen
-   - Inhalt: gewünschter Name (z.B. `rpi-ws1`)
-
-3. USB-Stick in den Raspberry Pi einstecken
-   - Die Einrichtung startet automatisch
-   - Nach Abschluss erscheint `ERGEBNIS.txt` auf dem Stick
-
----
-
-### Methode 2: Manuell per Setup-Datei
-
-> **Voraussetzung:** Display, Maus und Tastatur am Pi angeschlossen
-
-1. Die Setup-Datei auf den Pi herunterladen
-   - Download: [sidekick-setup.sh](https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/sidekick-setup.sh)
-   - Oder per USB-Stick / anderweitig übertragen
+1. Die Setup-Datei auf den RPi herunterladen:
+   - Download: [sidekick-setup.sh](https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/sidekick-setup.sh).
+   - Oder per USB-Stick übertragen.
 
 2. Die Datei ausführbar machen und starten:
    ```bash
@@ -129,156 +113,153 @@ Es gibt mehrere Wege, SIDEKICK auf einem Raspberry Pi einzurichten:
    sudo ./sidekick-setup.sh --hostname=rpi-ws1
    ```
 
-4. Die Einrichtung läuft automatisch durch
+4. Die Einrichtung wird automatisch durchgeführt.
 
 ---
 
-### Methode 3: Manuell per Terminal-Befehl
+### Methode 2: Per Terminal-Befehl
 
-> **Voraussetzung:** Display, Maus und Tastatur am Pi angeschlossen
+1. Ein Terminal-Fenster auf dem RPi öffnen:
+   - Kann bspw. mit `Strg` + `Alt` + `T` oder über das Menü geöffnet werden.
 
-1. Ein Terminal-Fenster auf dem Pi öffnen
-   - Kann z.B. mit `Strg+Alt+T` oder über das Menü geöffnet werden
-
-2. Folgenden Befehl eingeben und mit "Enter" bestätigen:
+2. Folgenden Befehl eingeben und mit `Enter` bestätigen:
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/sidekick-setup.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/sidekick-setup.sh | sudo bash
    ```
 
 3. Optional: Mit eigenem Hostname:
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/sidekick-setup.sh | bash -s -- --hostname=rpi-ws1
+   curl -fsSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/sidekick-setup.sh | sudo bash -s -- --hostname=rpi-ws1
    ```
 
-4. Die Einrichtung läuft automatisch durch
+4. Die Einrichtung wird automatisch durchgeführt.
 
 ---
 
 ### Einrichtung: Beispiel
 
-**Szenario:** Wir richten einen Pi für "Workstation 1" ein.
+**Szenario**: Einrichten eines RPis für „Workstation 1“.
 
-- Gewählter Hostname: `rpi-ws1`
+- Gewählter Hostname: `rpi-ws1`.
 - Nach der Installation:
-  - Hotspot-Name: `sidekick-rpi-ws1`
-  - Hotspot-Passwort: `sidekick`
-  - Erreichbar unter: `http://sidekick-rpi-ws1.local:8601`
+  - Hotspot-Name: `sidekick-rpi-ws1`.
+  - Hotspot-Passwort: `sidekick`.
+  - Erreichbar unter:
+    - SIDEKICK-Dashboard: `http://sidekick-rpi-ws1.local:5000`.
+    - Scratch-Editor: `http://sidekick-rpi-ws1.local:8601`.
 
 ---
 
 ### Was wird installiert?
 
 Das Setup-Script installiert automatisch:
-- ✅ Scratch Editor (angepasste Version mit SIDEKICK-Erweiterungen)
-- ✅ Dashboard für Dateiverwaltung
-- ✅ MQTT-Server für Kommunikation
-- ✅ WLAN-Hotspot (`sidekick-xxxxxx`)
-- ✅ Alle benötigten Abhängigkeiten
+- Scratch-Editor (angepasste Version mit SIDEKICK-Erweiterung).
+- SIDEKICK-Dashboard für Dateiverwaltung, Display-Fernsteuerung etc.
+- MQTT-Server für Kommunikation.
+- WLAN-Hotspot (`sidekick-xxxxxx`).
+- Notwendige Abhängigkeiten.
 
 ---
 
-## 🖥️ Bedienung
+## Bedienung
 
-### Aufrufen der SIDEKICK-Webseiten
+### Aufrufen der SIDEKICK-Webseiten-Oberflächen
 
-Es gibt zwei Webseiten die auf dem Pi laufen:
+Es gibt zwei Webseiten die auf dem RPi laufen:
 
 | Webseite | Funktion | Port |
 |----------|----------|------|
-| **Dashboard** | Videos/Projekte verwalten, Display steuern | 5000 |
-| **Scratch-Editor** | Anleitungen erstellen und bearbeiten | 8601 |
+| **SIDEKICK-Dashboard** | Videos / Projekte verwalten, Display steuern. | 5000 |
+| **Scratch-Editor** | Assistenz-Anleitungen erstellen und bearbeiten. | 8601 |
 
 ---
 
 ### Verbindungsmöglichkeiten
 
-**Option 1: Im gleichen Netzwerk wie der Pi**
-> z. B. am Office-PC, wenn der RPi im Firmen-WLAN ist
+**Option 1: Im gleichen Netzwerk wie der RPi**
+> Z. B. am Office-PC, wenn der RPi mit dem gleichen (Firmen-)WLAN verbunden ist.
 
-- **Dashboard:** `http://sidekick-HOSTNAME.local:5000`
-- **Scratch-Editor:** `http://sidekick-HOSTNAME.local:8601`
+- **Dashboard**: `http://sidekick-HOSTNAME.local:5000`.
+- **Scratch-Editor**: `http://sidekick-HOSTNAME.local:8601`.
 
 **Option 2: Per Hotspot-Verbindung**
-> Laptop/Tablet direkt mit dem RPi (dem WLAN / Hotspot des RPis) verbinden
+> Bspw. Laptop / Tablet direkt mit dem RPi (dem WLAN / Hotspot des RPis) verbinden.
 
 1. Mit Hotspot verbinden:
-   - WLAN-Name: `sidekick-HOSTNAME` (z.B. `sidekick-rpi-ws1`)
-   - Passwort: `sidekick`
+   - WLAN-Name: `sidekick-HOSTNAME` (z. B. `sidekick-rpi-ws1`).
+   - Passwort: `sidekick`.
 
 2. Webseiten aufrufen:
-   - **Dashboard:** `http://10.42.0.1:5000`
-   - **Scratch-Editor:** `http://10.42.0.1:8601`
+   - **Dashboard**: `http://10.42.0.1:5000`.
+   - **Scratch-Editor**: `http://10.42.0.1:8601`.
 
 ---
 
 ### Bedienung: Beispiel
 
-**Szenario:** Pi mit Hostname `rpi-ws1` wurde eingerichtet.
+**Szenario:** RPi mit Hostname `rpi-ws1` wurde eingerichtet.
 
-**Am Office-PC (gleiches Netzwerk):**
-- Dashboard: `http://sidekick-rpi-ws1.local:5000`
-- Scratch-Editor: `http://sidekick-rpi-ws1.local:8601`
+**Am Office-PC (gleiches Netzwerk)**:
+- Dashboard: `http://sidekick-rpi-ws1.local:5000`.
+- Scratch-Editor: `http://sidekick-rpi-ws1.local:8601`.
 
-**Per Hotspot:**
-1. Mit WLAN `sidekick-rpi-ws1` verbinden (Passwort: `sidekick`)
-2. Dashboard: `http://10.42.0.1:5000`
-3. Scratch-Editor: `http://10.42.0.1:8601`
+**Per Hotspot**:
+1. Mit WLAN `sidekick-rpi-ws1` verbinden (Passwort: `sidekick`).
+2. Dashboard: `http://10.42.0.1:5000`.
+3. Scratch-Editor: `http://10.42.0.1:8601`.
 
 ---
 
-## 📊 Dashboard (1. SIDEKICK-Webseite)
+## Dashboard (1. SIDEKICK-Webseite-Oberfläche)
 
-Das Dashboard (Port 5000) bietet:
+Das SIDEKICK-Dashboard (Port 5000) bietet:
 
 ### Dateiverwaltung
-- **Videos hochladen** - für Arbeitsanleitungen
-- **Projekte hochladen** - Scratch .sb3 Dateien
-- **Dateien umbenennen/löschen**
+- **Videos hochladen** (verwendbar bei der Erstellung der Arbeitsanleitungen).
+- **Projekte hochladen** (Scratch `.sb3`-Dateien).
+- **Dateien umbenennen / löschen**.
 
 ### Kiosk-Steuerung
-- **Projekt auf Display laden** - per Dropdown auswählen
-- **Start/Stop** - Grüne Flagge / Stop
-- **Vollbild** - Stage-Ansicht umschalten
+- **Projekt auf Display laden** (Projekt per Dropdown auswählbar).
+- **Start / Stop** (grüne Flagge / Stop-Button).
+- **Vollbild** (Stage- / Vollbild-Ansicht umschalten).
 
 ### Zugriff
 ```
-http://[PI-ADRESSE]:5000
+http://[RPI-ADRESSE]:5000
 ```
 
 ---
 
-## 🎨 Scratch-Editor (2. SIDEKICK-Webseite)
+## Scratch-Editor (2. SIDEKICK-Webseite-Oberfläche)
 
-Der Scratch Editor (Port 8601) ist eine **angepasste Version** von Scratch 3.0.
-
-### Was ist Scratch?
-
-Scratch ist eine visuelle Programmiersprache, bei der man **bunte Bausteine** zusammensteckt statt Code zu schreiben. Perfekt für Einsteiger!
+Der Scratch-Editor (Port 8601) ist eine **angepasste Version** von Scratch 3.0.
 
 ### SIDEKICK-Erweiterung
-- **Video abspielen** - Videos aus dem videos-Ordner
-- **Warten auf Tastendruck** - Interaktive Schritte
-- **Nachricht senden/empfangen** - Kommunikation zwischen Sprites
+- **Button-Zustand abfragen** (interaktive Schritte, bspw. durch Reaktion auf Drücken eines Buttons).
+- **Ultraschall-Sensoren abfragen** (bspw. für Erkennung eines Handeingriffs in einen Sichtlagerkasten).
+- **LED-Streifen ansteuern** (interaktive Schritte, bspw. durch Pick-By-Light-System).
+- **Videomaterial laden und steuern** (Nutzung der, über das SIDEKICK-Dashboard, hochgeladenen Videos, für Darstellung auf Display des SIDEKICK-Assistenzsystems).
 
-### MQTT-Erweiterung
+<!-- ### MQTT-Erweiterung
 - **MQTT verbinden** - Mit anderen Geräten kommunizieren
 - **Nachrichten senden** - An Topics publishen
-- **Nachrichten empfangen** - Topics abonnieren
+- **Nachrichten empfangen** - Topics abonnieren -->
 
 ### Zugriff
 ```
-http://[PI-ADRESSE]:8601
+http://[RPI-ADRESSE]:8601
 ```
 
 ---
 
-## 🖥️ Kiosk-Modus
+## Kiosk-Modus
 
-Der Kiosk-Modus zeigt Scratch-Projekte **im Vollbild** auf dem Pi-Display an.
+Der Kiosk-Modus zeigt Scratch-Projekte **im Vollbild** auf dem RPi-Display an.
 
 ### Aktivierung
 
-Bei der Installation:
+Während der Installation:
 ```bash
 curl -fsSL https://...sidekick-setup.sh | bash -s -- --kiosk
 ```
@@ -289,10 +270,10 @@ Oder nachträglich:
 ```
 
 ### Funktionen
-- Startet automatisch beim Booten
-- Zeigt Stage im Vollbild
-- Steuerbar über Dashboard (Start/Stop)
-- Keine Maus/Tastatur am Pi nötig
+- Startet automatisch beim Booten.
+- Darstellung der Scratch-Stage (und deren visuelle Inhalte / Elemente) im Vollbild.
+- Steuerbar über das SIDEKICK-Dashboard (Start / Stop / Vollbild umschalten).
+  - Keine Maus / Tastatur am RPi notwendig.
 
 ---
 
@@ -300,9 +281,9 @@ Oder nachträglich:
 
 ```
 ~/Sidekick/
-├── sidekick/              # Scratch-Installation
-│   ├── videos/            # Videos für Anleitungen
-│   ├── projects/          # Gespeicherte .sb3 Projekte
+├── sidekick/              # Scratch-Installation.
+│   ├── videos/            # Hochgeladene Videos (für Anleitungen nutzbar).
+│   ├── projects/          # Hochgeladene `.sb3`- / Scratch-Projekte (über SIDEKICK-Dashboard auf Display (Kiosk) ladbar). 
 │   └── ...
 ├── sidekick-setup.sh      # Setup-Script
 └── logs/                  # Log-Dateien
@@ -311,71 +292,71 @@ Oder nachträglich:
 ### Videos hochladen
 
 **Empfohlenes Format:**
-- Codec: H.264 (AVC)
-- Auflösung: max. 1920x1080
-- Dateigröße: max. 50MB
+- Codec: H.264 (AVC).
+- Auflösung: Maximal 1920 x 1080.
+- Dateigröße: Maximal 50 MB.
 
 **Nicht unterstützt:**
-- HEVC / H.265 (Pi kann das nicht dekodieren)
+- HEVC / H.265 (nicht dekodierbar durch den RPi).
 
-Videos können über das Dashboard oder direkt in den Ordner kopiert werden.
+Videos können in den Ordner über das SIDEKICK-Dashboard (hoch)geladen oder direkt hereinkopiert werden.
 
 ---
 
-## 🌐 Netzwerk
+## Netzwerk
 
 ### Automatischer WLAN-Name
 
-Der Pi erstellt automatisch einen Hotspot mit dem Namen:
+Der RPi erstellt automatisch einen Hotspot mit dem Namen:
 ```
 sidekick-xxxxxx
 ```
-Die 6 Zeichen (`xxxxxx`) sind die letzten 6 Zeichen der **Seriennummer** des Pi - diese steht auf dem Aufkleber auf dem Pi!
+Die 6 Zeichen (`xxxxxx`) sind die letzten 6 Zeichen der **Seriennummer** des entsprechenden RPis (siehe evtl. Aufkleber auf dem entsprechenden RPi).
 
 ### Ports
 
 | Port | Dienst |
 |------|--------|
-| 8601 | Scratch Editor |
-| 5000 | Dashboard |
+| 8601 | Scratch-Editor |
+| 5000 | SIDEKICK-Dashboard |
 | 9001 | MQTT (WebSocket) |
 | 1883 | MQTT (TCP) |
 
 ---
 
-## ❓ FAQ
+## FAQ
 
 ### Der Pi startet nicht
 - SD-Karte richtig eingesteckt?
-- Netzteil stark genug? (3A empfohlen)
+- Netzteil stark genug? (Empfohlen: 3 A.)
 
-### Ich finde den Pi nicht im Netzwerk
-- Mit Pi-Hotspot (`sidekick-xxxxxx`) verbinden
-- Dann: `http://10.42.0.1:8601`
+### Ich finde den RPi nicht im Netzwerk
+- Mit RPi-Hotspot (`sidekick-xxxxxx`, Passwort: `sidekick`) verbinden.
+  - Danach: `http://10.42.0.1:8601` aufrufen.
 
-### Videos spielen nicht ab
-- Format prüfen (H.264, nicht HEVC)
-- Mit ffmpeg konvertieren:
-  ```bash
-  ffmpeg -i video.mp4 -c:v libx264 -crf 23 output.mp4
-  ```
+### Videos werden nicht abgespielt
+- Format prüfen (H.264, nicht HEVC).
+  - Mit ffmpeg konvertieren:
+   ```bash
+   ffmpeg -i video.mp4 -c:v libx264 -crf 23 output.mp4
+   ```
 
 ### Wie aktualisiere ich SIDEKICK?
 ```bash
 ~/Sidekick/sidekick-setup.sh
 ```
-Das Script erkennt automatisch, dass bereits installiert ist und macht ein Update.
+Das Script erkennt automatisch, wenn SIDEKICK bereits installiert ist und führt ein Update durch.
 
 ---
 
-## 📞 Support
+## Support
 
 Bei Fragen oder Problemen:
-- GitHub Issues: [Repository-Link]
-- Dokumentation: Dieses Dokument
+- GitHub Issues: [Repository-Link].
+- Dokumentation: Dieses Dokument.
 
 ---
 
-*SIDEKICK - Einfache Assistenzsysteme für die Werkstatt*
+*SIDEKICK − Einfaches Assistenzsystem für WfbM.*
 
 *Version 1.0 | Dezember 2025*
