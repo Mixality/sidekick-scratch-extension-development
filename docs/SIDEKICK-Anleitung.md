@@ -108,7 +108,7 @@ Es sind unterschiedliche Methoden zur Einrichtung von SIDEKICK bereitgestellt:
    sudo ./sidekick-setup.sh
    ```
 
-3. Optional: Eigenen Hostname setzen:
+3. Optional: Eigenen Hostname setzen (Beispiel-Hostname: „rpi-ws1“):
    ```bash
    sudo ./sidekick-setup.sh --hostname=rpi-ws1
    ```
@@ -127,7 +127,7 @@ Es sind unterschiedliche Methoden zur Einrichtung von SIDEKICK bereitgestellt:
    curl -fsSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/sidekick-setup.sh | sudo bash
    ```
 
-3. Optional: Mit eigenem Hostname:
+3. Optional: Eigenen Hostname setzen (Beispiel-Hostname: „rpi-ws1“):
    ```bash
    curl -fsSL https://raw.githubusercontent.com/Mixality/sidekick-scratch-extension-development/master/RPi/sidekick-setup.sh | sudo bash -s -- --hostname=rpi-ws1
    ```
