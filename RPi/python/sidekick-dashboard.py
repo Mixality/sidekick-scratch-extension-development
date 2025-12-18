@@ -678,7 +678,24 @@ class DashboardHandler(BaseHTTPRequestHandler):
             </div>
         </div>
         
-        <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+        <!-- MQTT.js vom Scratch-Server laden (lokal, funktioniert offline!) -->
+        <script>
+            // Warte auf mqtt.js und initialisiere dann
+            function loadMqttAndInit() {{
+                const script = document.createElement('script');
+                script.src = 'http://' + window.location.hostname + ':8601/sidekick-thirdparty-libraries/mqtt/mqtt.min.js';
+                script.onload = function() {{
+                    console.log('MQTT.js geladen');
+                    initDashboard();
+                }};
+                script.onerror = function() {{
+                    console.error('MQTT.js konnte nicht geladen werden');
+                    document.getElementById('mqttStatusText').textContent = 'MQTT nicht verfügbar';
+                }};
+                document.head.appendChild(script);
+            }}
+            window.onload = loadMqttAndInit;
+        </script>
         <script>
             // Dynamische Host-Erkennung - funktioniert mit LAN und Hotspot!
             const SIDEKICK_HOST = window.location.hostname;
@@ -689,6 +706,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
             let mqttClient = null;
             
             // Kiosk-Link wird oben beim Scratch-Link gesetzt
+            
+            function initDashboard() {{
+                connectMQTT();
+            }}
             
             function connectMQTT() {{
                 const statusDot = document.getElementById('mqttStatusDot');
@@ -782,8 +803,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 }}
             }}
             
-            // MQTT beim Laden verbinden
-            document.addEventListener('DOMContentLoaded', connectMQTT);
+            // MQTT wird jetzt über initDashboard() gestartet (nach mqtt.js Laden)
             
             // Rename field functions
             function showRenameField(type) {{
