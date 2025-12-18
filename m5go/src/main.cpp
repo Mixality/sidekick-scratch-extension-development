@@ -26,7 +26,7 @@
 // =============================================================================
 
 // WLAN Zugangsdaten (SIDEKICK Hotspot)
-const char* WIFI_SSID = "SIDEKICK-RPI-2";
+const char* WIFI_SSID = "sidekick-rpi-2";
 const char* WIFI_PASSWORD = "sidekick";
 
 // MQTT Broker (Raspberry Pi im Hotspot-Modus)

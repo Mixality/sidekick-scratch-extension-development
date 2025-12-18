@@ -199,8 +199,8 @@ if (-not (Test-Path $assetsPath)) {
 }
 
 Set-Location $assetsPath
-$bgImage = Join-Path $SCRIPT_DIR "sidekick-mqtt.png"
-$iconImage = Join-Path $SCRIPT_DIR "sidekick-mqtt-small.png"
+$bgImage = Join-Path $SCRIPT_DIR "patches\extensions\sidekickmqtt\sidekick-mqtt.png"
+$iconImage = Join-Path $SCRIPT_DIR "patches\extensions\sidekickmqtt\sidekick-mqtt-small.png"
 
 try {
     if (-not (Test-Path "sidekick-mqtt.png")) {
@@ -225,8 +225,8 @@ if (-not (Test-Path $assetsPath2)) {
 }
 
 Set-Location $assetsPath2
-$bgImage2 = Join-Path $SCRIPT_DIR "sidekick.svg"
-$iconImage2 = Join-Path $SCRIPT_DIR "sidekick-small.svg"
+$bgImage2 = Join-Path $SCRIPT_DIR "patches\extensions\sidekick\sidekick.svg"
+$iconImage2 = Join-Path $SCRIPT_DIR "patches\extensions\sidekick\sidekick-small.svg"
 
 try {
     if (-not (Test-Path "sidekick.svg")) {

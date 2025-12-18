@@ -44,6 +44,15 @@ $env:NODE_OPTIONS = "--openssl-legacy-provider"
 npm run build
 Set-Location ..
 
+Write-Host "Linking scratch-vm to scratch-gui..." -ForegroundColor Yellow
+Set-Location "scratch-vm"
+npm link
+Set-Location ..
+Set-Location "scratch-gui"
+npm link scratch-vm
+Set-Location ..
+Write-Host "✓ scratch-vm linked!" -ForegroundColor Green
+
 Write-Host "Building Scratch GUI..." -ForegroundColor Yellow
 Set-Location "scratch-gui"
 $env:NODE_OPTIONS = "--openssl-legacy-provider"
@@ -78,6 +87,23 @@ if (-not (Test-Path $videoListFile)) {
     "[]" | Out-File -FilePath $videoListFile -Encoding UTF8
 }
 Write-Host "✓ Videos folder ready!" -ForegroundColor Green
+
+# Copy extension assets to build folder
+Write-Host "Copying extension assets to build folder..." -ForegroundColor Yellow
+$buildExtensionsPath = Join-Path $SCRIPT_DIR "scratch-gui\build\static\assets"
+if (-not (Test-Path $buildExtensionsPath)) {
+    New-Item -ItemType Directory -Path $buildExtensionsPath -Force | Out-Null
+}
+
+# Copy SIDEKICK MQTT icons
+$mqttIconSource = Join-Path $SCRIPT_DIR "patches\extensions\sidekickmqtt"
+Copy-Item "$mqttIconSource\*.png" -Destination $buildExtensionsPath -Force -ErrorAction SilentlyContinue
+
+# Copy SIDEKICK icons
+$sidekickIconSource = Join-Path $SCRIPT_DIR "patches\extensions\sidekick"
+Copy-Item "$sidekickIconSource\*.svg" -Destination $buildExtensionsPath -Force -ErrorAction SilentlyContinue
+
+Write-Host "✓ Extension assets copied to build folder!" -ForegroundColor Green
 
 # Copy kiosk.html for display mode
 $kioskSource = Join-Path $SCRIPT_DIR "src\kiosk.html"

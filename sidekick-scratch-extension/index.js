@@ -426,6 +426,10 @@ class Scratch3SidekickBlocks {
         this._videos = {};
         this._debugCounter = 0;
 
+        // Video-Daten für Projekt-Serialisierung (Base64 oder Blob-URLs)
+        /** @type {Object.<string, {data: string, type: string}>} */
+        this._videoData = {};
+
         // Server-Video-System: Liste der verfügbaren Videos vom Server
         /** @type {Array<{text: string, value: string}>} */
         this._serverVideos = [{ text: '(wird geladen...)', value: '' }];
@@ -457,6 +461,12 @@ class Scratch3SidekickBlocks {
         // Event-Handler für Video-Updates
         runtime.on('PROJECT_STOP_ALL', () => this._resetVideos());
 
+        // Beim Projekt-Laden: Versuche Video-Daten wiederherzustellen
+        runtime.on('PROJECT_LOADED', () => {
+            console.log('[sidekick] Project loaded, checking for video data...');
+            this._restoreVideosFromProject();
+        });
+
         // Video-Frame Update Loop - markiert alle spielenden Videos als dirty
         let frameCounter = 0;
         runtime.on('BEFORE_EXECUTE', () => {
@@ -472,6 +482,94 @@ class Scratch3SidekickBlocks {
                 }
             }
         });
+    }
+
+    /**
+     * Serialisiert alle Videos für Projekt-Speicherung
+     * Wird von Scratch beim Speichern aufgerufen
+     */
+    serialize() {
+        console.log('[sidekick] ⚠️ SERIALIZE CALLED! Saving videos...');
+        const videoData = {};
+        
+        for (const name in this._videoData) {
+            videoData[name] = this._videoData[name];
+            console.log('[sidekick]   - Saving video:', name);
+        }
+        
+        console.log('[sidekick] ✅ Serialized', Object.keys(videoData).length, 'videos');
+        console.log('[sidekick] Video data:', JSON.stringify(videoData, null, 2));
+        return { videos: videoData };
+    }
+
+    /**
+     * Deserialisiert Videos beim Projekt-Laden
+     * Wird von Scratch beim Laden aufgerufen
+     */
+    deserialize(data) {
+        console.log('[sidekick] ⚠️ DESERIALIZE CALLED! Loading videos...');
+        console.log('[sidekick] Received data:', JSON.stringify(data, null, 2));
+        
+        if (!data || !data.videos) {
+            console.log('[sidekick] ❌ No video data to deserialize');
+            return;
+        }
+
+        // Lade alle gespeicherten Videos
+        for (const name in data.videos) {
+            const videoInfo = data.videos[name];
+            console.log('[sidekick]   - Restoring video:', name, 'type:', videoInfo.type);
+            
+            // Lade Video aus gespeicherten Daten
+            this.loadVideoURL({ 
+                NAME: name, 
+                URL: videoInfo.data 
+            });
+        }
+        
+        console.log('[sidekick] ✅ Deserialized', Object.keys(data.videos).length, 'videos');
+    }
+
+    /**
+     * Versucht Videos aus gespeicherten Projektdaten wiederherzustellen
+     */
+    _restoreVideosFromProject() {
+        // Durchsuche alle Targets/Sprites nach Video-Blöcken
+        if (!this._runtime.targets) return;
+
+        const foundVideos = new Set();
+
+        for (const target of this._runtime.targets) {
+            const blocks = target.blocks._blocks;
+            
+            for (const blockId in blocks) {
+                const block = blocks[blockId];
+                
+                // Suche nach Video-Lade-Blöcken
+                if (block.opcode === 'sidekick_loadVideoFromURLReporter' && block.inputs.URL) {
+                    const urlInput = block.inputs.URL;
+                    if (urlInput.block) {
+                        const urlBlock = blocks[urlInput.block];
+                        if (urlBlock && urlBlock.fields && urlBlock.fields.TEXT) {
+                            const url = urlBlock.fields.TEXT.value;
+                            if (url && !foundVideos.has(url)) {
+                                foundVideos.add(url);
+                                console.log('[sidekick] Found video URL in project:', url);
+                                
+                                // Lade Video automatisch
+                                this.loadVideoFromURLReporter({ URL: url });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (foundVideos.size > 0) {
+            console.log('[sidekick] ✅ Restored', foundVideos.size, 'videos from project');
+        } else {
+            console.log('[sidekick] No videos found in project blocks');
+        }
     }
 
     /**
@@ -598,7 +696,6 @@ class Scratch3SidekickBlocks {
             color3: '#0C7B37',
 
             showStatusButton: true,
-
 
             // icons to display
             // blockIconURI: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAFCAAAAACyOJm3AAAAFklEQVQYV2P4DwMMEMgAI/+DEUIMBgAEWB7i7uidhAAAAABJRU5ErkJggg==',
@@ -738,19 +835,31 @@ class Scratch3SidekickBlocks {
                 // ==========================================
                 '---',
                 {
-                    opcode: 'loadVideoFromServer',
-                    text: 'Lade Video [FILENAME] als [NAME]',
-                    blockType: BlockType.COMMAND,
+                    opcode: 'loadVideoFromServerReporter',
+                    text: 'Lade Video [FILENAME]',
+                    blockType: BlockType.REPORTER,
                     arguments: {
                         FILENAME: {
                             type: ArgumentType.STRING,
                             menu: 'serverVideosMenu'
-                        },
-                        NAME: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'meinVideo'
                         }
                     }
+                },
+                {
+                    opcode: 'loadVideoFromURLReporter',
+                    text: 'Lade Video von [URL]',
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        URL: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+                        }
+                    }
+                },
+                {
+                    opcode: 'loadVideoFromFileReporter',
+                    text: '📁 Lade Video von Computer',
+                    blockType: BlockType.REPORTER
                 },
                 {
                     opcode: 'refreshVideoList',
@@ -771,6 +880,11 @@ class Scratch3SidekickBlocks {
                             defaultValue: 'video.mp4'
                         }
                     }
+                },
+                {
+                    opcode: 'addNewVideo',
+                    text: '➕ Füge neues Video hinzu',
+                    blockType: BlockType.COMMAND
                 },
                 '---',
                 {
@@ -1380,6 +1494,19 @@ class Scratch3SidekickBlocks {
 
         console.log('[sidekick] Loading video:', videoName, 'from', videoSrc);
 
+        // Speichere Video-Daten für Projekt-Serialisierung
+        // Wenn es eine Blob-URL oder Data-URL ist, speichern wir sie direkt
+        // Wenn es eine externe URL ist, speichern wir die URL
+        const urlType = videoSrc.startsWith('blob:') ? 'blob' :
+                       videoSrc.startsWith('data:') ? 'data' : 'url';
+        
+        this._videoData[videoName] = {
+            data: videoSrc,
+            type: urlType
+        };
+        
+        console.log('[sidekick] Stored video data for serialization:', videoName, 'type:', urlType);
+
         // Warte bis Video geladen ist
         return videoSkin.readyPromise;
     }
@@ -1488,6 +1615,9 @@ class Scratch3SidekickBlocks {
         videoSkin.videoElement.pause();
         videoSkin.dispose();
         delete this._videos[videoName];
+        
+        // Entferne auch gespeicherte Video-Daten
+        delete this._videoData[videoName];
 
         console.log('[sidekick] Video deleted:', videoName);
     }
@@ -1573,7 +1703,179 @@ class Scratch3SidekickBlocks {
         return !videoSkin.videoElement.paused && !videoSkin.videoElement.ended;
     }
 
+    /**
+     * Reporter-Block: Lädt Video vom Server und gibt Namen zurück
+     */
+    async loadVideoFromServerReporter(args) {
+        const filename = Cast.toString(args.FILENAME);
+        
+        if (!filename || filename === '' || filename === '(keine Videos auf Server)' || filename === '(wird geladen...)') {
+            return '';
+        }
+
+        // Verwende Dateinamen ohne Erweiterung als Video-Name
+        const videoName = filename.replace(/\.[^/.]+$/, '');
+        const videoUrl = `${this._videoServerBaseUrl}/${filename}`;
+        
+        console.log('[sidekick] Loading video from server (reporter):', videoUrl, 'as', videoName);
+        
+        await this.loadVideoURL({ NAME: videoName, URL: videoUrl });
+        return videoName;
+    }
+
+    /**
+     * Reporter-Block: Lädt Video von URL und gibt Namen zurück
+     */
+    async loadVideoFromURLReporter(args) {
+        const videoUrl = Cast.toString(args.URL);
+        
+        if (!videoUrl || videoUrl === '') {
+            return '';
+        }
+
+        // Generiere einen Namen aus der URL (letzter Teil ohne Erweiterung)
+        const urlParts = videoUrl.split('/');
+        const filename = urlParts[urlParts.length - 1];
+        const videoName = filename.replace(/\.[^/.]+$/, '') || 'video';
+        
+        console.log('[sidekick] Loading video from URL (reporter):', videoUrl, 'as', videoName);
+        
+        await this.loadVideoURL({ NAME: videoName, URL: videoUrl });
+        return videoName;
+    }
+
+    /**
+     * Reporter-Block: Öffnet Datei-Dialog und lädt lokales Video
+     */
+    loadVideoFromFileReporter() {
+        return new Promise((resolve) => {
+            if (typeof document === 'undefined') {
+                resolve('');
+                return;
+            }
+
+            // Erstelle verstecktes File-Input Element
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'video/*';
+            fileInput.style.display = 'none';
+            document.body.appendChild(fileInput);
+
+            fileInput.onchange = async (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const blobUrl = URL.createObjectURL(file);
+                    const videoName = file.name.replace(/\.[^/.]+$/, '');
+                    
+                    console.log('[sidekick] Loading video from file (reporter):', file.name, 'as', videoName);
+                    
+                    await this.loadVideoURL({ NAME: videoName, URL: blobUrl });
+                    document.body.removeChild(fileInput);
+                    resolve(videoName);
+                } else {
+                    document.body.removeChild(fileInput);
+                    resolve('');
+                }
+            };
+
+            fileInput.oncancel = () => {
+                document.body.removeChild(fileInput);
+                resolve('');
+            };
+
+            fileInput.click();
+        });
+    }
+
+    /**
+     * Dialog-Logik zum Hinzufügen eines neuen Videos (für alten Block)
+     */
+    addNewVideo() {
+        console.log('[sidekick] addNewVideo called');
+        
+        // Prüfe ob wir im Browser-Kontext sind
+        if (typeof window === 'undefined' || typeof prompt === 'undefined') {
+            console.error('[sidekick] Cannot create dialog - not in browser context');
+            return;
+        }
+
+        // Erstelle einen Dialog mit zwei Input-Feldern
+        const videoName = window.prompt('Video-Name:', 'meinVideo');
+        
+        if (!videoName || videoName.trim() === '') {
+            console.log('[sidekick] Video creation cancelled');
+            return;
+        }
+
+        // Frage nach der Video-Quelle
+        const sourceChoice = window.prompt(
+            'Video-Quelle:\n' +
+            '1 = Server\n' +
+            '2 = URL\n' +
+            '3 = Datei hochladen',
+            '1'
+        );
+
+        if (!sourceChoice) {
+            return;
+        }
+
+        console.log('[sidekick] User selected source:', sourceChoice);
+
+        switch (sourceChoice.trim()) {
+            case '1': // Server
+                // Zeige verfügbare Server-Videos
+                if (this._serverVideos && this._serverVideos.length > 0) {
+                    const videoList = this._serverVideos
+                        .map((v, i) => `${i + 1}. ${v.text}`)
+                        .join('\n');
+                    const videoIndex = window.prompt(
+                        'Wähle ein Video vom Server:\n\n' + videoList + '\n\nGib die Nummer ein:',
+                        '1'
+                    );
+                    
+                    if (videoIndex) {
+                        const index = parseInt(videoIndex) - 1;
+                        if (index >= 0 && index < this._serverVideos.length) {
+                            const selectedVideo = this._serverVideos[index];
+                            this.loadVideoFromServer({
+                                FILENAME: selectedVideo.value,
+                                NAME: videoName
+                            });
+                        }
+                    }
+                }
+                break;
+
+            case '2': // URL
+                const videoUrl = window.prompt('Video-URL:', 'https://example.com/video.mp4');
+                if (videoUrl && videoUrl.trim() !== '') {
+                    this.loadVideoURL({
+                        NAME: videoName,
+                        URL: videoUrl.trim()
+                    });
+                }
+                break;
+
+            case '3': // Datei hochladen
+                this.loadVideoFromFile({ NAME: videoName });
+                break;
+
+            default:
+                if (typeof alert !== 'undefined') {
+                    window.alert('Ungültige Auswahl. Bitte wähle 1, 2 oder 3.');
+                }
+                break;
+        }
+    }
+
     _loadMQTT() {
+        // Check if we're in a browser environment (not in a Worker)
+        if (typeof window === 'undefined' || typeof document === 'undefined') {
+            console.log('[sidekick] Not in browser context, skipping MQTT library load');
+            return;
+        }
+
         var id = 'mqtt-library-script';
         if (document.getElementById(id) || typeof window.mqtt !== 'undefined') {
             console.log('[sidekick] MQTT library already loaded');
